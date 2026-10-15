@@ -1,0 +1,6 @@
+{
+  "name": "Nexus Ranaji School Exam System",
+  "description": "Comprehensive online examination and student learning management system for Nexus Ranaji English School with real-time timed exams, auto-grading, student dashboards, badges, certificates, and teacher administration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

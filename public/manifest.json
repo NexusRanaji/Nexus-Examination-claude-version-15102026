@@ -1,0 +1,18 @@
+{
+  "short_name": "Nexus Exam",
+  "name": "Nexus Ranaji School Examination & Academic Portal",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#1e1b4b",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/"
+}

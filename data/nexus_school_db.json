@@ -1,0 +1,5712 @@
+{
+  "academicYears": [
+    {
+      "id": "ay-2025-26",
+      "name": "2025-2026",
+      "isCurrent": true
+    },
+    {
+      "id": "ay-2024-25",
+      "name": "2024-2025",
+      "isCurrent": false
+    }
+  ],
+  "classes": [
+    {
+      "id": "cls-10",
+      "name": "Standard 10 (SSC)",
+      "level": 10,
+      "archived": false
+    },
+    {
+      "id": "cls-9",
+      "name": "Standard 9",
+      "level": 9,
+      "archived": false
+    },
+    {
+      "id": "cls-8",
+      "name": "Standard 8",
+      "level": 8,
+      "archived": false
+    }
+  ],
+  "divisions": [
+    {
+      "id": "div-10a",
+      "classId": "cls-10",
+      "name": "Division A",
+      "roomNumber": "Room 201",
+      "archived": false
+    },
+    {
+      "id": "div-10b",
+      "classId": "cls-10",
+      "name": "Division B",
+      "roomNumber": "Room 202",
+      "archived": false
+    },
+    {
+      "id": "div-9a",
+      "classId": "cls-9",
+      "name": "Division A",
+      "roomNumber": "Room 105",
+      "archived": false
+    },
+    {
+      "id": "div-8b",
+      "classId": "cls-8",
+      "name": "Division B",
+      "roomNumber": "Room 102",
+      "archived": false
+    }
+  ],
+  "subjects": [
+    {
+      "id": "sub-phy",
+      "name": "Physics & Applied Science",
+      "code": "SCI-101",
+      "icon": "Atom"
+    },
+    {
+      "id": "sub-math",
+      "name": "Advanced Mathematics",
+      "code": "MTH-102",
+      "icon": "Calculator"
+    },
+    {
+      "id": "sub-eng",
+      "name": "English Literature & Composition",
+      "code": "ENG-103",
+      "icon": "BookOpen"
+    },
+    {
+      "id": "sub-cs",
+      "name": "Computer Science & Logic",
+      "code": "CS-104",
+      "icon": "Cpu"
+    },
+    {
+      "id": "sub-soc",
+      "name": "Social Studies & History",
+      "code": "SOC-105",
+      "icon": "Globe"
+    }
+  ],
+  "classSubjects": [
+    {
+      "classId": "cls-10",
+      "subjectId": "sub-phy"
+    },
+    {
+      "classId": "cls-10",
+      "subjectId": "sub-math"
+    },
+    {
+      "classId": "cls-10",
+      "subjectId": "sub-eng"
+    },
+    {
+      "classId": "cls-10",
+      "subjectId": "sub-cs"
+    },
+    {
+      "classId": "cls-10",
+      "subjectId": "sub-soc"
+    },
+    {
+      "classId": "cls-9",
+      "subjectId": "sub-cs"
+    },
+    {
+      "classId": "cls-9",
+      "subjectId": "sub-phy"
+    },
+    {
+      "classId": "cls-9",
+      "subjectId": "sub-math"
+    },
+    {
+      "classId": "cls-9",
+      "subjectId": "sub-eng"
+    },
+    {
+      "classId": "cls-8",
+      "subjectId": "sub-math"
+    },
+    {
+      "classId": "cls-8",
+      "subjectId": "sub-eng"
+    },
+    {
+      "classId": "cls-8",
+      "subjectId": "sub-soc"
+    }
+  ],
+  "users": [
+    {
+      "id": "usr-admin-1",
+      "name": "Dr. R. K. Deshmukh",
+      "username": "admin",
+      "email": "admin@nexusrana.edu",
+      "role": "superadmin",
+      "employeeId": "NRES-DIR-001",
+      "phone": "+91 98201 11000",
+      "createdAt": "2025-01-10T08:00:00Z",
+      "password": "$2b$10$OkTKeT1kKYnmUUc/4AYIpuxWgeUhPmd1M6dnhVPlmzcYMwmcJqPDm",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-teach-1",
+      "name": "Prof. Vikram Sharma",
+      "username": "teacher.sharma",
+      "email": "vikram.sharma@nexusrana.edu",
+      "role": "teacher",
+      "employeeId": "NRES-FAC-104",
+      "phone": "+91 98201 22334",
+      "assignedSubjects": [
+        {
+          "classId": "cls-10",
+          "divisionId": "div-10a",
+          "subjectId": "sub-phy"
+        },
+        {
+          "classId": "cls-10",
+          "divisionId": "div-10b",
+          "subjectId": "sub-phy"
+        },
+        {
+          "classId": "cls-10",
+          "divisionId": "div-10a",
+          "subjectId": "sub-math"
+        },
+        {
+          "classId": "cls-8",
+          "divisionId": "div-8b",
+          "subjectId": "sub-math"
+        }
+      ],
+      "createdAt": "2025-01-15T09:00:00Z",
+      "password": "$2b$10$Kz3lgR2wMUz2ICbXgSln.e0tGX2GB8rO4cuNLV3p3At57h0YpwT9q",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-teach-2",
+      "name": "Mrs. Meera Nair",
+      "username": "teacher.meera",
+      "email": "meera.nair@nexusrana.edu",
+      "role": "teacher",
+      "employeeId": "NRES-FAC-118",
+      "phone": "+91 98201 33445",
+      "assignedSubjects": [
+        {
+          "classId": "cls-10",
+          "divisionId": "div-10a",
+          "subjectId": "sub-eng"
+        },
+        {
+          "classId": "cls-9",
+          "divisionId": "div-9a",
+          "subjectId": "sub-cs"
+        }
+      ],
+      "createdAt": "2025-01-18T10:00:00Z",
+      "password": "$2b$12$zSXGn9m7VuYduopRKGi.Fuy1A73e4As53CID5NK1UCPuHpRxduwgS",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-stud-1",
+      "name": "Aarav Sharma",
+      "username": "student.aarav",
+      "email": "aarav.sharma@student.nexusrana.edu",
+      "role": "student",
+      "rollNo": "NRES-10A-01",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "parentId": "usr-parent-1",
+      "phone": "+91 98201 44521",
+      "bonusPoints": 260,
+      "createdAt": "2025-02-01T08:30:00Z",
+      "password": "$2b$12$3j/NjcW3P1vb66jiavLsyuJUeltBFnKi6bx33OW97m/fZaHd8nrpi",
+      "mustChangePassword": false,
+      "passwordChangedAt": "2026-10-14T09:33:48.804Z"
+    },
+    {
+      "id": "usr-stud-2",
+      "name": "Rohan Patel",
+      "username": "student.rohan",
+      "email": "rohan.patel@student.nexusrana.edu",
+      "role": "student",
+      "rollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "parentId": "usr-parent-2",
+      "phone": "+91 98202 88714",
+      "bonusPoints": 775,
+      "createdAt": "2025-02-01T08:30:00Z",
+      "password": "$2b$10$YvgVPr0L8S51aDeElLLlxuJ6Ua1JKpI0Kx8kEHq2YGBjNprk5ka6a",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-stud-3",
+      "name": "Ananya Sharma",
+      "username": "student.ananya",
+      "email": "ananya.sharma@student.nexusrana.edu",
+      "role": "student",
+      "rollNo": "NRES-8B-07",
+      "classId": "cls-8",
+      "divisionId": "div-8b",
+      "parentId": "usr-parent-1",
+      "phone": "+91 98201 44521",
+      "bonusPoints": 310,
+      "createdAt": "2025-02-01T08:30:00Z",
+      "password": "$2b$12$sF0QGi.I/L1rueAUBgFyF.eVRTkuzjFHDMNth8QFfTUQ3QiWPu.6W",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-stud-4",
+      "name": "Priya Verma",
+      "username": "student.priya",
+      "email": "priya.verma@student.nexusrana.edu",
+      "role": "student",
+      "rollNo": "NRES-9A-04",
+      "classId": "cls-9",
+      "divisionId": "div-9a",
+      "parentId": "usr-parent-3",
+      "phone": "+91 98203 11223",
+      "bonusPoints": 240,
+      "createdAt": "2025-02-01T08:30:00Z",
+      "password": "$2b$12$IfVZLpaORX7x.L2rxfzEiuNQ7uk5H6Qic9LdlUdF6j5gWmsf7YKwy",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-parent-1",
+      "name": "Mr. Rajesh Sharma",
+      "username": "parent.sharma",
+      "email": "rajesh.sharma@parent.nexusrana.edu",
+      "role": "parent",
+      "childrenIds": [
+        "usr-stud-1",
+        "usr-stud-3"
+      ],
+      "phone": "+91 98201 44521",
+      "createdAt": "2025-02-01T08:30:00Z",
+      "password": "$2b$10$/RRASr3y1TwRAKZEscd11uPFNlwzL.Eb/maCH6nme/o.NNNLepoli",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-parent-2",
+      "name": "Mrs. Sunita Patel",
+      "username": "parent.patel",
+      "email": "sunita.patel@parent.nexusrana.edu",
+      "role": "parent",
+      "childrenIds": [
+        "usr-stud-2"
+      ],
+      "phone": "+91 98202 88714",
+      "createdAt": "2025-02-01T08:30:00Z",
+      "password": "$2b$12$WwYuCN1C4ybG2A8lfRWla.pdO4bahkOj1MowAfUUU0F34qmV2jKVa",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-parent-3",
+      "name": "Mr. Arvind Verma",
+      "username": "parent.verma",
+      "email": "arvind.verma@parent.nexusrana.edu",
+      "role": "parent",
+      "childrenIds": [
+        "usr-stud-4"
+      ],
+      "phone": "+91 98203 11223",
+      "createdAt": "2025-02-01T08:30:00Z",
+      "password": "$2b$12$FBexWzlu3q7LfNWUU9K5yeySBbb2wSekmVK3/rcYLOjTzpeR2pHly",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-admin-legacy",
+      "name": "School Principal & Admin",
+      "username": "admin@school.com",
+      "email": "admin@school.com",
+      "role": "superadmin",
+      "employeeId": "NRES-ADM-002",
+      "phone": "+91 98201 11001",
+      "createdAt": "2025-01-01T08:00:00Z",
+      "password": "$2b$10$Oi01DesRU0T9fPvtZxSdV.EJnRYvXjKIsFrQBgFDti5X.kSHIDU6y",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-teach-legacy",
+      "name": "Senior Faculty Examiner",
+      "username": "teacher@school.com",
+      "email": "teacher@school.com",
+      "role": "teacher",
+      "employeeId": "NRES-FAC-100",
+      "phone": "+91 98201 22330",
+      "assignedSubjects": [
+        {
+          "classId": "cls-10",
+          "divisionId": "div-10a",
+          "subjectId": "sub-phy"
+        },
+        {
+          "classId": "cls-10",
+          "divisionId": "div-10b",
+          "subjectId": "sub-phy"
+        },
+        {
+          "classId": "cls-10",
+          "divisionId": "div-10a",
+          "subjectId": "sub-math"
+        }
+      ],
+      "createdAt": "2025-01-01T08:00:00Z",
+      "password": "$2b$12$oQE9U6XNFtTJT8C8Ykj8IORgs8As7H89/JVAcqZzXJ4mLmnrEZoTW",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-stud-legacy",
+      "name": "John Doe",
+      "username": "john@student.com",
+      "email": "john@student.com",
+      "role": "student",
+      "rollNo": "NRES-10A-99",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "parentId": "usr-parent-1",
+      "phone": "+91 98201 44521",
+      "bonusPoints": 240,
+      "createdAt": "2025-01-01T08:00:00Z",
+      "password": "$2b$12$iA93opZ7MS8t8Qun/.aXgeU9aWpxrvnspVLiy79BBJpz7c3Cf1db6",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-stud-legacy-2",
+      "name": "Sarah Jenkins",
+      "username": "sarah@student.com",
+      "email": "sarah@student.com",
+      "role": "student",
+      "rollNo": "NRES-10A-98",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "parentId": "usr-parent-2",
+      "phone": "+91 98202 88714",
+      "bonusPoints": 195,
+      "createdAt": "2025-01-01T08:00:00Z",
+      "password": "$2b$12$p1llyIx0LyCmVP7EouXZ/ek51g1nbdVaiJW4Rup1dKzRlGpLaKkyS",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-admin-owner",
+      "name": "Institutional Director",
+      "username": "theoneandonlyking999",
+      "email": "theoneandonlyking999@gmail.com",
+      "role": "superadmin",
+      "employeeId": "NRES-DIR-999",
+      "phone": "+91 98201 99999",
+      "createdAt": "2025-01-01T08:00:00Z",
+      "password": "$2b$10$QXiS9S6twJprb0S.MdpzqOyB/BiT1/jMTW9VqDxpkTufetVEqtBfC",
+      "mustChangePassword": false
+    },
+    {
+      "id": "usr-stud-1153450",
+      "name": "Pooja Bhatt",
+      "email": "student.poojabhatt188@nexusrana.edu",
+      "role": "student",
+      "username": "student.poojabhatt188",
+      "password": "$2b$12$0hDUekPrS4EVRE.uFdsMwe796JqzdFH0cio2.KfwXPwQI2hiNc8TS",
+      "createdAt": "2026-10-07T15:31:55.345Z",
+      "bonusPoints": 100,
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "rollNo": "NRES-10A-88",
+      "mustChangePassword": false,
+      "passwordChangedAt": "2026-10-14T09:34:17.950Z"
+    },
+    {
+      "id": "usr-teach-1153451",
+      "name": "Prof. Ramesh Rao",
+      "email": "teacher.proframesh597@nexusrana.edu",
+      "role": "teacher",
+      "username": "teacher.proframesh597",
+      "password": "$2b$12$ofjRDHLTzFhAhctgCCvVienv4.Mssl2qbqVrw7ki4i2e/G8J8FHG2",
+      "createdAt": "2026-10-07T15:31:55.345Z",
+      "employeeId": "NRES-FAC-888",
+      "assignedSubjects": [],
+      "mustChangePassword": false
+    }
+  ],
+  "questionBank": [
+    {
+      "id": "qb-1791880931758",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1791880717672",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1791880124695",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1791879753271",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1791879530187",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1791823814791",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1791387127287",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1791387115336-0",
+      "text": "What is Newton's Second Law of Motion?  = ma$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-a",
+          "text": "F = ma"
+        },
+        {
+          "id": "opt-b",
+          "text": "E = mc^2"
+        }
+      ],
+      "correctAnswer": "opt-a",
+      "explanation": "Force equals mass times acceleration.",
+      "points": 5,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Uploaded Chapter",
+      "inQuestionBank": true,
+      "createdAt": "2026-10-07T15:31:55.336Z"
+    },
+    {
+      "id": "qb-1790873478914",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1790872982688",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1790872382896",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1790872343653",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1790872242825",
+      "text": "Calculate the focal length using formula: $\\frac{1}{f} = \\frac{1}{v} - \\frac{1}{u}$",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "+15 cm"
+        },
+        {
+          "id": "opt-2",
+          "text": "-15 cm"
+        },
+        {
+          "id": "opt-3",
+          "text": "+30 cm"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "Applying the standard lens formula with sign conventions yields f = +15 cm.",
+      "points": 2,
+      "imageUrl": "",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Light: Reflection and Refraction",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-1",
+      "text": "According to Newton’s Second Law of Motion, what is the mathematical formula for force?",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "$F = \\frac{m}{a}$"
+        },
+        {
+          "id": "opt-2",
+          "text": "$F = m \\cdot a$"
+        },
+        {
+          "id": "opt-3",
+          "text": "$F = m \\cdot v^2$"
+        },
+        {
+          "id": "opt-4",
+          "text": "$F = \\frac{1}{2} m \\cdot a$"
+        }
+      ],
+      "correctAnswer": "opt-2",
+      "explanation": "Newton’s second law states that Force equals mass multiplied by acceleration: $F = ma$.",
+      "points": 10,
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Chapter 1: Laws of Motion & Momentum",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-2",
+      "text": "Analyze the circuit diagram below. Which of the following components are connected in parallel?",
+      "type": "multi",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "Resistor R1 and Resistor R2"
+        },
+        {
+          "id": "opt-2",
+          "text": "Voltmeter across R1"
+        },
+        {
+          "id": "opt-3",
+          "text": "Ammeter in main line"
+        },
+        {
+          "id": "opt-4",
+          "text": "Battery supply terminal"
+        }
+      ],
+      "correctAnswer": [
+        "opt-1",
+        "opt-2"
+      ],
+      "explanation": "Resistors R1 and R2 branch from the same nodes, and the voltmeter is placed in parallel to measure potential drop.",
+      "points": 15,
+      "imageUrl": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80",
+      "subjectId": "sub-phy",
+      "classId": "cls-10",
+      "chapterName": "Chapter 2: Electricity & Ohm’s Law",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-3",
+      "text": "Light travels faster in water than in a vacuum. (True or False)",
+      "type": "true_false",
+      "options": [
+        {
+          "id": "opt-true",
+          "text": "True"
+        },
+        {
+          "id": "opt-false",
+          "text": "False"
+        }
+      ],
+      "correctAnswer": "opt-false",
+      "explanation": "The speed of light is highest in a vacuum (approx 3×10⁸ m/s) and decreases in denser optical media like water due to refraction.",
+      "points": 10,
+      "subjectId": "sub-phy",
+      "classId": "cls-9",
+      "chapterName": "Chapter 1: Reflection & Refraction of Light",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-4",
+      "text": "What is the discriminant of the quadratic equation $ax^2 + bx + c = 0$?",
+      "type": "single",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "$\\Delta = b^2 - 4ac$"
+        },
+        {
+          "id": "opt-2",
+          "text": "$\\Delta = b^2 + 4ac$"
+        },
+        {
+          "id": "opt-3",
+          "text": "$\\Delta = \\frac{2a}{-b}$"
+        },
+        {
+          "id": "opt-4",
+          "text": "$\\Delta = 4ab - c^2$"
+        }
+      ],
+      "correctAnswer": "opt-1",
+      "explanation": "The discriminant determines the nature of roots: $\\Delta = b^2 - 4ac$. The quadratic formula is $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$.",
+      "points": 10,
+      "subjectId": "sub-math",
+      "classId": "cls-10",
+      "chapterName": "Chapter 2: Quadratic Equations & Polynomials",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-5",
+      "text": "Which of the following numbers are prime numbers? (Select all that apply)",
+      "type": "multi",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "29"
+        },
+        {
+          "id": "opt-2",
+          "text": "37"
+        },
+        {
+          "id": "opt-3",
+          "text": "51"
+        },
+        {
+          "id": "opt-4",
+          "text": "97"
+        }
+      ],
+      "correctAnswer": [
+        "opt-1",
+        "opt-2",
+        "opt-4"
+      ],
+      "explanation": "51 is divisible by 3 (3 × 17 = 51). 29, 37, and 97 are prime numbers.",
+      "points": 15,
+      "subjectId": "sub-math",
+      "classId": "cls-8",
+      "chapterName": "Chapter 1: Number Systems & Factors",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-6",
+      "text": "Binary search operates in O(log n) time complexity on a sorted array.",
+      "type": "true_false",
+      "options": [
+        {
+          "id": "opt-true",
+          "text": "True"
+        },
+        {
+          "id": "opt-false",
+          "text": "False"
+        }
+      ],
+      "correctAnswer": "opt-true",
+      "explanation": "Binary search halves the search space at each comparison, achieving logarithmic time complexity.",
+      "points": 10,
+      "subjectId": "sub-cs",
+      "classId": "cls-9",
+      "chapterName": "Chapter 3: Algorithms & Time Complexity",
+      "inQuestionBank": true
+    }
+  ],
+  "loginAudits": [
+    {
+      "id": "log-1792003524454",
+      "timestamp": "2026-10-14T18:45:24.454Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "status": "Success"
+    },
+    {
+      "id": "log-1792003167571",
+      "timestamp": "2026-10-14T18:39:27.571Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "status": "Success"
+    },
+    {
+      "id": "log-1792003129199",
+      "timestamp": "2026-10-14T18:38:49.199Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "status": "Success"
+    },
+    {
+      "id": "log-1792002881692",
+      "timestamp": "2026-10-14T18:34:41.692Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1792001834440",
+      "timestamp": "2026-10-14T18:17:14.440Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791997678993",
+      "timestamp": "2026-10-14T17:07:58.993Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791997659485",
+      "timestamp": "2026-10-14T17:07:39.485Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791997161199",
+      "timestamp": "2026-10-14T16:59:21.199Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791995337947",
+      "timestamp": "2026-10-14T16:28:57.947Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791994221121",
+      "timestamp": "2026-10-14T16:10:21.121Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791994192030",
+      "timestamp": "2026-10-14T16:09:52.030Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791992337907",
+      "timestamp": "2026-10-14T15:38:57.907Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791975462705",
+      "timestamp": "2026-10-14T10:57:42.705Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791975458404",
+      "timestamp": "2026-10-14T10:57:38.404Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970545227",
+      "timestamp": "2026-10-14T09:35:45.227Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970457143",
+      "timestamp": "2026-10-14T09:34:17.143Z",
+      "userId": "usr-stud-1153450",
+      "userName": "Pooja Bhatt",
+      "role": "student",
+      "identifier": "student.poojabhatt188",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970448781",
+      "timestamp": "2026-10-14T09:34:08.781Z",
+      "userId": "usr-stud-1153450",
+      "userName": "Pooja Bhatt",
+      "role": "student",
+      "identifier": "student.poojabhatt188",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970434648",
+      "timestamp": "2026-10-14T09:33:54.648Z",
+      "userId": "usr-stud-1153450",
+      "userName": "Pooja Bhatt",
+      "role": "student",
+      "identifier": "student.poojabhatt188",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970428021",
+      "timestamp": "2026-10-14T09:33:48.022Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970427597",
+      "timestamp": "2026-10-14T09:33:47.597Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Failed",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1791970427194",
+      "timestamp": "2026-10-14T09:33:47.194Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970425949",
+      "timestamp": "2026-10-14T09:33:45.949Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970425522",
+      "timestamp": "2026-10-14T09:33:45.522Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970425027",
+      "timestamp": "2026-10-14T09:33:45.027Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970424914",
+      "timestamp": "2026-10-14T09:33:44.914Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791970424792",
+      "timestamp": "2026-10-14T09:33:44.792Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791912685270",
+      "timestamp": "2026-10-13T17:31:25.270Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791912684727",
+      "timestamp": "2026-10-13T17:31:24.727Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791912683542",
+      "timestamp": "2026-10-13T17:31:23.542Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911594399",
+      "timestamp": "2026-10-13T17:13:14.399Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911540689",
+      "timestamp": "2026-10-13T17:12:20.689Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911501565",
+      "timestamp": "2026-10-13T17:11:41.565Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911450701",
+      "timestamp": "2026-10-13T17:10:50.701Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911417652",
+      "timestamp": "2026-10-13T17:10:17.652Z",
+      "userId": "usr-admin-owner",
+      "userName": "Institutional Director",
+      "role": "superadmin",
+      "identifier": "theoneandonlyking999",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911091138",
+      "timestamp": "2026-10-13T17:04:51.138Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911050331",
+      "timestamp": "2026-10-13T17:04:10.331Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911040616",
+      "timestamp": "2026-10-13T17:04:00.616Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911039420",
+      "timestamp": "2026-10-13T17:03:59.420Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911029579",
+      "timestamp": "2026-10-13T17:03:49.579Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Failed",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1791911029476",
+      "timestamp": "2026-10-13T17:03:49.476Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911029066",
+      "timestamp": "2026-10-13T17:03:49.066Z",
+      "userId": "usr-admin-owner",
+      "userName": "Institutional Director",
+      "role": "superadmin",
+      "identifier": "theoneandonlyking999",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911028963",
+      "timestamp": "2026-10-13T17:03:48.963Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911028569",
+      "timestamp": "2026-10-13T17:03:48.569Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911028462",
+      "timestamp": "2026-10-13T17:03:48.462Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791911028034",
+      "timestamp": "2026-10-13T17:03:48.034Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880931753",
+      "timestamp": "2026-10-13T08:42:11.753Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880931289",
+      "timestamp": "2026-10-13T08:42:11.289Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880930856",
+      "timestamp": "2026-10-13T08:42:10.856Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880930365",
+      "timestamp": "2026-10-13T08:42:10.365Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880929917",
+      "timestamp": "2026-10-13T08:42:09.917Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880929799",
+      "timestamp": "2026-10-13T08:42:09.799Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880929352",
+      "timestamp": "2026-10-13T08:42:09.352Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880928910",
+      "timestamp": "2026-10-13T08:42:08.910Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880928475",
+      "timestamp": "2026-10-13T08:42:08.475Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880885106",
+      "timestamp": "2026-10-13T08:41:25.106Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880884649",
+      "timestamp": "2026-10-13T08:41:24.649Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880884178",
+      "timestamp": "2026-10-13T08:41:24.178Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880883707",
+      "timestamp": "2026-10-13T08:41:23.707Z",
+      "userId": "usr-admin-owner",
+      "userName": "Institutional Director",
+      "role": "superadmin",
+      "identifier": "theoneandonlyking999@gmail.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Failed",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1791880883584",
+      "timestamp": "2026-10-13T08:41:23.584Z",
+      "userId": "usr-admin-owner",
+      "userName": "Institutional Director",
+      "role": "superadmin",
+      "identifier": "theoneandonlyking999",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880883470",
+      "timestamp": "2026-10-13T08:41:23.470Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880882880",
+      "timestamp": "2026-10-13T08:41:22.880Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880882450",
+      "timestamp": "2026-10-13T08:41:22.450Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880882171",
+      "timestamp": "2026-10-13T08:41:22.171Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880881600",
+      "timestamp": "2026-10-13T08:41:21.600Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880717667",
+      "timestamp": "2026-10-13T08:38:37.667Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880717223",
+      "timestamp": "2026-10-13T08:38:37.223Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880716776",
+      "timestamp": "2026-10-13T08:38:36.776Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880716342",
+      "timestamp": "2026-10-13T08:38:36.342Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880715908",
+      "timestamp": "2026-10-13T08:38:35.908Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880715468",
+      "timestamp": "2026-10-13T08:38:35.468Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880715008",
+      "timestamp": "2026-10-13T08:38:35.008Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880714538",
+      "timestamp": "2026-10-13T08:38:34.538Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880714067",
+      "timestamp": "2026-10-13T08:38:34.067Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880598237",
+      "timestamp": "2026-10-13T08:36:38.237Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880429364",
+      "timestamp": "2026-10-13T08:33:49.364Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880425816",
+      "timestamp": "2026-10-13T08:33:45.816Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Failed",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1791880414807",
+      "timestamp": "2026-10-13T08:33:34.807Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Failed",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1791880233974",
+      "timestamp": "2026-10-13T08:30:33.974Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880164104",
+      "timestamp": "2026-10-13T08:29:24.104Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880124690",
+      "timestamp": "2026-10-13T08:28:44.690Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880124210",
+      "timestamp": "2026-10-13T08:28:44.211Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880123716",
+      "timestamp": "2026-10-13T08:28:43.716Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880123261",
+      "timestamp": "2026-10-13T08:28:43.261Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880122807",
+      "timestamp": "2026-10-13T08:28:42.807Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880122292",
+      "timestamp": "2026-10-13T08:28:42.292Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880121822",
+      "timestamp": "2026-10-13T08:28:41.822Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880121352",
+      "timestamp": "2026-10-13T08:28:41.352Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791880120897",
+      "timestamp": "2026-10-13T08:28:40.897Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879753265",
+      "timestamp": "2026-10-13T08:22:33.265Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879752803",
+      "timestamp": "2026-10-13T08:22:32.803Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879752356",
+      "timestamp": "2026-10-13T08:22:32.356Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879751918",
+      "timestamp": "2026-10-13T08:22:31.918Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879751475",
+      "timestamp": "2026-10-13T08:22:31.475Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879751034",
+      "timestamp": "2026-10-13T08:22:31.034Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879750583",
+      "timestamp": "2026-10-13T08:22:30.583Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879750133",
+      "timestamp": "2026-10-13T08:22:30.133Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879749640",
+      "timestamp": "2026-10-13T08:22:29.640Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879530181",
+      "timestamp": "2026-10-13T08:18:50.181Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879529717",
+      "timestamp": "2026-10-13T08:18:49.717Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879529236",
+      "timestamp": "2026-10-13T08:18:49.236Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879528731",
+      "timestamp": "2026-10-13T08:18:48.731Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879528249",
+      "timestamp": "2026-10-13T08:18:48.249Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879527817",
+      "timestamp": "2026-10-13T08:18:47.817Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879527384",
+      "timestamp": "2026-10-13T08:18:47.384Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879526924",
+      "timestamp": "2026-10-13T08:18:46.924Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879526469",
+      "timestamp": "2026-10-13T08:18:46.469Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879242136",
+      "timestamp": "2026-10-13T08:14:02.136Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879241680",
+      "timestamp": "2026-10-13T08:14:01.680Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879241219",
+      "timestamp": "2026-10-13T08:14:01.219Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879240765",
+      "timestamp": "2026-10-13T08:14:00.765Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879240316",
+      "timestamp": "2026-10-13T08:14:00.316Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879239870",
+      "timestamp": "2026-10-13T08:13:59.870Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879239422",
+      "timestamp": "2026-10-13T08:13:59.422Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879238941",
+      "timestamp": "2026-10-13T08:13:58.941Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791879238459",
+      "timestamp": "2026-10-13T08:13:58.459Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824927698",
+      "timestamp": "2026-10-12T17:08:47.698Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824927258",
+      "timestamp": "2026-10-12T17:08:47.258Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824926831",
+      "timestamp": "2026-10-12T17:08:46.831Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824926372",
+      "timestamp": "2026-10-12T17:08:46.372Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824925935",
+      "timestamp": "2026-10-12T17:08:45.935Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824925468",
+      "timestamp": "2026-10-12T17:08:45.468Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824925025",
+      "timestamp": "2026-10-12T17:08:45.025Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824924598",
+      "timestamp": "2026-10-12T17:08:44.598Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824924160",
+      "timestamp": "2026-10-12T17:08:44.160Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824809143",
+      "timestamp": "2026-10-12T17:06:49.143Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824808668",
+      "timestamp": "2026-10-12T17:06:48.668Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824796542",
+      "timestamp": "2026-10-12T17:06:36.542Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824796084",
+      "timestamp": "2026-10-12T17:06:36.084Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "student.aarav",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824785813",
+      "timestamp": "2026-10-12T17:06:25.813Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "vikram.sharma@nexusrana.edu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Failed",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1791824785331",
+      "timestamp": "2026-10-12T17:06:25.331Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "aarav.sharma@student.nexusrana.edu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Failed",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1791824774026",
+      "timestamp": "2026-10-12T17:06:14.026Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin@nexusrana.edu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Failed",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1791824773533",
+      "timestamp": "2026-10-12T17:06:13.533Z",
+      "userName": "aarav.patil@nexus.edu",
+      "role": "unauthenticated",
+      "identifier": "aarav.patil@nexus.edu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Failed",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1791824764163",
+      "timestamp": "2026-10-12T17:06:04.163Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824745410",
+      "timestamp": "2026-10-12T17:05:45.410Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791824728373",
+      "timestamp": "2026-10-12T17:05:28.373Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin@nexusrana.edu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Failed",
+      "failureReason": "Incorrect password entered"
+    },
+    {
+      "id": "log-1791824720912",
+      "timestamp": "2026-10-12T17:05:20.912Z",
+      "userName": "admin@nexus.edu",
+      "role": "unauthenticated",
+      "identifier": "admin@nexus.edu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "node",
+      "status": "Failed",
+      "failureReason": "Invalid school credentials or unregistered institutional identifier"
+    },
+    {
+      "id": "log-1791824421598",
+      "timestamp": "2026-10-12T17:00:21.598Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "103.117.187.223, 169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791823814781",
+      "timestamp": "2026-10-12T16:50:14.781Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791823814778",
+      "timestamp": "2026-10-12T16:50:14.778Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791823814777",
+      "timestamp": "2026-10-12T16:50:14.777Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791823814775",
+      "timestamp": "2026-10-12T16:50:14.775Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791823814772",
+      "timestamp": "2026-10-12T16:50:14.772Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791823814770",
+      "timestamp": "2026-10-12T16:50:14.770Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791823814767",
+      "timestamp": "2026-10-12T16:50:14.767Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791387127282",
+      "timestamp": "2026-10-07T15:32:07.282Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791387127278",
+      "timestamp": "2026-10-07T15:32:07.278Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791387127275",
+      "timestamp": "2026-10-07T15:32:07.275Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791387127273",
+      "timestamp": "2026-10-07T15:32:07.273Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791387127271",
+      "timestamp": "2026-10-07T15:32:07.271Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791387127269",
+      "timestamp": "2026-10-07T15:32:07.269Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1791387127267",
+      "timestamp": "2026-10-07T15:32:07.267Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790873478906",
+      "timestamp": "2026-10-01T16:51:18.906Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790873478903",
+      "timestamp": "2026-10-01T16:51:18.903Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790873478902",
+      "timestamp": "2026-10-01T16:51:18.902Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790873478900",
+      "timestamp": "2026-10-01T16:51:18.900Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790873478897",
+      "timestamp": "2026-10-01T16:51:18.897Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790873478895",
+      "timestamp": "2026-10-01T16:51:18.895Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790873478890",
+      "timestamp": "2026-10-01T16:51:18.890Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790873340560",
+      "timestamp": "2026-10-01T16:49:00.560Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "103.117.187.223, 169.254.169.126",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872982678",
+      "timestamp": "2026-10-01T16:43:02.678Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872982676",
+      "timestamp": "2026-10-01T16:43:02.676Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872982674",
+      "timestamp": "2026-10-01T16:43:02.674Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872982672",
+      "timestamp": "2026-10-01T16:43:02.672Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872982670",
+      "timestamp": "2026-10-01T16:43:02.670Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872982668",
+      "timestamp": "2026-10-01T16:43:02.668Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872982663",
+      "timestamp": "2026-10-01T16:43:02.663Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872382545",
+      "timestamp": "2026-10-01T16:33:02.545Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872382540",
+      "timestamp": "2026-10-01T16:33:02.540Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872382529",
+      "timestamp": "2026-10-01T16:33:02.529Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872382527",
+      "timestamp": "2026-10-01T16:33:02.527Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872382521",
+      "timestamp": "2026-10-01T16:33:02.521Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872382511",
+      "timestamp": "2026-10-01T16:33:02.511Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872382504",
+      "timestamp": "2026-10-01T16:33:02.504Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872343645",
+      "timestamp": "2026-10-01T16:32:23.645Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872343641",
+      "timestamp": "2026-10-01T16:32:23.641Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872343639",
+      "timestamp": "2026-10-01T16:32:23.639Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872343638",
+      "timestamp": "2026-10-01T16:32:23.638Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872343636",
+      "timestamp": "2026-10-01T16:32:23.636Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872343634",
+      "timestamp": "2026-10-01T16:32:23.634Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872343632",
+      "timestamp": "2026-10-01T16:32:23.632Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872242817",
+      "timestamp": "2026-10-01T16:30:42.817Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872242815",
+      "timestamp": "2026-10-01T16:30:42.815Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872242812",
+      "timestamp": "2026-10-01T16:30:42.812Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872242810",
+      "timestamp": "2026-10-01T16:30:42.810Z",
+      "userId": "usr-teach-legacy",
+      "userName": "Senior Faculty Examiner",
+      "role": "teacher",
+      "identifier": "teacher@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872242808",
+      "timestamp": "2026-10-01T16:30:42.808Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872242806",
+      "timestamp": "2026-10-01T16:30:42.806Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790872242802",
+      "timestamp": "2026-10-01T16:30:42.802Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790871205373",
+      "timestamp": "2026-10-01T16:13:25.373Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790871205365",
+      "timestamp": "2026-10-01T16:13:25.365Z",
+      "userId": "usr-stud-legacy",
+      "userName": "John Doe",
+      "role": "student",
+      "identifier": "john@student.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790871205362",
+      "timestamp": "2026-10-01T16:13:25.362Z",
+      "userId": "usr-stud-2",
+      "userName": "Rohan Patel",
+      "role": "student",
+      "identifier": "student.rohan",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790871205352",
+      "timestamp": "2026-10-01T16:13:25.352Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790871205349",
+      "timestamp": "2026-10-01T16:13:25.349Z",
+      "userId": "usr-admin-legacy",
+      "userName": "School Principal & Admin",
+      "role": "superadmin",
+      "identifier": "admin@school.com",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1790871205342",
+      "timestamp": "2026-10-01T16:13:25.342Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Browser Client",
+      "status": "Success"
+    },
+    {
+      "id": "log-1",
+      "timestamp": "2026-10-01T15:58:16.295Z",
+      "userId": "usr-admin-1",
+      "userName": "Dr. R. K. Deshmukh",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "192.168.1.104",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0",
+      "status": "Success"
+    },
+    {
+      "id": "log-2",
+      "timestamp": "2026-10-01T15:41:16.295Z",
+      "userId": "usr-teach-1",
+      "userName": "Prof. Vikram Sharma",
+      "role": "teacher",
+      "identifier": "teacher.sharma",
+      "ipAddress": "192.168.1.112",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      "status": "Success"
+    },
+    {
+      "id": "log-3",
+      "timestamp": "2026-10-01T15:18:16.295Z",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "role": "student",
+      "identifier": "NRES-10A-01",
+      "ipAddress": "192.168.1.189",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/121.0",
+      "status": "Success"
+    },
+    {
+      "id": "log-4",
+      "timestamp": "2026-10-01T14:53:16.295Z",
+      "userName": "Unauthorized Guest",
+      "role": "unauthenticated",
+      "identifier": "unknown.portal.test",
+      "ipAddress": "192.168.1.205",
+      "userAgent": "Mozilla/5.0 (Linux; Android 14)",
+      "status": "Failed",
+      "failureReason": "Invalid school credentials or unregistered username"
+    },
+    {
+      "id": "log-5",
+      "timestamp": "2026-10-01T14:23:16.295Z",
+      "userId": "usr-parent-1",
+      "userName": "Mr. Rajesh Sharma",
+      "role": "parent",
+      "identifier": "parent.sharma",
+      "ipAddress": "192.168.1.144",
+      "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_3)",
+      "status": "Success"
+    }
+  ],
+  "cheatingAudits": [
+    {
+      "id": "cht-1791880931778",
+      "timestamp": "2026-10-13T08:42:11.778Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1791880931763",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1791880717685",
+      "timestamp": "2026-10-13T08:38:37.685Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1791880717676",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1791880124710",
+      "timestamp": "2026-10-13T08:28:44.710Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1791880124700",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1791879753288",
+      "timestamp": "2026-10-13T08:22:33.288Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1791879753277",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1791879530215",
+      "timestamp": "2026-10-13T08:18:50.215Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1791879530198",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1791879242146",
+      "timestamp": "2026-10-13T08:14:02.146Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-active",
+      "examTitle": "Active Online Examination Session",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1791824927707",
+      "timestamp": "2026-10-12T17:08:47.707Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-active",
+      "examTitle": "Active Online Examination Session",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1791823814800",
+      "timestamp": "2026-10-12T16:50:14.800Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1791823814793",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1791387127295",
+      "timestamp": "2026-10-07T15:32:07.295Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1791387127289",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1790873478921",
+      "timestamp": "2026-10-01T16:51:18.921Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1790873478916",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1790872982697",
+      "timestamp": "2026-10-01T16:43:02.697Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1790872982691",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1790872382937",
+      "timestamp": "2026-10-01T16:33:02.937Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1790872382918",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1790872343660",
+      "timestamp": "2026-10-01T16:32:23.660Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1790872343655",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1790872242833",
+      "timestamp": "2026-10-01T16:30:42.833Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-1790872242828",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Window focus blur / candidate navigated to external browser tab"
+    },
+    {
+      "id": "cht-1",
+      "timestamp": "2026-10-01T04:13:16.295Z",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "examId": "exam-past-1",
+      "examTitle": "Unit Test 1: Shakespearean Drama & Grammar Foundations",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Browser window blur recorded (1 strike). Student switched away from active exam window."
+    },
+    {
+      "id": "cht-2",
+      "timestamp": "2026-09-29T16:13:16.295Z",
+      "studentId": "usr-stud-x1",
+      "studentName": "Vivek Kulkarni",
+      "studentRollNo": "NRES-10B-14",
+      "examId": "exam-past-1",
+      "examTitle": "Unit Test 1: Shakespearean Drama & Grammar Foundations",
+      "violationCount": 3,
+      "actionTaken": "Flagged & Force-Submitted",
+      "details": "Exceeded maximum allowable focus loss warnings. Exam terminated automatically by window blur guard."
+    },
+    {
+      "id": "cht-3",
+      "timestamp": "2026-10-01T15:13:16.295Z",
+      "studentId": "usr-stud-1",
+      "studentName": "Aarav Sharma",
+      "studentRollNo": "NRES-10A-01",
+      "examId": "exam-up-1",
+      "examTitle": "Standard 10 Mathematics: Trigonometry & Quadratic Roots",
+      "violationCount": 1,
+      "actionTaken": "Warning 1",
+      "details": "Alt-Tab key sequence registered. Secondary desktop display blur intercepted."
+    }
+  ],
+  "deletedCredentialAudits": [
+    {
+      "id": "del-1",
+      "timestamp": "2026-09-28T16:13:16.295Z",
+      "deletedUserId": "usr-fac-temp-9",
+      "deletedUserName": "Sanjay Deshmukh (Visiting Lecturer)",
+      "role": "teacher",
+      "identifier": "NRES-FAC-088",
+      "deletedBy": "Dr. R. K. Deshmukh (Super Admin)",
+      "reason": "Guest lecture semester tenure ended"
+    },
+    {
+      "id": "del-2",
+      "timestamp": "2026-09-21T16:13:16.295Z",
+      "deletedUserId": "usr-stud-arch-12",
+      "deletedUserName": "Karan Mehra (Alumnus)",
+      "role": "student",
+      "identifier": "NRES-10A-99",
+      "deletedBy": "Dr. R. K. Deshmukh (Super Admin)",
+      "reason": "School leaving certificate issued"
+    }
+  ],
+  "schoolNotices": [
+    {
+      "id": "ntc-1",
+      "title": "Standard 10 SSC Preliminary Examination Schedule Released",
+      "content": "The official schedule for standard 10 preliminary online mock exams is published. All candidates must log in 15 minutes before the exam window and ensure uninterrupted camera and full-screen connectivity.",
+      "category": "Exam Schedule",
+      "targetAudience": "All",
+      "authorName": "Dr. R. K. Deshmukh",
+      "authorRole": "superadmin",
+      "createdAt": "2026-10-01T14:13:16.295Z"
+    },
+    {
+      "id": "ntc-2",
+      "title": "Zero Tolerance Policy on Window Blur & External Tab Switching",
+      "content": "Students are cautioned that the online examination system automatically logs browser focus blurs. Exceeding 2 blur infractions leads to immediate auto-submission and a malpractice flag on the institutional record.",
+      "category": "Urgent Alert",
+      "targetAudience": "Students",
+      "authorName": "Prof. Vikram Sharma",
+      "authorRole": "teacher",
+      "createdAt": "2026-09-30T16:13:16.295Z"
+    },
+    {
+      "id": "ntc-3",
+      "title": "Parent-Teacher Communication Portal & Answer Key Review Window",
+      "content": "Parents are invited to review test performance, unlocked model answers, and teacher feedback directly through the Student Performance tab and Helpdesk messaging system.",
+      "category": "General Announcement",
+      "targetAudience": "Parents",
+      "authorName": "Dr. R. K. Deshmukh",
+      "authorRole": "superadmin",
+      "createdAt": "2026-09-29T16:13:16.295Z"
+    },
+    {
+      "id": "ntc-4",
+      "title": "Physics Mechanics Formula Guide & Solved Exemplars Uploaded",
+      "content": "Prof. Vikram Sharma has uploaded comprehensive revision notes and MIT interactive circuit simulation links to the Study Materials repository for Standard 10 Division A & B.",
+      "category": "Academic Notice",
+      "targetAudience": "Students",
+      "authorName": "Prof. Vikram Sharma",
+      "authorRole": "teacher",
+      "createdAt": "2026-09-28T16:13:16.295Z"
+    }
+  ],
+  "academicConfig": {
+    "testBadges": [
+      {
+        "id": "tb-1",
+        "name": "Centurion (100%)",
+        "minPercentage": 100,
+        "description": "Flawless 100% score on unit or term assessment",
+        "iconName": "Crown"
+      },
+      {
+        "id": "tb-2",
+        "name": "Prodigy (90%+)",
+        "minPercentage": 90,
+        "description": "Achieved 90% or higher in subject test",
+        "iconName": "Star"
+      },
+      {
+        "id": "tb-3",
+        "name": "Merit Scholar (75%+)",
+        "minPercentage": 75,
+        "description": "Distinction score of 75% or higher",
+        "iconName": "Award"
+      },
+      {
+        "id": "tb-4",
+        "name": "Credit Scholar (60%+)",
+        "minPercentage": 60,
+        "description": "Solid academic score of 60% or higher",
+        "iconName": "CheckCircle"
+      }
+    ],
+    "overallBadges": [
+      {
+        "id": "ob-1",
+        "name": "Academic Titan",
+        "criteriaType": "bonusPoints",
+        "thresholdValue": 250,
+        "description": "Accumulated 250+ institutional bonus points",
+        "iconName": "Zap"
+      },
+      {
+        "id": "ob-2",
+        "name": "Valedictorian Circle",
+        "criteriaType": "topRank",
+        "thresholdValue": 3,
+        "description": "Ranks in Top 3 annual positions across standards",
+        "iconName": "Trophy"
+      },
+      {
+        "id": "ob-3",
+        "name": "Consistent Achiever",
+        "criteriaType": "averageScore",
+        "thresholdValue": 80,
+        "description": "Maintains 80%+ cumulative average across all tests",
+        "iconName": "TrendingUp"
+      }
+    ],
+    "standingTiers": [
+      {
+        "id": "st-1",
+        "tierName": "Summa Cum Laude / High Distinction",
+        "minAveragePercentage": 90,
+        "color": "emerald",
+        "badgeLabel": "Tier I: High Distinction"
+      },
+      {
+        "id": "st-2",
+        "tierName": "First Class with Distinction",
+        "minAveragePercentage": 75,
+        "color": "blue",
+        "badgeLabel": "Tier II: Distinction"
+      },
+      {
+        "id": "st-3",
+        "tierName": "First Class",
+        "minAveragePercentage": 60,
+        "color": "amber",
+        "badgeLabel": "Tier III: First Class"
+      },
+      {
+        "id": "st-4",
+        "tierName": "Second Class / Pass",
+        "minAveragePercentage": 40,
+        "color": "slate",
+        "badgeLabel": "Tier IV: Satisfactory Pass"
+      }
+    ]
+  },
+  "appNotifications": [
+    {
+      "id": "notif-1",
+      "title": "New Exam Result: Mathematics Unit Assessment 1",
+      "message": "Results have been published! Aarav Sharma scored 46/50 (92% - Grade A1 Outstanding) with zero integrity infractions.",
+      "category": "result",
+      "targetRole": "all",
+      "targetUserId": "usr-stud-1",
+      "linkTab": "exams",
+      "linkId": "ex-math-101",
+      "metadata": {
+        "score": 46,
+        "totalMarks": 50,
+        "percentage": 92,
+        "subjectName": "Mathematics",
+        "teacherName": "Prof. Vikram Sharma",
+        "urgency": "normal"
+      },
+      "timestamp": "2026-10-01T15:38:16.295Z",
+      "read": false
+    },
+    {
+      "id": "notif-2",
+      "title": "Upcoming Deadline: Science & Physics Mid-Term Assessment",
+      "message": "Online CBT examination begins tomorrow at 10:00 AM. 45-minute countdown timer with window blur proctoring active.",
+      "category": "deadline",
+      "targetRole": "all",
+      "linkTab": "exams",
+      "metadata": {
+        "dueDate": "Tomorrow, 10:00 AM",
+        "urgency": "high",
+        "subjectName": "Science & Physics"
+      },
+      "timestamp": "2026-10-01T14:13:16.295Z",
+      "read": false
+    },
+    {
+      "id": "notif-3",
+      "title": "Teacher Announcement: Physics Revision Notes Uploaded",
+      "message": "Prof. Vikram Sharma published comprehensive revision notes and solved 5-year board exemplars in the Study Notes section.",
+      "category": "announcement",
+      "targetRole": "all",
+      "linkTab": "materials",
+      "metadata": {
+        "teacherName": "Prof. Vikram Sharma",
+        "subjectName": "Science & Physics"
+      },
+      "timestamp": "2026-10-01T11:13:16.295Z",
+      "read": false
+    },
+    {
+      "id": "notif-4",
+      "title": "Ward Result Alert: Aarav Sharma Scored 92%",
+      "message": "Mathematics Mid-Term evaluated. Performance standing: Diamond Scholar Tier I. Answer sheet and question analysis now available.",
+      "category": "result",
+      "targetRole": "parent",
+      "targetUserId": "usr-stud-1",
+      "linkTab": "submissions",
+      "linkId": "ex-math-101",
+      "metadata": {
+        "percentage": 92,
+        "subjectName": "Mathematics"
+      },
+      "timestamp": "2026-10-01T02:13:16.295Z",
+      "read": false
+    },
+    {
+      "id": "notif-5",
+      "title": "Institutional Circular: Parent-Teacher Consultation Timetable",
+      "message": "Official consultation schedule released by Dr. R. K. Deshmukh. Slots are available for booking in the Circulars tab.",
+      "category": "announcement",
+      "targetRole": "all",
+      "linkTab": "notices",
+      "metadata": {
+        "urgency": "high"
+      },
+      "timestamp": "2026-09-30T16:13:16.295Z",
+      "read": true
+    },
+    {
+      "id": "notif-6",
+      "title": "Upcoming Assessment: English Literature Term Test",
+      "message": "Scheduled for Thursday at 11:30 AM. Syllabus encompasses Chapters 1 to 5 with critical poetry analysis.",
+      "category": "deadline",
+      "targetRole": "student",
+      "linkTab": "exams",
+      "metadata": {
+        "dueDate": "Thursday, 11:30 AM",
+        "urgency": "normal",
+        "subjectName": "English Literature"
+      },
+      "timestamp": "2026-09-30T04:13:16.295Z",
+      "read": true
+    }
+  ],
+  "exams": [
+    {
+      "id": "exam-1792003524486",
+      "title": "Unit Test Motion",
+      "description": "",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "all",
+      "targetDivisionId": "all",
+      "divisionName": "All Divisions",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "draft",
+      "startTime": "2026-10-14T18:45:24.486Z",
+      "endTime": "2026-10-14T20:45:24.486Z",
+      "durationMinutes": 30,
+      "passingScore": 40,
+      "totalMarks": 4,
+      "questionCount": 1,
+      "questions": [
+        {
+          "text": "What is velocity?",
+          "options": [
+            "Speed",
+            "Speed in direction"
+          ],
+          "correctAnswer": "opt-2",
+          "marks": 4
+        }
+      ],
+      "createdAt": "2026-10-14T18:45:24.486Z"
+    },
+    {
+      "id": "exam-1791880931763",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-13T08:42:11.763Z",
+      "endTime": "2026-10-13T10:42:11.763Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-13T08:42:11.763Z"
+    },
+    {
+      "id": "exam-1791880717676",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-13T08:38:37.676Z",
+      "endTime": "2026-10-13T10:38:37.676Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-13T08:38:37.676Z"
+    },
+    {
+      "id": "exam-1791880124700",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-13T08:28:44.700Z",
+      "endTime": "2026-10-13T10:28:44.700Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-13T08:28:44.700Z"
+    },
+    {
+      "id": "exam-1791879753277",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-13T08:22:33.277Z",
+      "endTime": "2026-10-13T10:22:33.277Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-13T08:22:33.277Z"
+    },
+    {
+      "id": "exam-1791879530198",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-13T08:18:50.198Z",
+      "endTime": "2026-10-13T10:18:50.198Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-13T08:18:50.198Z"
+    },
+    {
+      "id": "exam-1791823814793",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-12T16:50:14.793Z",
+      "endTime": "2026-10-12T18:50:14.793Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-12T16:50:14.793Z"
+    },
+    {
+      "id": "exam-1791387127289",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-07T15:32:07.289Z",
+      "endTime": "2026-10-07T17:32:07.289Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-07T15:32:07.289Z"
+    },
+    {
+      "id": "exam-1791387115336",
+      "title": "Automated Physics Bulk Exam 2026",
+      "description": "Examination generated from uploaded curriculum question sheet.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-07T15:31:55.336Z",
+      "endTime": "2026-10-07T18:11:55.336Z",
+      "durationMinutes": 40,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "qb-1791387115336-0",
+          "text": "What is Newton's Second Law of Motion?  = ma$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "F = ma"
+            },
+            {
+              "id": "opt-b",
+              "text": "E = mc^2"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "explanation": "Force equals mass times acceleration.",
+          "points": 5,
+          "imageUrl": "",
+          "subjectId": "sub-phy",
+          "classId": "cls-10",
+          "chapterName": "Uploaded Chapter",
+          "inQuestionBank": true,
+          "createdAt": "2026-10-07T15:31:55.336Z"
+        }
+      ],
+      "createdAt": "2026-10-07T15:31:55.336Z"
+    },
+    {
+      "id": "exam-1790873478916",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-01T16:51:18.916Z",
+      "endTime": "2026-10-01T18:51:18.916Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-01T16:51:18.916Z"
+    },
+    {
+      "id": "exam-1790872982691",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-01T16:43:02.691Z",
+      "endTime": "2026-10-01T18:43:02.691Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-01T16:43:02.691Z"
+    },
+    {
+      "id": "exam-1790872382918",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-01T16:33:02.918Z",
+      "endTime": "2026-10-01T18:33:02.918Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-01T16:33:02.918Z"
+    },
+    {
+      "id": "exam-1790872343655",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-01T16:32:23.655Z",
+      "endTime": "2026-10-01T18:32:23.655Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-01T16:32:23.655Z"
+    },
+    {
+      "id": "exam-1790872242828",
+      "title": "Automated Comprehensive Audit Exam 2026",
+      "description": "System verification examination verifying testing engine & anti-cheating.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "targetClassId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "targetDivisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-01T16:30:42.828Z",
+      "endTime": "2026-10-01T18:30:42.828Z",
+      "durationMinutes": 30,
+      "passingScore": 50,
+      "totalMarks": 5,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "q-audit-1",
+          "text": "What is the speed of light in vacuum? $c = 3 \\times 10^8\\text{ m/s}$",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "True"
+            },
+            {
+              "id": "opt-b",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-a",
+          "points": 5
+        }
+      ],
+      "createdAt": "2026-10-01T16:30:42.828Z"
+    },
+    {
+      "id": "exam-live-1",
+      "title": "Mid-Term Assessment: Classical Mechanics & Electric Circuits",
+      "description": "Comprehensive evaluation on Newton laws, circuit analysis, and wave optics. Anti-cheating window monitor active.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-01T15:13:16.295Z",
+      "endTime": "2026-10-01T18:13:16.295Z",
+      "durationMinutes": 20,
+      "passingScore": 50,
+      "totalMarks": 35,
+      "questionCount": 3,
+      "questions": [
+        {
+          "id": "q-1",
+          "text": "According to Newton’s Second Law of Motion, what is the mathematical formula for force?",
+          "type": "single",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "$F = \\frac{m}{a}$"
+            },
+            {
+              "id": "opt-2",
+              "text": "$F = m \\cdot a$"
+            },
+            {
+              "id": "opt-3",
+              "text": "$F = m \\cdot v^2$"
+            },
+            {
+              "id": "opt-4",
+              "text": "$F = \\frac{1}{2} m \\cdot a$"
+            }
+          ],
+          "correctAnswer": "opt-2",
+          "explanation": "Newton’s second law states that Force equals mass multiplied by acceleration: $F = m \\cdot a$.",
+          "points": 10,
+          "imageUrl": ""
+        },
+        {
+          "id": "q-2",
+          "text": "Study the electrical laboratory setup photograph below. Which elements are wired in parallel configuration?",
+          "type": "multi",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Resistor R1 and Resistor R2 branches"
+            },
+            {
+              "id": "opt-2",
+              "text": "Voltmeter across the primary load"
+            },
+            {
+              "id": "opt-3",
+              "text": "Ammeter in the primary trunk"
+            },
+            {
+              "id": "opt-4",
+              "text": "Emergency isolation switch"
+            }
+          ],
+          "correctAnswer": [
+            "opt-1",
+            "opt-2"
+          ],
+          "explanation": "Parallel branches share the same terminal potential difference (resistors R1 and R2, plus the measuring voltmeter).",
+          "points": 15,
+          "imageUrl": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          "id": "q-3",
+          "text": "The velocity of light in a vacuum is invariant to the motion of the observer.",
+          "type": "true_false",
+          "options": [
+            {
+              "id": "opt-true",
+              "text": "True"
+            },
+            {
+              "id": "opt-false",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-true",
+          "explanation": "According to Einstein’s special relativity, the speed of light in vacuum (c) is constant in all inertial frames.",
+          "points": 10,
+          "imageUrl": ""
+        }
+      ],
+      "createdAt": "2025-03-01T10:00:00Z"
+    },
+    {
+      "id": "exam-past-1",
+      "title": "Unit Test 1: Shakespearean Drama & Grammar Foundations",
+      "description": "Detailed assessment covering Act I & II, syntax parsing, and active/passive voice transformation.",
+      "subjectId": "sub-eng",
+      "subjectName": "English Literature & Composition",
+      "classId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-2",
+      "teacherName": "Mrs. Meera Nair",
+      "status": "completed",
+      "startTime": "2026-09-30T14:13:16.295Z",
+      "endTime": "2026-09-30T16:13:16.295Z",
+      "durationMinutes": 30,
+      "passingScore": 40,
+      "totalMarks": 30,
+      "questionCount": 3,
+      "questions": [
+        {
+          "id": "qe-1",
+          "text": "In \"The Merchant of Venice\", where does Portia reside?",
+          "type": "single",
+          "options": [
+            {
+              "id": "o-1",
+              "text": "Venice"
+            },
+            {
+              "id": "o-2",
+              "text": "Belmont"
+            },
+            {
+              "id": "o-3",
+              "text": "Padua"
+            },
+            {
+              "id": "o-4",
+              "text": "Verona"
+            }
+          ],
+          "correctAnswer": "o-2",
+          "explanation": "Portia is the wealthy heiress residing at Belmont estate.",
+          "points": 10
+        },
+        {
+          "id": "qe-2",
+          "text": "Identify the grammatically correct passive voice transformations for: \"The student solved the problem.\"",
+          "type": "multi",
+          "options": [
+            {
+              "id": "o-1",
+              "text": "The problem was solved by the student."
+            },
+            {
+              "id": "o-2",
+              "text": "The problem is being solved by the student."
+            },
+            {
+              "id": "o-3",
+              "text": "The problem has been solved by the student."
+            }
+          ],
+          "correctAnswer": [
+            "o-1"
+          ],
+          "explanation": "Simple past \"solved\" transforms into \"was solved\" in standard passive voice.",
+          "points": 10
+        },
+        {
+          "id": "qe-3",
+          "text": "An oxymoron is a figure of speech in which contradictory terms appear in conjunction.",
+          "type": "true_false",
+          "options": [
+            {
+              "id": "opt-true",
+              "text": "True"
+            },
+            {
+              "id": "opt-false",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-true",
+          "explanation": "Examples of oxymorons include \"deafening silence\" and \"cruel kindness\".",
+          "points": 10
+        }
+      ],
+      "createdAt": "2025-02-20T10:00:00Z"
+    },
+    {
+      "id": "exam-up-1",
+      "title": "Standard 10 Mathematics: Trigonometry & Quadratic Roots",
+      "description": "Upcoming scheduled test. Calculator permitted; formulas must be derived.",
+      "subjectId": "sub-math",
+      "subjectName": "Advanced Mathematics",
+      "classId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "published",
+      "startTime": "2026-10-02T16:13:16.295Z",
+      "endTime": "2026-10-02T19:13:16.295Z",
+      "durationMinutes": 45,
+      "passingScore": 50,
+      "totalMarks": 40,
+      "questionCount": 4,
+      "questions": [
+        {
+          "id": "qm-1",
+          "text": "What is the value of the fundamental trigonometric identity $\\sin^2(\\theta) + \\cos^2(\\theta)$?",
+          "type": "single",
+          "options": [
+            {
+              "id": "o-1",
+              "text": "$0$"
+            },
+            {
+              "id": "o-2",
+              "text": "$1$"
+            },
+            {
+              "id": "o-3",
+              "text": "$2$"
+            },
+            {
+              "id": "o-4",
+              "text": "$\\tan(\\theta)$"
+            }
+          ],
+          "correctAnswer": "o-2",
+          "explanation": "Pythagorean trigonometric identity: $\\sin^2(\\theta) + \\cos^2(\\theta) = 1$ for all angles $\\theta$.",
+          "points": 10
+        }
+      ],
+      "createdAt": "2025-03-02T11:00:00Z"
+    },
+    {
+      "id": "exam-draft-1",
+      "title": "Draft: Modern World History & Industrial Revolution",
+      "description": "Working draft for upcoming Standard 9 social science exam.",
+      "subjectId": "sub-soc",
+      "subjectName": "Social Studies & History",
+      "classId": "cls-9",
+      "className": "Standard 9",
+      "divisionId": "div-9a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "draft",
+      "startTime": "2026-10-02T16:13:16.295Z",
+      "endTime": "2026-10-02T19:13:16.295Z",
+      "durationMinutes": 30,
+      "passingScore": 40,
+      "totalMarks": 20,
+      "questionCount": 1,
+      "questions": [
+        {
+          "id": "qd-1",
+          "text": "The steam engine was patented by James Watt in 1769.",
+          "type": "true_false",
+          "options": [
+            {
+              "id": "opt-true",
+              "text": "True"
+            },
+            {
+              "id": "opt-false",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-true",
+          "explanation": "James Watt made crucial improvements that catalyzed industrial development.",
+          "points": 20
+        }
+      ],
+      "createdAt": "2025-03-05T14:00:00Z"
+    },
+    {
+      "id": "exam-cls9-cs1",
+      "title": "Unit Test 1: Computer Science & Computational Logic",
+      "description": "Boolean algebra, algorithms, and fundamental computer concepts for Standard 9.",
+      "subjectId": "sub-cs",
+      "subjectName": "Computer Science & Logic",
+      "classId": "cls-9",
+      "className": "Standard 9",
+      "divisionId": "div-9a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-2",
+      "teacherName": "Mrs. Meera Nair",
+      "status": "completed",
+      "startTime": "2026-09-30T14:13:16.295Z",
+      "endTime": "2026-09-30T16:13:16.295Z",
+      "durationMinutes": 30,
+      "passingScore": 40,
+      "totalMarks": 30,
+      "questionCount": 3,
+      "questions": [
+        {
+          "id": "qcs-1",
+          "text": "Binary search operates in O(log n) time complexity on a sorted array.",
+          "type": "true_false",
+          "options": [
+            {
+              "id": "opt-true",
+              "text": "True"
+            },
+            {
+              "id": "opt-false",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-true",
+          "explanation": "Binary search divides the search space in half at each step.",
+          "points": 10
+        }
+      ],
+      "createdAt": "2025-02-15T10:00:00Z"
+    },
+    {
+      "id": "exam-cls8-math1",
+      "title": "Unit Test 1: Mathematics - Rational Numbers & Linear Equations",
+      "description": "Core concepts evaluation for Standard 8 Division B.",
+      "subjectId": "sub-math",
+      "subjectName": "Advanced Mathematics",
+      "classId": "cls-8",
+      "className": "Standard 8",
+      "divisionId": "div-8b",
+      "divisionName": "Division B",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "status": "completed",
+      "startTime": "2026-09-30T14:13:16.295Z",
+      "endTime": "2026-09-30T16:13:16.295Z",
+      "durationMinutes": 30,
+      "passingScore": 40,
+      "totalMarks": 30,
+      "questionCount": 3,
+      "questions": [
+        {
+          "id": "qm8-1",
+          "text": "The additive inverse of -5/7 is 5/7.",
+          "type": "true_false",
+          "options": [
+            {
+              "id": "opt-true",
+              "text": "True"
+            },
+            {
+              "id": "opt-false",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "opt-true",
+          "explanation": "-5/7 + 5/7 = 0.",
+          "points": 10
+        }
+      ],
+      "createdAt": "2025-02-18T10:00:00Z"
+    }
+  ],
+  "submissions": [
+    {
+      "id": "subm-1791880931785",
+      "examId": "exam-1791880931763",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-13T08:42:11.785Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1791880717688",
+      "examId": "exam-1791880717676",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-13T08:38:37.688Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1791880124713",
+      "examId": "exam-1791880124700",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-13T08:28:44.713Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1791879753291",
+      "examId": "exam-1791879753277",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-13T08:22:33.291Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1791879530222",
+      "examId": "exam-1791879530198",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-13T08:18:50.222Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1791823814802",
+      "examId": "exam-1791823814793",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-12T16:50:14.802Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1791387127297",
+      "examId": "exam-1791387127289",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-07T15:32:07.297Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1790873478923",
+      "examId": "exam-1790873478916",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-01T16:51:18.923Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1790872982700",
+      "examId": "exam-1790872982691",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-01T16:43:02.700Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1790872382954",
+      "examId": "exam-1790872382918",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-01T16:33:02.954Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1790872343662",
+      "examId": "exam-1790872343655",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-01T16:32:23.662Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1790872242836",
+      "examId": "exam-1790872242828",
+      "examTitle": "Automated Comprehensive Audit Exam 2026",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "q-audit-1": "opt-a"
+      },
+      "score": 5,
+      "totalMarks": 5,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-10-01T16:30:42.836Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": [],
+        "reason": "Clean session with no tab switches."
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-cls9-1",
+      "examId": "exam-cls9-cs1",
+      "examTitle": "Unit Test 1: Computer Science & Computational Logic",
+      "subjectName": "Computer Science & Logic",
+      "studentId": "usr-stud-4",
+      "studentName": "Priya Verma",
+      "studentRollNo": "NRES-9A-04",
+      "classId": "cls-9",
+      "divisionId": "div-9a",
+      "answers": {},
+      "score": 27,
+      "totalMarks": 30,
+      "percentage": 90,
+      "passed": true,
+      "bonusPointsAwarded": 90,
+      "submittedAt": "2026-09-26T14:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-cls8-1",
+      "examId": "exam-cls8-math1",
+      "examTitle": "Unit Test 1: Mathematics - Rational Numbers & Linear Equations",
+      "subjectName": "Advanced Mathematics",
+      "studentId": "usr-stud-3",
+      "studentName": "Ananya Sharma",
+      "studentRollNo": "NRES-8B-07",
+      "classId": "cls-8",
+      "divisionId": "div-8b",
+      "answers": {},
+      "score": 28,
+      "totalMarks": 30,
+      "percentage": 93,
+      "passed": true,
+      "bonusPointsAwarded": 93,
+      "submittedAt": "2026-09-25T15:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-hist-1",
+      "examId": "exam-diag-math",
+      "examTitle": "Diagnostic Assessment: Arithmetic Progressions & Linear Equations",
+      "subjectName": "Mathematics",
+      "studentId": "usr-stud-1",
+      "studentName": "Aarav Sharma",
+      "studentRollNo": "NRES-10A-01",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {},
+      "score": 22,
+      "totalMarks": 30,
+      "percentage": 73,
+      "passed": true,
+      "bonusPointsAwarded": 73,
+      "submittedAt": "2026-09-07T14:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-hist-2",
+      "examId": "exam-diag-math",
+      "examTitle": "Diagnostic Assessment: Arithmetic Progressions & Linear Equations",
+      "subjectName": "Mathematics",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {},
+      "score": 18,
+      "totalMarks": 30,
+      "percentage": 60,
+      "passed": true,
+      "bonusPointsAwarded": 60,
+      "submittedAt": "2026-09-07T15:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-hist-3",
+      "examId": "exam-chem-1",
+      "examTitle": "Unit Test: Chemical Reactions, Acids & Bases",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-1",
+      "studentName": "Aarav Sharma",
+      "studentRollNo": "NRES-10A-01",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {},
+      "score": 28,
+      "totalMarks": 35,
+      "percentage": 80,
+      "passed": true,
+      "bonusPointsAwarded": 80,
+      "submittedAt": "2026-09-13T13:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-hist-4",
+      "examId": "exam-chem-1",
+      "examTitle": "Unit Test: Chemical Reactions, Acids & Bases",
+      "subjectName": "Physics & Applied Science",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {},
+      "score": 24,
+      "totalMarks": 35,
+      "percentage": 69,
+      "passed": true,
+      "bonusPointsAwarded": 69,
+      "submittedAt": "2026-09-13T14:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-hist-5",
+      "examId": "exam-civics-1",
+      "examTitle": "Unit Assessment: Federalism & Democratic Governance",
+      "subjectName": "Social Studies & Civics",
+      "studentId": "usr-stud-1",
+      "studentName": "Aarav Sharma",
+      "studentRollNo": "NRES-10A-01",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {},
+      "score": 26,
+      "totalMarks": 30,
+      "percentage": 87,
+      "passed": true,
+      "bonusPointsAwarded": 87,
+      "submittedAt": "2026-09-19T15:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-hist-6",
+      "examId": "exam-civics-1",
+      "examTitle": "Unit Assessment: Federalism & Democratic Governance",
+      "subjectName": "Social Studies & Civics",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {},
+      "score": 23,
+      "totalMarks": 30,
+      "percentage": 77,
+      "passed": true,
+      "bonusPointsAwarded": 77,
+      "submittedAt": "2026-09-19T14:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-hist-7",
+      "examId": "exam-trig-1",
+      "examTitle": "Weekly Quiz: Trigonometric Identities & Heights and Distances",
+      "subjectName": "Mathematics",
+      "studentId": "usr-stud-1",
+      "studentName": "Aarav Sharma",
+      "studentRollNo": "NRES-10A-01",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {},
+      "score": 28,
+      "totalMarks": 30,
+      "percentage": 93,
+      "passed": true,
+      "bonusPointsAwarded": 93,
+      "submittedAt": "2026-09-24T12:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-hist-8",
+      "examId": "exam-trig-1",
+      "examTitle": "Weekly Quiz: Trigonometric Identities & Heights and Distances",
+      "subjectName": "Mathematics",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {},
+      "score": 22,
+      "totalMarks": 30,
+      "percentage": 73,
+      "passed": true,
+      "bonusPointsAwarded": 73,
+      "submittedAt": "2026-09-24T13:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-1",
+      "examId": "exam-past-1",
+      "examTitle": "Unit Test 1: Shakespearean Drama & Grammar Foundations",
+      "subjectName": "English Literature & Composition",
+      "studentId": "usr-stud-1",
+      "studentName": "Aarav Sharma",
+      "studentRollNo": "NRES-10A-01",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "qe-1": "o-2",
+        "qe-2": [
+          "o-1"
+        ],
+        "qe-3": "opt-true"
+      },
+      "score": 30,
+      "totalMarks": 30,
+      "percentage": 100,
+      "passed": true,
+      "bonusPointsAwarded": 100,
+      "submittedAt": "2026-09-30T14:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 0,
+        "blurTimestamps": []
+      },
+      "rescheduled": false
+    },
+    {
+      "id": "subm-2",
+      "examId": "exam-past-1",
+      "examTitle": "Unit Test 1: Shakespearean Drama & Grammar Foundations",
+      "subjectName": "English Literature & Composition",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentRollNo": "NRES-10A-02",
+      "classId": "cls-10",
+      "divisionId": "div-10a",
+      "answers": {
+        "qe-1": "o-1",
+        "qe-2": [
+          "o-1"
+        ],
+        "qe-3": "opt-true"
+      },
+      "score": 20,
+      "totalMarks": 30,
+      "percentage": 67,
+      "passed": true,
+      "bonusPointsAwarded": 67,
+      "submittedAt": "2026-09-30T14:13:16.295Z",
+      "cheatingFlagged": false,
+      "cheatingDetails": {
+        "violationCount": 1,
+        "blurTimestamps": [
+          "2026-09-30T14:13:16.295Z"
+        ],
+        "reason": "Temporary focus blur (1 strike)"
+      },
+      "rescheduled": false
+    }
+  ],
+  "studyMaterials": [
+    {
+      "id": "mat-1",
+      "title": "Standard 10 Physics: Formulas, Newton Laws & Circuit Diagrams",
+      "description": "Comprehensive revision guide including solved derivations, circuit notation standards, and SI units.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "type": "file",
+      "url": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80",
+      "fileName": "Std10_Physics_Quick_Derivations_v2.pdf",
+      "fileSize": "3.4 MB",
+      "createdAt": "2025-02-15T09:00:00Z"
+    },
+    {
+      "id": "mat-2",
+      "title": "Interactive Circuit Simulator & Lab Demonstrations (MIT Physics)",
+      "description": "Recommended digital simulation reference link to practice parallel and series resistor configurations.",
+      "subjectId": "sub-phy",
+      "subjectName": "Physics & Applied Science",
+      "classId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-1",
+      "teacherName": "Prof. Vikram Sharma",
+      "type": "link",
+      "url": "https://phet.colorado.edu/en/simulations/circuit-construction-kit-dc",
+      "createdAt": "2025-02-18T11:00:00Z"
+    },
+    {
+      "id": "mat-3",
+      "title": "Shakespearean Context: Venetian Law and Merchant Guilds",
+      "description": "Historical context reading for Act IV trial scenes and character motivation analysis.",
+      "subjectId": "sub-eng",
+      "subjectName": "English Literature & Composition",
+      "classId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "divisionId": "div-10a",
+      "divisionName": "Division A",
+      "teacherId": "usr-teach-2",
+      "teacherName": "Mrs. Meera Nair",
+      "type": "file",
+      "url": "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&auto=format&fit=crop&q=80",
+      "fileName": "Merchant_of_Venice_Critical_Notes.pdf",
+      "fileSize": "1.8 MB",
+      "createdAt": "2025-02-22T14:00:00Z"
+    }
+  ],
+  "supportTickets": [
+    {
+      "id": "tkt-1797",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-13T08:42:11.797Z",
+      "updatedAt": "2026-10-13T08:42:11.803Z",
+      "replies": [
+        {
+          "id": "rep-1791880931803",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-13T08:42:11.803Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-7700",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-13T08:38:37.700Z",
+      "updatedAt": "2026-10-13T08:38:37.703Z",
+      "replies": [
+        {
+          "id": "rep-1791880717703",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-13T08:38:37.703Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-4721",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-13T08:28:44.721Z",
+      "updatedAt": "2026-10-13T08:28:44.723Z",
+      "replies": [
+        {
+          "id": "rep-1791880124723",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-13T08:28:44.723Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-3300",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-13T08:22:33.300Z",
+      "updatedAt": "2026-10-13T08:22:33.302Z",
+      "replies": [
+        {
+          "id": "rep-1791879753302",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-13T08:22:33.302Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-0250",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-13T08:18:50.250Z",
+      "updatedAt": "2026-10-13T08:18:50.252Z",
+      "replies": [
+        {
+          "id": "rep-1791879530252",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-13T08:18:50.252Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-2155",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-13T08:14:02.155Z",
+      "updatedAt": "2026-10-13T08:14:02.158Z",
+      "replies": [
+        {
+          "id": "rep-1791879242158",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-13T08:14:02.158Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-7715",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-12T17:08:47.715Z",
+      "updatedAt": "2026-10-12T17:08:47.717Z",
+      "replies": [
+        {
+          "id": "rep-1791824927717",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-12T17:08:47.717Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-4809",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-12T16:50:14.809Z",
+      "updatedAt": "2026-10-12T16:50:14.811Z",
+      "replies": [
+        {
+          "id": "rep-1791823814811",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-12T16:50:14.811Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-7303",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-07T15:32:07.303Z",
+      "updatedAt": "2026-10-07T15:32:07.304Z",
+      "replies": [
+        {
+          "id": "rep-1791387127304",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-07T15:32:07.304Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-8931",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-01T16:51:18.931Z",
+      "updatedAt": "2026-10-01T16:51:18.933Z",
+      "replies": [
+        {
+          "id": "rep-1790873478933",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-01T16:51:18.933Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-2707",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-01T16:43:02.707Z",
+      "updatedAt": "2026-10-01T16:43:02.709Z",
+      "replies": [
+        {
+          "id": "rep-1790872982709",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-01T16:43:02.709Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-3047",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-01T16:33:03.047Z",
+      "updatedAt": "2026-10-01T16:33:03.049Z",
+      "replies": [
+        {
+          "id": "rep-1790872383049",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-01T16:33:03.049Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-3670",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-01T16:32:23.670Z",
+      "updatedAt": "2026-10-01T16:32:23.672Z",
+      "replies": [
+        {
+          "id": "rep-1790872343672",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-01T16:32:23.672Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-2841",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "recipientId": "usr-teach-1",
+      "recipientName": "Subject Teacher",
+      "recipientRole": "teacher",
+      "subject": "Inquiry regarding Physics practical test marks",
+      "category": "Score Inquiry",
+      "message": "Kindly review the scoring for optical ray diagrams in the midterm test.",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2026-10-01T16:30:42.841Z",
+      "updatedAt": "2026-10-01T16:30:42.843Z",
+      "replies": [
+        {
+          "id": "rep-1790872242843",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "The diagram scores have been verified and full credits were conferred.",
+          "timestamp": "2026-10-01T16:30:42.843Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-101",
+      "parentId": "usr-parent-1",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentId": "usr-stud-1",
+      "studentName": "Aarav Sharma",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "subject": "Request regarding upcoming Board Practical Schedule & Model Papers",
+      "category": "General Query",
+      "message": "Respected Management, we would like to confirm whether the preliminary physics mock exam scheduled this week adheres to the new SSC question pattern. Also, will the teacher provide model answers after the exam closes?",
+      "status": "In Progress",
+      "priority": "medium",
+      "createdAt": "2025-03-01T09:30:00Z",
+      "updatedAt": "2025-03-02T11:15:00Z",
+      "replies": [
+        {
+          "id": "rep-1",
+          "senderId": "usr-teach-1",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher",
+          "message": "Dear Mr. Sharma, yes, all questions in the active and upcoming tests strictly conform to the Maharashtra SSC pattern. Complete answer keys and explanations unlock automatically as soon as the test time window concludes.",
+          "timestamp": "2025-03-02T11:15:00Z"
+        }
+      ]
+    },
+    {
+      "id": "tkt-102",
+      "parentId": "usr-parent-2",
+      "parentName": "Mrs. Sunita Patel",
+      "studentId": "usr-stud-2",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A",
+      "subject": "Temporary Broadband Disconnection warning during online unit test",
+      "category": "Technical Issue",
+      "message": "Good morning, Rohan noticed an accidental window blur warning strike yesterday when an incoming system notification briefly popped up on his desktop. Could the teacher review this log?",
+      "status": "Resolved",
+      "priority": "low",
+      "createdAt": "2025-02-28T14:20:00Z",
+      "updatedAt": "2025-03-01T16:00:00Z",
+      "replies": [
+        {
+          "id": "rep-2",
+          "senderId": "usr-admin-1",
+          "senderName": "Dr. R. K. Deshmukh",
+          "senderRole": "superadmin",
+          "message": "Dear Mrs. Patel, we reviewed the audit trail. Only 1 momentary warning was logged and his final score of 67% was successfully auto-graded without any penalty or cheating flag. He remains in good standing.",
+          "timestamp": "2025-03-01T16:00:00Z"
+        }
+      ]
+    }
+  ],
+  "examAttempts": [
+    {
+      "id": "att-1791879530210-ud-2",
+      "examId": "exam-1791879530198",
+      "studentId": "usr-stud-2",
+      "startedAt": "2026-10-13T08:18:50.210Z"
+    },
+    {
+      "id": "att-1791879753286-ud-2",
+      "examId": "exam-1791879753277",
+      "studentId": "usr-stud-2",
+      "startedAt": "2026-10-13T08:22:33.286Z"
+    },
+    {
+      "id": "att-1791880124709-ud-2",
+      "examId": "exam-1791880124700",
+      "studentId": "usr-stud-2",
+      "startedAt": "2026-10-13T08:28:44.709Z"
+    },
+    {
+      "id": "att-1791880717683-ud-2",
+      "examId": "exam-1791880717676",
+      "studentId": "usr-stud-2",
+      "startedAt": "2026-10-13T08:38:37.683Z"
+    },
+    {
+      "id": "att-1791880931775-ud-2",
+      "examId": "exam-1791880931763",
+      "studentId": "usr-stud-2",
+      "startedAt": "2026-10-13T08:42:11.775Z"
+    }
+  ]
+}

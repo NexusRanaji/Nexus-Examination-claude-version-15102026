@@ -1,0 +1,394 @@
+{
+  "classes": [
+    {
+      "class_name": "4th Standard",
+      "id": 1
+    },
+    {
+      "class_name": "5th Standard",
+      "id": 2
+    },
+    {
+      "class_name": "6th Standard",
+      "id": 3
+    },
+    {
+      "class_name": "7th Standard",
+      "id": 4
+    },
+    {
+      "class_name": "8th Standard",
+      "id": 5
+    },
+    {
+      "class_name": "9th Standard",
+      "id": 6
+    },
+    {
+      "class_name": "10th Standard",
+      "id": 7
+    }
+  ],
+  "subjects": [
+    {
+      "subject_name": "General Science",
+      "code": "SCI101",
+      "id": 1
+    },
+    {
+      "subject_name": "Mathematics",
+      "code": "MATH101",
+      "id": 2
+    },
+    {
+      "subject_name": "English Literature",
+      "code": "ENG101",
+      "id": 3
+    },
+    {
+      "subject_name": "Social Science",
+      "code": "SOC101",
+      "id": 4
+    },
+    {
+      "subject_name": "Computer Science",
+      "code": "CS101",
+      "id": 5
+    }
+  ],
+  "users": [
+    {
+      "name": "School Principal & Admin",
+      "email": "admin@school.com",
+      "password": "$2b$10$eSj/vjXRAuuUZbaHXo17leJlXSgJ82RLl4JJM5FinZdr1FAq66l.K",
+      "role": "admin",
+      "status": "active",
+      "id": 1
+    },
+    {
+      "name": "Senior Faculty Examiner",
+      "email": "teacher@school.com",
+      "password": "$2b$10$Jybgt7uuZVivYC9rQaF8GeYr.6KxCuZFsipAcul5ILHAW7v6r7Bi6",
+      "role": "admin",
+      "status": "active",
+      "id": 2
+    },
+    {
+      "name": "John Doe",
+      "email": "john@student.com",
+      "password": "$2b$10$7JhfPhYGzTt5FMNoJ9Vij.zjvlztRLxui1AoDfVvE9EqrUdKvynoq",
+      "role": "student",
+      "class_id": 7,
+      "status": "active",
+      "id": 3
+    },
+    {
+      "name": "Sarah Jenkins",
+      "email": "sarah@student.com",
+      "password": "$2b$10$7JhfPhYGzTt5FMNoJ9Vij.zjvlztRLxui1AoDfVvE9EqrUdKvynoq",
+      "role": "student",
+      "class_id": 7,
+      "status": "active",
+      "id": 4
+    }
+  ],
+  "exams": [
+    {
+      "title": "Class 10 Science: Optics & Light Quiz",
+      "subject_id": 1,
+      "class_id": 7,
+      "chapter_id": 1,
+      "duration": 15,
+      "total_marks": 10,
+      "passing_marks": 4,
+      "status": "published",
+      "description": "Covering reflection, refraction, and convex lenses.",
+      "id": 1
+    },
+    {
+      "title": "Class 10 Science: Chemical Reactions Quiz",
+      "subject_id": 1,
+      "class_id": 7,
+      "chapter_id": 2,
+      "duration": 15,
+      "total_marks": 10,
+      "passing_marks": 4,
+      "status": "published",
+      "description": "Testing chemical equations, oxidation, and reduction.",
+      "id": 2
+    }
+  ],
+  "questions": [
+    {
+      "exam_id": 1,
+      "question_type": "mcq",
+      "question_text": "A convex lens forms a real inverted image when object is placed beyond 2F at:",
+      "option_a": "At F",
+      "option_b": "At 2F",
+      "option_c": "Between F and 2F",
+      "option_d": "At infinity",
+      "correct_option": "C",
+      "marks": 2,
+      "id": 1
+    },
+    {
+      "exam_id": 1,
+      "question_type": "mcq",
+      "question_text": "What is the speed of light in vacuum?",
+      "option_a": "3 × 10^8 m/s",
+      "option_b": "3 × 10^6 m/s",
+      "option_c": "3 × 10^10 m/s",
+      "option_d": "3 × 10^5 m/s",
+      "correct_option": "A",
+      "marks": 2,
+      "id": 2
+    },
+    {
+      "exam_id": 1,
+      "question_type": "mcq",
+      "question_text": "The focal length of a plane mirror is:",
+      "option_a": "Zero",
+      "option_b": "Negative",
+      "option_c": "Positive",
+      "option_d": "Infinity",
+      "correct_option": "D",
+      "marks": 2,
+      "id": 3
+    },
+    {
+      "exam_id": 1,
+      "question_type": "mcq",
+      "question_text": "Which color of light bends the most during dispersion through a prism?",
+      "option_a": "Red",
+      "option_b": "Yellow",
+      "option_c": "Violet",
+      "option_d": "Green",
+      "correct_option": "C",
+      "marks": 2,
+      "id": 4
+    },
+    {
+      "exam_id": 1,
+      "question_type": "match",
+      "question_text": "Match Column A (Optical Element) with Column B (Property/Application).",
+      "match_data": "{\"left_items\":[\"Convex Lens\",\"Concave Mirror\",\"Refraction\"],\"right_items\":[\"Converging rays\",\"Shaving mirror\",\"Bending of light\"],\"correct_pairs\":{\"0\":\"0\",\"1\":\"1\",\"2\":\"2\"}}",
+      "marks": 2,
+      "id": 5
+    },
+    {
+      "exam_id": 2,
+      "question_type": "mcq",
+      "question_text": "Which gas is evolved when zinc reacts with dilute sulfuric acid?",
+      "option_a": "Oxygen",
+      "option_b": "Hydrogen",
+      "option_c": "Carbon Dioxide",
+      "option_d": "Nitrogen",
+      "correct_option": "B",
+      "marks": 2,
+      "id": 6
+    },
+    {
+      "exam_id": 2,
+      "question_type": "mcq",
+      "question_text": "Rusting of iron is an example of:",
+      "option_a": "Oxidation reaction",
+      "option_b": "Reduction reaction",
+      "option_c": "Decomposition",
+      "option_d": "Displacement",
+      "correct_option": "A",
+      "marks": 2,
+      "id": 7
+    },
+    {
+      "exam_id": 2,
+      "question_type": "mcq",
+      "question_text": "What type of reaction is photosynthesis?",
+      "option_a": "Exothermic",
+      "option_b": "Endothermic",
+      "option_c": "Neutralization",
+      "option_d": "Displacement",
+      "correct_option": "B",
+      "marks": 2,
+      "id": 8
+    },
+    {
+      "exam_id": 2,
+      "question_type": "mcq",
+      "question_text": "The chemical formula of marble is:",
+      "option_a": "CaO",
+      "option_b": "Ca(OH)2",
+      "option_c": "CaCO3",
+      "option_d": "CaCl2",
+      "correct_option": "C",
+      "marks": 2,
+      "id": 9
+    },
+    {
+      "exam_id": 2,
+      "question_type": "match",
+      "question_text": "Match Column A (Biological Process) with Column B (Primary Role).",
+      "match_data": "{\"left_items\":[\"Photosynthesis\",\"Respiration\",\"Chlorophyll\"],\"right_items\":[\"Food preparation\",\"Energy release\",\"Green pigment\"],\"correct_pairs\":{\"0\":\"0\",\"1\":\"1\",\"2\":\"2\"}}",
+      "marks": 2,
+      "id": 10
+    }
+  ],
+  "exam_attempts": [],
+  "answers": [],
+  "chapters": [
+    {
+      "subject_id": 1,
+      "class_id": 7,
+      "chapter_number": 1,
+      "title": "Physics: Light, Reflection & Refraction",
+      "description": "Laws of reflection, lenses, and optical phenomena",
+      "id": 1
+    },
+    {
+      "subject_id": 1,
+      "class_id": 7,
+      "chapter_number": 2,
+      "title": "Chemistry: Chemical Reactions & Equations",
+      "description": "Chemical equations, combination, and oxidation-reduction",
+      "id": 2
+    },
+    {
+      "subject_id": 1,
+      "class_id": 7,
+      "chapter_number": 3,
+      "title": "Biology: Life Processes & Nutrition",
+      "description": "Photosynthesis, human digestion, and respiration",
+      "id": 3
+    },
+    {
+      "subject_id": 1,
+      "class_id": 7,
+      "chapter_number": 4,
+      "title": "Environment: Natural Resources & Ecology",
+      "description": "Ecosystems, food chains, and sustainable development",
+      "id": 4
+    }
+  ],
+  "badges": [
+    {
+      "code": "first_step",
+      "title": "First Step",
+      "description": "Completed your first online examination successfully.",
+      "icon": "🌟",
+      "requirement": "Complete 1 quiz",
+      "id": 1
+    },
+    {
+      "code": "quiz_champion",
+      "title": "Quiz Champion",
+      "description": "Demonstrated consistency by completing 5 online quizzes.",
+      "icon": "🏆",
+      "requirement": "Complete 5 quizzes",
+      "id": 2
+    },
+    {
+      "code": "perfect_score",
+      "title": "Perfect Score",
+      "description": "Achieved a flawless 100% score on a quiz.",
+      "icon": "💯",
+      "requirement": "Score 100% on any quiz",
+      "id": 3
+    },
+    {
+      "code": "subject_explorer",
+      "title": "Subject Explorer",
+      "description": "Completed all required quizzes in a subject.",
+      "icon": "📚",
+      "requirement": "Complete all quizzes of a subject",
+      "id": 4
+    },
+    {
+      "code": "consistent_learner",
+      "title": "Consistent Learner",
+      "description": "Scored 80% or above across 3 separate quizzes.",
+      "icon": "🔥",
+      "requirement": "Score 80%+ on 3 quizzes",
+      "id": 5
+    },
+    {
+      "code": "science_master",
+      "title": "Science Master",
+      "description": "Successfully completed the entire Science course.",
+      "icon": "🎯",
+      "requirement": "Complete all Science course quizzes",
+      "id": 6
+    }
+  ],
+  "student_badges": [],
+  "courses": [
+    {
+      "course_name": "Class 10 General Science Complete Course",
+      "subject_id": 1,
+      "class_id": 7,
+      "description": "Master Physics, Chemistry, Biology, and Environmental Science",
+      "id": 1
+    }
+  ],
+  "certificates": [],
+  "study_materials": [
+    {
+      "class_id": 7,
+      "subject_id": 1,
+      "chapter_id": 1,
+      "title": "Optics & Light Ray Diagrams Guide",
+      "description": "Complete chapter notes with formula sheet and diagram references.",
+      "material_type": "pdf",
+      "file_url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      "id": 1
+    },
+    {
+      "class_id": 7,
+      "subject_id": 1,
+      "chapter_id": 2,
+      "title": "Chemical Equations & Balancing Tutorial",
+      "description": "Video breakdown of chemical equation balancing rules.",
+      "material_type": "video",
+      "file_url": "https://www.youtube.com/watch?v=2Jufp-Jv430",
+      "id": 2
+    },
+    {
+      "class_id": 7,
+      "subject_id": 1,
+      "chapter_id": 3,
+      "title": "Life Processes Key Concepts & Mind Map",
+      "description": "Summary notes for quick revision before exams.",
+      "material_type": "notes",
+      "file_url": "https://example.com/life-processes-notes",
+      "id": 3
+    }
+  ],
+  "notifications": [
+    {
+      "student_id": 3,
+      "title": "Welcome to Student Portal!",
+      "message": "Welcome to Nexus Ranaji English School Online Examination & Learning System. Explore your subjects and quizzes to get started.",
+      "type": "info",
+      "id": 1
+    },
+    {
+      "student_id": 3,
+      "title": "New Science Quiz Published",
+      "message": "Class 10 Science: Optics & Light Quiz is now active in your dashboard.",
+      "type": "quiz",
+      "id": 2
+    },
+    {
+      "student_id": 4,
+      "title": "Welcome to Student Portal!",
+      "message": "Welcome to Nexus Ranaji English School Online Examination & Learning System. Explore your subjects and quizzes to get started.",
+      "type": "info",
+      "id": 3
+    },
+    {
+      "student_id": 4,
+      "title": "New Science Quiz Published",
+      "message": "Class 10 Science: Optics & Light Quiz is now active in your dashboard.",
+      "type": "quiz",
+      "id": 4
+    }
+  ]
+}
