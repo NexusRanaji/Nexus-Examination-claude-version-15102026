@@ -210,7 +210,7 @@ export const TeacherStudentManagement: React.FC<TeacherStudentManagementProps> =
         name: data.student.name,
         role: 'student',
         username: data.student.username,
-        password: data.student.password,
+        password: data.student.password || data.student.rawPassword || studentCustomPassword.trim() || 'StudentPass#101',
         phone: data.student.phone,
         rollNo: data.student.rollNo,
         className: targetClass?.name,

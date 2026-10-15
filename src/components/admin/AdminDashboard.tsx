@@ -202,7 +202,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         return;
       }
 
-      setStatusMessage({ type: 'success', text: `Credential generated for ${data.user.name} (${data.user.role})!` });
+      const pass = data.temporaryPassword || data.rawPassword || 'Nres@2025';
+      const uName = data.username || data.user.username;
+      setStatusMessage({ type: 'success', text: `Credential generated for ${data.user.name}! Username: ${uName} | Password: ${pass}` });
       setNewUserName('');
       setNewUserEmail('');
       setNewUserRollNo('');
@@ -1780,6 +1782,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             divisions={divisionsList}
             onUserDeleted={handleUserDeleted}
             onUserUpdated={handleUserUpdated}
+            currentUser={currentUser}
           />
         </div>
       )}

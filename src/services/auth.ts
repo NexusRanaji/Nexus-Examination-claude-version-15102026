@@ -9,13 +9,13 @@ export const USER_STORAGE_KEY = 'nexus_authenticated_user';
 export function getAuthToken(): string | null {
   if (inMemoryToken) return inMemoryToken;
   try {
-    const stored = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+    const stored = sessionStorage.getItem(TOKEN_STORAGE_KEY) || localStorage.getItem(TOKEN_STORAGE_KEY);
     if (stored) {
       inMemoryToken = stored;
       return stored;
     }
   } catch (e) {
-    // SessionStorage may fail in private mode
+    // Storage access may fail in private mode
   }
   return null;
 }
@@ -23,7 +23,7 @@ export function getAuthToken(): string | null {
 export function getAuthUser(): UserCredential | null {
   if (inMemoryUser) return inMemoryUser;
   try {
-    const stored = sessionStorage.getItem(USER_STORAGE_KEY);
+    const stored = sessionStorage.getItem(USER_STORAGE_KEY) || localStorage.getItem(USER_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed && parsed.id && parsed.role) {
@@ -32,7 +32,7 @@ export function getAuthUser(): UserCredential | null {
       }
     }
   } catch (e) {
-    // SessionStorage may fail
+    // Storage access may fail
   }
   return null;
 }
@@ -43,8 +43,10 @@ export function setAuthSession(token: string, user: UserCredential) {
   try {
     sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
     sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
   } catch (e) {
-    console.error('Failed to save auth session to sessionStorage', e);
+    console.error('Failed to save auth session', e);
   }
 }
 
@@ -54,7 +56,9 @@ export function clearAuthSession() {
   try {
     sessionStorage.removeItem(TOKEN_STORAGE_KEY);
     sessionStorage.removeItem(USER_STORAGE_KEY);
-    // Remove any legacy localStorage session keys
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
+    // Remove legacy localStorage session keys
     localStorage.removeItem('nexus_authenticated_user');
     localStorage.removeItem('nexus_remembered_user');
     localStorage.removeItem('user');
@@ -111,7 +115,8 @@ export function initAuthFetchInterceptor() {
         response.status === 401 &&
         !url.includes('/api/auth/login') &&
         !url.includes('/api/auth/student/login') &&
-        !url.includes('/api/auth/faculty/login')
+        !url.includes('/api/auth/faculty/login') &&
+        !url.includes('/api/auth/public-users')
       ) {
         clearAuthSession();
         window.dispatchEvent(new CustomEvent('nexus:unauthorized'));

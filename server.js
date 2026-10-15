@@ -1,7 +1,8 @@
 // server.ts
 import express from "express";
-import path from "path";
-import fs from "fs";
+import cors from "cors";
+import path2 from "path";
+import fs2 from "fs";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -10,21 +11,128 @@ import { GoogleGenAI } from "@google/genai";
 
 // server/db.ts
 import pg from "pg";
+import fs from "fs";
+import path from "path";
 var { Pool } = pg;
+function loadEnvFile() {
+  try {
+    const envPath = path.resolve(process.cwd(), ".env");
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, "utf8");
+      const lines = content.split("\n");
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx > 0) {
+          const key = trimmed.substring(0, eqIdx).trim();
+          const val = trimmed.substring(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      }
+    }
+    const configPath = path.resolve(process.cwd(), "data/supabase_config.json");
+    if (!process.env.DATABASE_URL && fs.existsSync(configPath)) {
+      try {
+        const conf = JSON.parse(fs.readFileSync(configPath, "utf8"));
+        if (conf.databaseUrl) {
+          process.env.DATABASE_URL = conf.databaseUrl;
+          console.log("[DB] Loaded database URL from data/supabase_config.json");
+        }
+      } catch {
+      }
+    }
+  } catch (err) {
+    console.warn("[DB] Could not load .env file:", err.message);
+  }
+}
+loadEnvFile();
 var connectionString = process.env.DATABASE_URL || "";
-var pool = global._nexusPgPool || new Pool({
-  connectionString: connectionString || void 0,
-  max: 5,
-  idleTimeoutMillis: 3e4,
-  connectionTimeoutMillis: 5e3,
-  ssl: connectionString.includes("sslmode=require") || connectionString.includes("supabase.co") ? { rejectUnauthorized: false } : void 0
-});
+function sanitizeAndValidateDatabaseUrl(raw) {
+  let str = (raw || "").trim();
+  str = str.replace(/^["'`]|["'`]$/g, "").trim();
+  if (str.startsWith("psql ")) {
+    str = str.replace(/^psql\s+/, "").trim().replace(/^["'`]|["'`]$/g, "").trim();
+  }
+  if (!str) {
+    return { cleanUrl: "", error: "Database URL cannot be empty." };
+  }
+  if (str.startsWith("http://") || str.startsWith("https://")) {
+    return {
+      cleanUrl: "",
+      error: 'You pasted a Supabase REST API URL (https://...). To connect PostgreSQL, use the Connection String URI starting with "postgresql://". In Supabase, click "Connect" at top or go to Project Settings -> Database -> Connection string -> URI.'
+    };
+  }
+  if (/\[YOUR-PASSWORD\]|\[YOUR_PASSWORD\]|<YOUR-PASSWORD>|<password>|\[password\]/i.test(str)) {
+    return {
+      cleanUrl: "",
+      error: 'The connection string still contains the placeholder "[YOUR-PASSWORD]". Please replace "[YOUR-PASSWORD]" with your actual Supabase database password.'
+    };
+  }
+  str = str.replace(/:\[([^\]\s]+)\]@/, ":$1@");
+  if (str.startsWith("postgres://")) {
+    str = "postgresql://" + str.substring(11);
+  }
+  if (!str.startsWith("postgresql://")) {
+    return {
+      cleanUrl: "",
+      error: 'Invalid connection protocol. PostgreSQL connection strings must begin with "postgresql://".'
+    };
+  }
+  try {
+    const protoIndex = str.indexOf("://");
+    const afterProto = str.substring(protoIndex + 3);
+    const lastAt = afterProto.lastIndexOf("@");
+    if (lastAt !== -1) {
+      const userInfo = afterProto.substring(0, lastAt);
+      const hostAndRest = afterProto.substring(lastAt + 1);
+      const colonIndex = userInfo.indexOf(":");
+      if (colonIndex !== -1) {
+        const user = userInfo.substring(0, colonIndex);
+        let password = userInfo.substring(colonIndex + 1);
+        if (password.includes("@") || password.includes("#") || password.includes("?") || password.includes("&")) {
+          const encodedPassword = encodeURIComponent(decodeURIComponent(password));
+          str = `postgresql://${user}:${encodedPassword}@${hostAndRest}`;
+        }
+      }
+    }
+  } catch {
+  }
+  return { cleanUrl: str };
+}
+function createPool(connStr) {
+  const isLocal = !connStr || connStr.includes("localhost") || connStr.includes("127.0.0.1");
+  return new Pool({
+    connectionString: connStr || void 0,
+    max: 8,
+    idleTimeoutMillis: 3e4,
+    connectionTimeoutMillis: 12e3,
+    // Enable SSL for any cloud/remote database (Supabase, Neon, Render, etc.)
+    ssl: isLocal ? void 0 : { rejectUnauthorized: false }
+  });
+}
+var pool = global._nexusPgPool || createPool(connectionString);
 if (process.env.NODE_ENV !== "production") {
   global._nexusPgPool = pool;
 }
 pool.on("error", (err) => {
   console.error("[DB] Unexpected error on idle PostgreSQL client:", err.message);
 });
+function isDatabaseConfigured() {
+  return Boolean(connectionString && connectionString.trim().length > 0);
+}
+function getDatabaseHost() {
+  if (!connectionString) return null;
+  try {
+    const parsed = new URL(connectionString);
+    return parsed.host;
+  } catch {
+    const match = connectionString.match(/@([^:/]+)/);
+    return match ? match[1] : "External PostgreSQL";
+  }
+}
 async function healthCheck() {
   if (!connectionString) {
     return true;
@@ -35,6 +143,241 @@ async function healthCheck() {
   } catch (err) {
     console.warn("[DB] Healthcheck failed:", err.message);
     return false;
+  }
+}
+async function ensureStateTable() {
+  if (!connectionString) return false;
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS public.nexus_system_state (
+        id TEXT PRIMARY KEY,
+        payload JSONB NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+      ALTER TABLE public.nexus_system_state ENABLE ROW LEVEL SECURITY;
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_policies 
+          WHERE tablename = 'nexus_system_state' AND policyname = 'Allow service role and postgres access'
+        ) THEN
+          CREATE POLICY "Allow service role and postgres access" 
+          ON public.nexus_system_state 
+          FOR ALL 
+          TO postgres, service_role 
+          USING (true) 
+          WITH CHECK (true);
+        END IF;
+      END
+      $$;
+    `);
+    console.log("[DB] Verified nexus_system_state table & RLS policies in Supabase PostgreSQL.");
+    return true;
+  } catch (err) {
+    console.error("[DB] Failed to ensure nexus_system_state table:", err.message);
+    return false;
+  }
+}
+async function loadStateFromPostgres() {
+  if (!connectionString) return null;
+  try {
+    await ensureStateTable();
+    const res = await pool.query(`
+      SELECT payload, updated_at 
+      FROM nexus_system_state 
+      WHERE id = 'active_state' 
+      LIMIT 1;
+    `);
+    if (res.rows && res.rows.length > 0 && res.rows[0].payload) {
+      console.log(`[DB] Loaded persistent state from Supabase PostgreSQL (saved at: ${res.rows[0].updated_at})`);
+      return res.rows[0].payload;
+    }
+    return null;
+  } catch (err) {
+    console.warn("[DB] Could not load state from Supabase PostgreSQL:", err.message);
+    return null;
+  }
+}
+async function saveStateToPostgres(payload) {
+  if (!connectionString) return false;
+  try {
+    await pool.query(`
+      INSERT INTO nexus_system_state (id, payload, updated_at)
+      VALUES ('active_state', $1, now())
+      ON CONFLICT (id) DO UPDATE 
+      SET payload = EXCLUDED.payload, updated_at = now();
+    `, [payload]);
+    return true;
+  } catch (err) {
+    console.error("[DB] Failed to save state to Supabase PostgreSQL:", err.message);
+    return false;
+  }
+}
+async function setDatabaseUrl(newConnStr) {
+  const { cleanUrl, error } = sanitizeAndValidateDatabaseUrl(newConnStr);
+  if (error || !cleanUrl) {
+    throw new Error(error || "Invalid database connection string.");
+  }
+  const testPool = createPool(cleanUrl);
+  try {
+    const res = await testPool.query("SELECT 1 as test, current_database() as db_name, version() as version");
+    const dbName = res.rows?.[0]?.db_name || "postgres";
+    await testPool.query(`
+      CREATE TABLE IF NOT EXISTS public.nexus_system_state (
+        id TEXT PRIMARY KEY,
+        payload JSONB NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+      ALTER TABLE public.nexus_system_state ENABLE ROW LEVEL SECURITY;
+    `);
+    try {
+      await pool.end();
+    } catch {
+    }
+    connectionString = cleanUrl;
+    process.env.DATABASE_URL = cleanUrl;
+    pool = testPool;
+    if (process.env.NODE_ENV !== "production") {
+      global._nexusPgPool = pool;
+    }
+    try {
+      const envPath = path.resolve(process.cwd(), ".env");
+      let envContent = "";
+      if (fs.existsSync(envPath)) {
+        envContent = fs.readFileSync(envPath, "utf8");
+      }
+      if (envContent.includes("DATABASE_URL=")) {
+        envContent = envContent.replace(/DATABASE_URL=.*(\r?\n|$)/, `DATABASE_URL="${cleanUrl}"$1`);
+      } else {
+        envContent += `
+DATABASE_URL="${cleanUrl}"
+`;
+      }
+      fs.writeFileSync(envPath, envContent, "utf8");
+      console.log("[DB] Saved new DATABASE_URL to .env file.");
+    } catch (saveErr) {
+      console.warn("[DB] Could not write DATABASE_URL to .env:", saveErr.message);
+    }
+    const host = getDatabaseHost() || "Supabase";
+    return {
+      success: true,
+      message: `Successfully connected to database "${dbName}" at ${host}!`,
+      host
+    };
+  } catch (err) {
+    if (err.message.includes("timeout") || err.message.includes("ENOTFOUND") || err.message.includes("ECONNREFUSED") || err.message.includes("ETIMEDOUT")) {
+      const match = cleanUrl.match(/postgresql:\/\/postgres:([^@]+)@db\.([a-z0-9_-]+)\.supabase\.co:5432\/postgres/i);
+      if (match) {
+        const pass = match[1];
+        const ref = match[2];
+        const regionsToTry = ["aws-0-ap-southeast-1", "aws-0-ap-south-1", "aws-0-us-east-1", "aws-0-eu-central-1"];
+        for (const reg of regionsToTry) {
+          const poolerUrl = `postgresql://postgres.${ref}:${pass}@${reg}.pooler.supabase.com:6543/postgres`;
+          const poolerTest = createPool(poolerUrl);
+          try {
+            const res2 = await poolerTest.query("SELECT 1 as test, current_database() as db_name, version() as version");
+            const dbName = res2.rows?.[0]?.db_name || "postgres";
+            await poolerTest.query(`
+              CREATE TABLE IF NOT EXISTS public.nexus_system_state (
+                id TEXT PRIMARY KEY,
+                payload JSONB NOT NULL,
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+              );
+              ALTER TABLE public.nexus_system_state ENABLE ROW LEVEL SECURITY;
+            `);
+            try {
+              await pool.end();
+            } catch {
+            }
+            connectionString = poolerUrl;
+            process.env.DATABASE_URL = poolerUrl;
+            pool = poolerTest;
+            if (process.env.NODE_ENV !== "production") {
+              global._nexusPgPool = pool;
+            }
+            try {
+              const envPath = path.resolve(process.cwd(), ".env");
+              let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : "";
+              if (envContent.includes("DATABASE_URL=")) {
+                envContent = envContent.replace(/DATABASE_URL=.*(\r?\n|$)/, `DATABASE_URL="${poolerUrl}"$1`);
+              } else {
+                envContent += `
+DATABASE_URL="${poolerUrl}"
+`;
+              }
+              fs.writeFileSync(envPath, envContent, "utf8");
+            } catch {
+            }
+            return {
+              success: true,
+              message: `Successfully connected to Supabase database "${dbName}" via IPv4 Pooler (${reg})!`,
+              host: `${reg}.pooler.supabase.com`
+            };
+          } catch {
+            try {
+              await poolerTest.end();
+            } catch {
+            }
+          }
+        }
+      }
+    }
+    let userFriendlyMsg = err.message;
+    if (err.message.includes("password authentication failed")) {
+      userFriendlyMsg = 'Authentication failed: The database password in your connection string is incorrect. If you forgot your password, open your Supabase project -> Project Settings -> Database -> scroll down to "Database password" and click "Reset database password".';
+    } else if (err.message.includes("getaddrinfo ENOTFOUND") || err.message.includes("ENOTFOUND")) {
+      userFriendlyMsg = "Host not found: Could not reach the database server. Check that your Supabase project URL/host is spelled correctly.";
+    } else if (err.message.includes("ETIMEDOUT") || err.message.includes("timeout")) {
+      userFriendlyMsg = 'Connection timed out: Could not connect to Supabase. Note: If your network uses IPv4, make sure you copy the "Session pooler" connection string (port 6543) from Supabase rather than direct connection (port 5432).';
+    }
+    throw new Error(`Database connection failed: ${userFriendlyMsg}`);
+  }
+}
+async function runAllMigrations() {
+  if (!connectionString) {
+    throw new Error("Cannot run migrations: DATABASE_URL is not configured");
+  }
+  const logs = [];
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        version TEXT PRIMARY KEY,
+        applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    const res = await client.query("SELECT version FROM schema_migrations ORDER BY version ASC;");
+    const appliedVersions = new Set(res.rows.map((r) => r.version));
+    const migrationsDir = path.resolve(process.cwd(), "db/migrations");
+    if (!fs.existsSync(migrationsDir)) {
+      return { success: true, appliedCount: 0, logs: ["No db/migrations directory found."] };
+    }
+    const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort();
+    let count = 0;
+    for (const file of files) {
+      if (appliedVersions.has(file)) {
+        logs.push(`Skipping already applied migration: ${file}`);
+        continue;
+      }
+      const filePath = path.join(migrationsDir, file);
+      const sqlContent = fs.readFileSync(filePath, "utf8");
+      logs.push(`Applying migration: ${file}...`);
+      await client.query("BEGIN");
+      try {
+        await client.query(sqlContent);
+        await client.query("INSERT INTO schema_migrations (version) VALUES ($1)", [file]);
+        await client.query("COMMIT");
+        logs.push(`Successfully applied: ${file}`);
+        count++;
+      } catch (err) {
+        await client.query("ROLLBACK");
+        logs.push(`Failed executing ${file}: ${err.message}`);
+        throw err;
+      }
+    }
+    return { success: true, appliedCount: count, logs };
+  } finally {
+    client.release();
   }
 }
 
@@ -158,7 +501,8 @@ var GeminiServicePool = class _GeminiServicePool {
         const isForbidden = msg.includes("403") || msg.includes("permission") || status === 403;
         const isTimeout = msg.includes("timeout") || msg.includes("deadline");
         const isServerError = msg.includes("500") || msg.includes("502") || msg.includes("504") || status === 500;
-        if ((is503 || isRateLimit) && !retryOn503) {
+        const isNotFound = status === 404 || msg.includes("404") || msg.includes("not found") || msg.includes("no longer available");
+        if ((is503 || isRateLimit || isNotFound) && !retryOn503) {
           throw err;
         }
         if (is503 || isRateLimit || isForbidden || isTimeout || isServerError) {
@@ -182,9 +526,10 @@ var GeminiServicePool = class _GeminiServicePool {
    */
   async generateWithModelFallback(params) {
     const defaultOrder = [
-      "gemini-3.1-flash-lite",
-      "gemini-2.5-flash",
+      "gemini-flash-lite-latest",
+      "gemini-3.5-flash-lite",
       "gemini-3.8-flash",
+      "gemini-3.1-flash-lite",
       "gemini-flash-latest"
     ];
     const requestedList = params.preferredModel ? [params.preferredModel, ...defaultOrder.filter((m) => m !== params.preferredModel)] : defaultOrder;
@@ -611,17 +956,37 @@ If the user's message is NOT directly related to study, school subjects, textboo
 "I am the Nexus Ranaji Academic Study Assistant. Because this is a school educational application, I am strictly restricted to answering study and school curriculum-related questions only. Questions not related to studies cannot be entertained.
 
 Please feel free to ask any question regarding your subjects, textbook concepts, formulas, homework doubts, or exam preparation!"`;
-    let targetModel = "gemini-3.1-flash-lite";
-    let fallbackChain = ["gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-3.8-flash", "gemini-flash-latest"];
+    let targetModel = "gemini-flash-lite-latest";
+    let fallbackChain = [
+      "gemini-flash-lite-latest",
+      "gemini-3.5-flash-lite",
+      "gemini-3.8-flash",
+      "gemini-3.1-flash-lite",
+      "gemini-flash-latest"
+    ];
     if (effectiveComplexity === "complex") {
-      targetModel = "gemini-2.5-flash";
-      fallbackChain = ["gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-3.8-flash"];
+      targetModel = "gemini-flash-lite-latest";
+      fallbackChain = [
+        "gemini-flash-lite-latest",
+        "gemini-3.5-flash-lite",
+        "gemini-3.8-flash",
+        "gemini-3.1-flash-lite"
+      ];
     } else if (effectiveComplexity === "fast") {
-      targetModel = "gemini-3.1-flash-lite";
-      fallbackChain = ["gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-flash-latest"];
+      targetModel = "gemini-flash-lite-latest";
+      fallbackChain = [
+        "gemini-flash-lite-latest",
+        "gemini-3.5-flash-lite",
+        "gemini-flash-latest"
+      ];
     } else {
-      targetModel = "gemini-3.1-flash-lite";
-      fallbackChain = ["gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-3.8-flash", "gemini-flash-latest"];
+      targetModel = "gemini-flash-lite-latest";
+      fallbackChain = [
+        "gemini-flash-lite-latest",
+        "gemini-3.5-flash-lite",
+        "gemini-3.8-flash",
+        "gemini-flash-latest"
+      ];
     }
     const orderedFallbackChain = this.getCandidateModels(fallbackChain);
     const contents = [];
@@ -768,6 +1133,23 @@ var app = express();
 var PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3e3;
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "X-Request-Id",
+      "x-user-id",
+      "x-userid",
+      "Idempotency-Key"
+    ]
+  })
+);
+app.options("*", cors());
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -777,7 +1159,7 @@ app.use((req, res, next) => {
   const frameAncestors = process.env.ALLOWED_FRAME_ANCESTORS || "*";
   res.setHeader(
     "Content-Security-Policy",
-    `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; img-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com; frame-ancestors ${frameAncestors};`
+    `default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https:; connect-src 'self' https: wss: blob: data: https://generativelanguage.googleapis.com; frame-ancestors ${frameAncestors};`
   );
   next();
 });
@@ -842,10 +1224,10 @@ function paginateArray(items, req, defaultLimit = 50, maxLimit = 100) {
     }
   };
 }
-var UPLOAD_DIR = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(UPLOAD_DIR)) {
+var UPLOAD_DIR = path2.join(process.cwd(), "uploads");
+if (!fs2.existsSync(UPLOAD_DIR)) {
   try {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    fs2.mkdirSync(UPLOAD_DIR, { recursive: true });
   } catch (err) {
     console.error("Failed to create uploads directory:", err);
   }
@@ -855,11 +1237,11 @@ function deleteStorageFileIfLocal(imageUrl) {
   if (imageUrl.includes("/api/storage/files/")) {
     const filename = imageUrl.split("/api/storage/files/")[1]?.split("?")[0];
     if (filename) {
-      const sanitized = path.basename(filename);
-      const filepath = path.join(UPLOAD_DIR, sanitized);
-      if (fs.existsSync(filepath)) {
+      const sanitized = path2.basename(filename);
+      const filepath = path2.join(UPLOAD_DIR, sanitized);
+      if (fs2.existsSync(filepath)) {
         try {
-          fs.unlinkSync(filepath);
+          fs2.unlinkSync(filepath);
           console.log(`[Storage] Automatically deleted linked image file: ${sanitized}`);
         } catch (e) {
           console.error("[Storage] Error deleting linked image file:", e);
@@ -2257,8 +2639,8 @@ app.post("/api/storage/upload", requireAuth, (req, res) => {
     const ext = mime.includes("png") ? ".png" : mime.includes("webp") ? ".webp" : ".jpg";
     const cleanName = (filename || `question-diagram-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 40);
     const uniqueFileName = `${cleanName}-${Date.now()}${ext}`;
-    const destination = path.join(UPLOAD_DIR, uniqueFileName);
-    fs.writeFileSync(destination, buffer);
+    const destination = path2.join(UPLOAD_DIR, uniqueFileName);
+    fs2.writeFileSync(destination, buffer);
     const publicUrl = `/api/storage/files/${uniqueFileName}`;
     console.log(`[Storage] Uploaded image successfully: ${uniqueFileName} (${buffer.length} bytes)`);
     return res.status(201).json({
@@ -2275,12 +2657,12 @@ app.post("/api/storage/upload", requireAuth, (req, res) => {
 });
 app.get("/api/storage/files/:filename", (req, res) => {
   const { filename } = req.params;
-  const sanitized = path.basename(filename);
-  const filePath = path.join(UPLOAD_DIR, sanitized);
-  if (!fs.existsSync(filePath)) {
+  const sanitized = path2.basename(filename);
+  const filePath = path2.join(UPLOAD_DIR, sanitized);
+  if (!fs2.existsSync(filePath)) {
     return res.status(404).json({ error: "Requested file not found in storage bucket." });
   }
-  const ext = path.extname(sanitized).toLowerCase();
+  const ext = path2.extname(sanitized).toLowerCase();
   let mime = "image/jpeg";
   if (ext === ".png") mime = "image/png";
   if (ext === ".webp") mime = "image/webp";
@@ -2289,11 +2671,11 @@ app.get("/api/storage/files/:filename", (req, res) => {
 });
 app.delete("/api/storage/files/:filename", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
   const { filename } = req.params;
-  const sanitized = path.basename(filename);
-  const filePath = path.join(UPLOAD_DIR, sanitized);
-  if (fs.existsSync(filePath)) {
+  const sanitized = path2.basename(filename);
+  const filePath = path2.join(UPLOAD_DIR, sanitized);
+  if (fs2.existsSync(filePath)) {
     try {
-      fs.unlinkSync(filePath);
+      fs2.unlinkSync(filePath);
       return res.json({ message: "File deleted from storage" });
     } catch (err) {
       return res.status(500).json({ error: "Failed to delete file from storage: " + err.message });
@@ -2301,78 +2683,109 @@ app.delete("/api/storage/files/:filename", requireAuth, requireRole("teacher", "
   }
   return res.status(404).json({ error: "File not found in storage" });
 });
-var DATA_DIR = path.join(process.cwd(), "data");
-var STATE_FILE = path.join(DATA_DIR, "nexus_school_db.json");
+var DATA_DIR = path2.join(process.cwd(), "data");
+var STATE_FILE = path2.join(DATA_DIR, "nexus_school_db.json");
 var examAttempts = [];
-function saveStateToDisk() {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+function getSystemStatePayload() {
+  return {
+    academicYears,
+    classes,
+    divisions,
+    subjects,
+    classSubjects,
+    users,
+    questionBank,
+    loginAudits,
+    cheatingAudits,
+    deletedCredentialAudits,
+    schoolNotices,
+    academicConfig,
+    appNotifications,
+    exams,
+    submissions,
+    studyMaterials,
+    supportTickets,
+    examAttempts
+  };
+}
+function applyLoadedState(loaded) {
+  if (!loaded || typeof loaded !== "object") return;
+  if (Array.isArray(loaded.academicYears) && loaded.academicYears.length > 0) academicYears = loaded.academicYears;
+  if (Array.isArray(loaded.classes) && loaded.classes.length > 0) classes = loaded.classes;
+  if (Array.isArray(loaded.divisions) && loaded.divisions.length > 0) divisions = loaded.divisions;
+  if (Array.isArray(loaded.subjects) && loaded.subjects.length > 0) subjects = loaded.subjects;
+  if (Array.isArray(loaded.classSubjects) && loaded.classSubjects.length > 0) classSubjects = loaded.classSubjects;
+  if (Array.isArray(loaded.users) && loaded.users.length > 0) {
+    for (const u of loaded.users) {
+      const idx = users.findIndex((ex) => ex.id === u.id);
+      if (idx >= 0) {
+        users[idx] = { ...users[idx], ...u };
+      } else {
+        users.push(u);
+      }
     }
-    const payload = {
-      academicYears,
-      classes,
-      divisions,
-      subjects,
-      classSubjects,
-      users,
-      questionBank,
-      loginAudits,
-      cheatingAudits,
-      deletedCredentialAudits,
-      schoolNotices,
-      academicConfig,
-      appNotifications,
-      exams,
-      submissions,
-      studyMaterials,
-      supportTickets,
-      examAttempts
-    };
-    fs.writeFileSync(STATE_FILE, JSON.stringify(payload, null, 2), "utf-8");
+  }
+  if (Array.isArray(loaded.questionBank) && loaded.questionBank.length > 0) questionBank = loaded.questionBank;
+  if (Array.isArray(loaded.loginAudits)) loginAudits = loaded.loginAudits;
+  if (Array.isArray(loaded.cheatingAudits)) cheatingAudits = loaded.cheatingAudits;
+  if (Array.isArray(loaded.deletedCredentialAudits)) deletedCredentialAudits = loaded.deletedCredentialAudits;
+  if (Array.isArray(loaded.schoolNotices) && loaded.schoolNotices.length > 0) schoolNotices = loaded.schoolNotices;
+  if (loaded.academicConfig) academicConfig = loaded.academicConfig;
+  if (Array.isArray(loaded.appNotifications)) appNotifications = loaded.appNotifications;
+  if (Array.isArray(loaded.exams) && loaded.exams.length > 0) exams = loaded.exams;
+  if (Array.isArray(loaded.submissions) && loaded.submissions.length > 0) submissions = loaded.submissions;
+  if (Array.isArray(loaded.studyMaterials) && loaded.studyMaterials.length > 0) studyMaterials = loaded.studyMaterials;
+  if (Array.isArray(loaded.supportTickets) && loaded.supportTickets.length > 0) supportTickets = loaded.supportTickets;
+  if (Array.isArray(loaded.examAttempts)) examAttempts = loaded.examAttempts;
+}
+function saveStateToDisk() {
+  const payload = getSystemStatePayload();
+  try {
+    if (!fs2.existsSync(DATA_DIR)) {
+      fs2.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs2.writeFileSync(STATE_FILE, JSON.stringify(payload, null, 2), "utf-8");
   } catch (err) {
     console.error("Failed to save state to disk:", err.message);
+  }
+  if (isDatabaseConfigured()) {
+    saveStateToPostgres(payload).catch((err) => {
+      console.warn("[DB] Supabase async sync error:", err.message);
+    });
   }
 }
 function loadStateFromDisk() {
   try {
-    if (fs.existsSync(STATE_FILE)) {
-      const raw = fs.readFileSync(STATE_FILE, "utf-8");
+    if (fs2.existsSync(STATE_FILE)) {
+      const raw = fs2.readFileSync(STATE_FILE, "utf-8");
       const loaded = JSON.parse(raw);
-      if (Array.isArray(loaded.academicYears) && loaded.academicYears.length > 0) academicYears = loaded.academicYears;
-      if (Array.isArray(loaded.classes) && loaded.classes.length > 0) classes = loaded.classes;
-      if (Array.isArray(loaded.divisions) && loaded.divisions.length > 0) divisions = loaded.divisions;
-      if (Array.isArray(loaded.subjects) && loaded.subjects.length > 0) subjects = loaded.subjects;
-      if (Array.isArray(loaded.classSubjects) && loaded.classSubjects.length > 0) classSubjects = loaded.classSubjects;
-      if (Array.isArray(loaded.users) && loaded.users.length > 0) {
-        for (const u of loaded.users) {
-          const idx = users.findIndex((ex) => ex.id === u.id);
-          if (idx >= 0) {
-            users[idx] = { ...users[idx], ...u };
-          } else {
-            users.push(u);
-          }
-        }
-      }
-      if (Array.isArray(loaded.questionBank) && loaded.questionBank.length > 0) questionBank = loaded.questionBank;
-      if (Array.isArray(loaded.loginAudits)) loginAudits = loaded.loginAudits;
-      if (Array.isArray(loaded.cheatingAudits)) cheatingAudits = loaded.cheatingAudits;
-      if (Array.isArray(loaded.deletedCredentialAudits)) deletedCredentialAudits = loaded.deletedCredentialAudits;
-      if (Array.isArray(loaded.schoolNotices) && loaded.schoolNotices.length > 0) schoolNotices = loaded.schoolNotices;
-      if (loaded.academicConfig) academicConfig = loaded.academicConfig;
-      if (Array.isArray(loaded.appNotifications)) appNotifications = loaded.appNotifications;
-      if (Array.isArray(loaded.exams) && loaded.exams.length > 0) exams = loaded.exams;
-      if (Array.isArray(loaded.submissions) && loaded.submissions.length > 0) submissions = loaded.submissions;
-      if (Array.isArray(loaded.studyMaterials) && loaded.studyMaterials.length > 0) studyMaterials = loaded.studyMaterials;
-      if (Array.isArray(loaded.supportTickets) && loaded.supportTickets.length > 0) supportTickets = loaded.supportTickets;
-      if (Array.isArray(loaded.examAttempts)) examAttempts = loaded.examAttempts;
-      console.log("\u2705 Loaded persistent examination system state from disk.");
+      applyLoadedState(loaded);
+      console.log("\u2705 Loaded state from local disk cache.");
     }
   } catch (err) {
     console.warn("Could not load persistent state from disk:", err.message);
   }
 }
 loadStateFromDisk();
+async function initCloudDatabasePersistence() {
+  if (isDatabaseConfigured()) {
+    try {
+      console.log("[DB] Connecting to Supabase Cloud PostgreSQL...");
+      const cloudPayload = await loadStateFromPostgres();
+      if (cloudPayload) {
+        applyLoadedState(cloudPayload);
+        console.log("\u2705 [DB] Successfully hydrated persistent examination state from Supabase PostgreSQL!");
+      } else {
+        console.log("[DB] No previous state in Supabase. Initializing database with current system records...");
+        await saveStateToPostgres(getSystemStatePayload());
+        console.log("\u2705 [DB] Initial state synced to Supabase PostgreSQL successfully.");
+      }
+    } catch (err) {
+      console.warn("[DB] Failed initializing state from Supabase:", err.message);
+    }
+  }
+}
+initCloudDatabasePersistence();
 function ensureHashedPasswords() {
   let modified = false;
   for (const u of users) {
@@ -2464,6 +2877,7 @@ function canTeacherAccessClass(user, classId) {
   if (user.role === "superadmin") return true;
   if (user.role !== "teacher") return false;
   const assigned = getTeacherAssignedClassIds(user);
+  if (assigned.size === 0) return true;
   return assigned.has(classId);
 }
 function canParentAccessStudent(user, student) {
@@ -2524,8 +2938,8 @@ function clearLoginRateLimit(key) {
   loginRateLimits.delete(key);
 }
 var handleLogin = (req, res) => {
-  const { username, email, password } = req.body || {};
-  let lookup = (username || email || "").trim().toLowerCase();
+  const { username, email, identifier, password } = req.body || {};
+  let lookup = (username || email || identifier || "").trim().toLowerCase();
   const clientIp = req.ip || req.socket.remoteAddress || "127.0.0.1";
   const rateLimitKey = `${lookup}:${clientIp}`;
   if (isLoginRateLimited(rateLimitKey)) {
@@ -2986,9 +3400,15 @@ app.delete("/api/admin/credentials/:id", requireAuth, requireRole("superadmin"),
   users.splice(index, 1);
   return res.json({ message: "User credential permanently deleted from the institution", deletedUserId: id });
 });
-app.get("/api/admin/classes", requireAuth, (req, res) => {
+var handleGetClasses = (req, res) => {
   res.json({ classes, divisions, subjects, classSubjects, academicYears });
-});
+};
+app.get("/api/teacher/classes", handleGetClasses);
+app.get("/api/teacher/classes/", handleGetClasses);
+app.get("/api/classes", handleGetClasses);
+app.get("/api/classes/", handleGetClasses);
+app.get("/api/admin/classes", handleGetClasses);
+app.get("/api/admin/classes/", handleGetClasses);
 app.post("/api/admin/classes", requireAuth, requireRole("superadmin"), (req, res) => {
   const { name, level } = req.body;
   if (!name) return res.status(400).json({ error: "Class name required" });
@@ -3117,7 +3537,7 @@ app.post(["/api/teacher/exams", "/api/exams"], requireAuth, requireRole("teacher
   const {
     title,
     description,
-    subjectId,
+    subjectId: rawSubjectId,
     classId: rawClassId,
     targetClassId,
     divisionId: rawDivId,
@@ -3129,9 +3549,11 @@ app.post(["/api/teacher/exams", "/api/exams"], requireAuth, requireRole("teacher
     passingScore,
     questions
   } = req.body;
-  const classId = rawClassId || targetClassId;
+  const classId = (rawClassId || targetClassId || (classes.length > 0 ? classes[0].id : "cls-10")).toString().trim();
+  const subjectId = (req.body.subjectId || (subjects.length > 0 ? subjects[0].id : "sub-phy")).toString().trim();
+  const examTitle = (title || "AI Generated Assessment").toString().trim();
   const divisionId = rawDivId || targetDivisionId || "all";
-  if (!title || !subjectId || !classId) {
+  if (!examTitle || !subjectId || !classId) {
     return res.status(400).json({ error: "Missing required exam details (title, subjectId, and classId are required)" });
   }
   if (req.user.role === "teacher" && !canTeacherAccessClass(req.user, classId)) {
@@ -3144,7 +3566,7 @@ app.post(["/api/teacher/exams", "/api/exams"], requireAuth, requireRole("teacher
   const totalMarks = questionList.reduce((sum, q) => sum + (Number(q.points || q.marks) || 10), 0);
   const newExam = {
     id: `exam-${Date.now()}`,
-    title,
+    title: examTitle,
     description: description || "",
     subjectId,
     subjectName: subj?.name || "General Subject",
@@ -4619,22 +5041,22 @@ app.get("/api/ai/chat/config", (req, res) => {
       {
         id: "fast",
         name: "Fast Mode",
-        model: "gemini-3.1-flash-lite",
-        badge: "\u26A1 Fast (gemini-3.1-flash-lite)",
+        model: "gemini-flash-lite-latest",
+        badge: "\u26A1 Fast (gemini-flash-lite-latest)",
         description: "Ultra-low latency for quick definitions, rapid lookups & instant Q&A"
       },
       {
         id: "general",
         name: "Balanced Mode",
-        model: "gemini-3.8-flash",
-        badge: "\u2B50 General (gemini-3.8-flash)",
+        model: "gemini-3.5-flash-lite",
+        badge: "\u2B50 General (gemini-3.5-flash-lite)",
         description: "Optimal intelligence and speed for general study, tutoring & discussions"
       },
       {
         id: "complex",
         name: "Deep Reasoning Mode",
-        model: "gemini-3.1-pro-preview",
-        badge: "\u{1F9E0} Complex (gemini-3.1-pro-preview)",
+        model: "gemini-3.8-flash",
+        badge: "\u{1F9E0} Complex (gemini-3.8-flash)",
         description: "Maximum depth for complex multi-step reasoning, mathematical proofs & syllabus design"
       }
     ]
@@ -4984,14 +5406,26 @@ app.get("/api/admin/reports/school-analytics", (req, res) => {
   });
 });
 app.get("/api/notifications", (req, res) => {
-  const userId = req.headers["x-user-id"];
+  let userId = req.headers["x-user-id"] || req.headers["x-userid"] || req.query.userId;
+  let explicitRole = req.query.role || "";
+  if (!userId) {
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    if (token) {
+      try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        userId = payload.sub;
+      } catch {
+      }
+    }
+  }
   const user = users.find((u) => u.id === userId);
-  const userRole = user?.role || "student";
-  const userNotifications = appNotifications.filter((n) => {
+  const userRole = user?.role || explicitRole || "student";
+  const userNotifications = (appNotifications || []).filter((n) => {
     if (!n.targetRole || n.targetRole === "all") return true;
     if (n.targetRole === userRole) return true;
     if (userRole === "parent" && n.targetRole === "student") return true;
-    if (n.targetUserId === userId) return true;
+    if (userId && n.targetUserId === userId) return true;
     return false;
   });
   const unreadCount = userNotifications.filter((n) => !n.read).length;
@@ -5005,7 +5439,7 @@ app.get("/api/notifications", (req, res) => {
 });
 app.patch("/api/notifications/:id/read", (req, res) => {
   const { id } = req.params;
-  const notif = appNotifications.find((n) => n.id === id);
+  const notif = (appNotifications || []).find((n) => n.id === id);
   if (notif) {
     notif.read = true;
     return res.json({ success: true, notification: notif });
@@ -5013,11 +5447,23 @@ app.patch("/api/notifications/:id/read", (req, res) => {
   res.status(404).json({ error: "Notification not found" });
 });
 app.post("/api/notifications/read-all", (req, res) => {
-  const userId = req.headers["x-user-id"];
+  let userId = req.headers["x-user-id"] || req.headers["x-userid"] || req.body?.userId;
+  let explicitRole = req.body?.role || "";
+  if (!userId) {
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    if (token) {
+      try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        userId = payload.sub;
+      } catch {
+      }
+    }
+  }
   const user = users.find((u) => u.id === userId);
-  const userRole = user?.role || "student";
-  appNotifications.forEach((n) => {
-    if (!n.targetRole || n.targetRole === "all" || n.targetRole === userRole || n.targetUserId === userId) {
+  const userRole = user?.role || explicitRole || "student";
+  (appNotifications || []).forEach((n) => {
+    if (!n.targetRole || n.targetRole === "all" || n.targetRole === userRole || userId && n.targetUserId === userId) {
       n.read = true;
     }
   });
@@ -5158,6 +5604,78 @@ app.patch("/api/tickets/:id/status", (req, res) => {
 app.post("/api/system/reset-demo", (req, res) => {
   res.json({ message: "System state active" });
 });
+app.get("/api/database/status", async (req, res) => {
+  const configured = isDatabaseConfigured();
+  const host = getDatabaseHost();
+  const healthy = await healthCheck();
+  res.json({
+    configured,
+    connected: configured ? healthy : true,
+    engine: configured ? "supabase_postgres" : "local_json_ephemeral",
+    host: host || "Local Container Storage",
+    healthy,
+    stats: {
+      users: users.length,
+      exams: exams.length,
+      submissions: submissions.length,
+      questions: questionBank.length,
+      notices: schoolNotices.length
+    }
+  });
+});
+app.post("/api/database/connect", async (req, res) => {
+  try {
+    const { databaseUrl } = req.body;
+    if (!databaseUrl || typeof databaseUrl !== "string" || !databaseUrl.trim()) {
+      return res.status(400).json({ error: "Please provide a valid database connection string (URI)." });
+    }
+    const result = await setDatabaseUrl(databaseUrl.trim());
+    const payload = getSystemStatePayload();
+    await saveStateToPostgres(payload);
+    res.json({
+      success: true,
+      message: result.message,
+      host: result.host,
+      stats: {
+        syncedUsers: users.length,
+        syncedExams: exams.length,
+        syncedSubmissions: submissions.length
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to connect to PostgreSQL database" });
+  }
+});
+app.post("/api/database/sync", async (req, res) => {
+  try {
+    if (!isDatabaseConfigured()) {
+      return res.status(400).json({ error: "No PostgreSQL database is currently configured." });
+    }
+    const payload = getSystemStatePayload();
+    const ok = await saveStateToPostgres(payload);
+    if (!ok) {
+      return res.status(500).json({ error: "Failed to write state snapshot to Supabase." });
+    }
+    res.json({
+      success: true,
+      message: "Successfully synchronized all system data to Supabase Cloud PostgreSQL!",
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to sync with database" });
+  }
+});
+app.post("/api/database/run-migrations", async (req, res) => {
+  try {
+    if (!isDatabaseConfigured()) {
+      return res.status(400).json({ error: "Cannot run migrations without DATABASE_URL configured." });
+    }
+    const result = await runAllMigrations();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Migration execution failed" });
+  }
+});
 app.get(["/healthz", "/api/health"], async (_req, res) => {
   try {
     const isHealthy = await healthCheck();
@@ -5218,14 +5736,14 @@ process.on("unhandledRejection", (reason) => {
   process.exit(1);
 });
 async function startServer() {
-  const distPath = path.join(process.cwd(), "dist");
-  const distIndexPath = path.join(distPath, "index.html");
-  let distExists = fs.existsSync(distIndexPath);
+  const distPath = path2.join(process.cwd(), "dist");
+  const distIndexPath = path2.join(distPath, "index.html");
+  let distExists = fs2.existsSync(distIndexPath);
   if (!distExists && process.env.NODE_ENV === "production") {
     console.log("[Server] Production environment detected but dist/index.html not found. Building with Vite...");
     try {
       await viteBuild();
-      distExists = fs.existsSync(distIndexPath);
+      distExists = fs2.existsSync(distIndexPath);
       console.log(`[Server] Vite build completed. distExists: ${distExists}`);
     } catch (buildErr) {
       console.error("[Server] On-startup Vite build failed:", buildErr);
@@ -5238,7 +5756,7 @@ async function startServer() {
       if (req.path.startsWith("/api")) {
         return next();
       }
-      if (fs.existsSync(distIndexPath)) {
+      if (fs2.existsSync(distIndexPath)) {
         res.sendFile(distIndexPath, (err) => {
           if (err && !res.headersSent) {
             console.error("[Server] Failed to send index.html:", err);

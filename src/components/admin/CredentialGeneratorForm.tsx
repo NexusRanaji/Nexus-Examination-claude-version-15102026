@@ -13,7 +13,11 @@ import {
   Lock, 
   Sparkles,
   Eye,
-  EyeOff
+  EyeOff,
+  Copy,
+  Check,
+  X,
+  Download
 } from 'lucide-react';
 import { UserCredential, SchoolClass, Division } from '../../types';
 import { apiClient } from '../../lib/apiClient';
@@ -51,6 +55,18 @@ export const CredentialGeneratorForm: React.FC<CredentialGeneratorFormProps> = (
   // Status & loading
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [createdCredential, setCreatedCredential] = useState<{
+    name: string;
+    role: string;
+    username: string;
+    password: string;
+    phone?: string;
+    email?: string;
+    rollNo?: string;
+    employeeId?: string;
+    className?: string;
+  } | null>(null);
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
   // Filter divisions for selected class
   const classDivisions = divisions.filter((d) => d.classId === classId);
@@ -137,12 +153,26 @@ export const CredentialGeneratorForm: React.FC<CredentialGeneratorFormProps> = (
         throw new Error(data?.error || 'Failed to create credential');
       }
 
+      const clearPassword = password.trim() || data.temporaryPassword || data.rawPassword || 'Nres@2025';
+      const createdObj = {
+        name: data.user.name,
+        role: data.user.role,
+        username: data.username || data.user.username || username.trim(),
+        password: clearPassword,
+        phone: data.user.phone || phone.trim(),
+        email: data.user.email,
+        rollNo: data.user.rollNo || rollNo.trim(),
+        employeeId: data.user.employeeId || employeeId.trim(),
+        className: classes.find((c) => c.id === (data.user.classId || classId))?.name,
+      };
+      setCreatedCredential(createdObj);
+
       // Immediately update UI list
       onCredentialCreated(data.user);
 
       setStatusMessage({
         type: 'success',
-        text: `Successfully provisioned ${data.user.role.toUpperCase()} account for ${data.user.name} (${data.user.email}). Credentials active immediately!`,
+        text: `Successfully provisioned ${data.user.role.toUpperCase()} account for ${data.user.name} (${data.user.username || data.user.email}). Credentials active immediately!`,
       });
 
       // Reset form
@@ -477,6 +507,139 @@ export const CredentialGeneratorForm: React.FC<CredentialGeneratorFormProps> = (
           </ul>
         </div>
       </div>
+
+      {/* Credential Slip Modal */}
+      {createdCredential && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-4 shadow-2xl relative text-left">
+            <button
+              type="button"
+              onClick={() => setCreatedCredential(null)}
+              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                  {createdCredential.role.toUpperCase()} PROVISIONED
+                </span>
+                <h3 className="text-base sm:text-lg font-serif font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                  Institutional Credential Slip
+                </h3>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 text-xs">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Account Holder:</span>
+                <strong className="text-slate-900 dark:text-slate-100">{createdCredential.name}</strong>
+              </div>
+
+              {createdCredential.rollNo && (
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400">Roll Number:</span>
+                  <span className="font-mono font-bold text-amber-600 dark:text-amber-400">{createdCredential.rollNo}</span>
+                </div>
+              )}
+
+              {createdCredential.employeeId && (
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400">Employee ID:</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{createdCredential.employeeId}</span>
+                </div>
+              )}
+
+              {createdCredential.className && (
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400">Enrolled Class:</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200">{createdCredential.className}</span>
+                </div>
+              )}
+
+              {/* Login Identifier / Username with 1-Click Copy */}
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400 block">Login Username / ID:</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">{createdCredential.username}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(createdCredential.username);
+                    setCopiedItem('username');
+                    setTimeout(() => setCopiedItem(null), 2000);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  {copiedItem === 'username' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedItem === 'username' ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+
+              {/* Password with 1-Click Copy & Show/Hide */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400 block">Password:</span>
+                  <span className="font-mono font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
+                    {showPassword ? createdCredential.password : '••••••••••••'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdCredential.password);
+                      setCopiedItem('password');
+                      setTimeout(() => setCopiedItem(null), 2000);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    {copiedItem === 'password' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedItem === 'password' ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const slip = `NEXUS RANAJI ENGLISH SCHOOL - CREDENTIAL SLIP\nName: ${createdCredential.name}\nRole: ${createdCredential.role.toUpperCase()}\n${createdCredential.rollNo ? `Roll No: ${createdCredential.rollNo}\n` : ''}Login Username: ${createdCredential.username}\nPassword: ${createdCredential.password}\nPortal: https://nexusrana.edu/login`;
+                  navigator.clipboard.writeText(slip);
+                  setCopiedItem('all');
+                  setTimeout(() => setCopiedItem(null), 2000);
+                }}
+                className="flex-1 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                {copiedItem === 'all' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedItem === 'all' ? 'All Copied!' : 'Copy Full Slip'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCreatedCredential(null)}
+                className="flex-1 py-2.5 px-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

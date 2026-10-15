@@ -154,12 +154,12 @@ export default function App() {
         }
       }
 
-      // 2. Server API fallback if Supabase client not directly configured
-      if (!currentUser || currentUser.role === 'superadmin') {
+      // 2. Server API fallback: respect user role and authentication boundaries
+      if (currentUser?.role === 'superadmin') {
+        // Superadmin has permission to view full credentials directory
         const res = await apiClient.get('/api/admin/credentials');
-        if (res.ok) {
-          const data = res.data;
-          const users = data.users || [];
+        if (res.ok && res.data) {
+          const users = res.data.users || [];
           if (users.length > 0) {
             const uniqueUsers = Array.from(new Map(users.map((u: UserCredential) => [u.id, u])).values()) as UserCredential[];
             setAllUsers(uniqueUsers);
@@ -169,9 +169,27 @@ export default function App() {
             }
           }
         }
+      } else if (currentUser) {
+        // Authenticated faculty/teacher, student, or parent: refresh their own profile via /api/auth/me
+        const res = await apiClient.get('/api/auth/me');
+        if (res.ok && res.data?.user) {
+          setCurrentUser((prev) => (prev ? { ...prev, ...res.data.user } : res.data.user));
+        }
+      } else {
+        // Unauthenticated visitor on login page: load public demo directory safely without credentials
+        const res = await apiClient.get('/api/auth/public-users', { skipAuth: true });
+        if (res.ok && res.data) {
+          const users = res.data.users || [];
+          if (users.length > 0) {
+            const uniqueUsers = Array.from(new Map(users.map((u: UserCredential) => [u.id, u])).values()) as UserCredential[];
+            setAllUsers(uniqueUsers);
+          }
+        }
       }
-    } catch (err) {
-      console.error('[Supabase/API] Failed to load user list:', err);
+    } catch (err: any) {
+      if (err?.status !== 401 && err?.status !== 403) {
+        console.error('[Supabase/API] Failed to load user list:', err);
+      }
     } finally {
       setLoading(false);
     }

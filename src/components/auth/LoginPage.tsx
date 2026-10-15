@@ -36,8 +36,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers =
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Quick preset logins for fast testing across all roles & legacy accounts
-  const quickPresets = [
+  // Quick preset logins combining core accounts with dynamically registered users from directory
+  const basePresets = [
     {
       role: 'student',
       label: 'Student (Rohan - Class 10A)',
@@ -111,6 +111,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers =
       accent: 'border-violet-300 dark:border-violet-500/40 text-violet-900 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 hover:bg-violet-100 dark:hover:bg-violet-500/20',
     },
   ];
+
+  // Dynamic presets for newly registered directory accounts
+  const existingPresetIds = new Set(basePresets.map((p) => p.id.toLowerCase()));
+  const dynamicPresets = (allUsers || [])
+    .filter((u) => u.username && !existingPresetIds.has(u.username.toLowerCase()) && !existingPresetIds.has((u.email || '').toLowerCase()))
+    .map((u) => {
+      const defaultPass = u.role === 'student' ? 'StudentPass#101' :
+        u.role === 'teacher' ? 'NexusTeacher#2025' :
+        u.role === 'parent' ? 'ParentPass#2025' : 'Admin@Nexus2025!';
+      return {
+        role: u.role,
+        label: `${u.name} (${u.role === 'student' ? (u.rollNo || 'Student') : u.role})`,
+        id: u.username || u.rollNo || u.email || u.id,
+        pass: (u as any).password || (u as any).rawPassword || defaultPass,
+        badge: u.rollNo ? `Roll: ${u.rollNo}` : 'New Account',
+        accent: u.role === 'student'
+          ? 'border-amber-300 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20'
+          : u.role === 'teacher'
+          ? 'border-emerald-300 dark:border-emerald-500/40 text-emerald-900 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20'
+          : u.role === 'superadmin'
+          ? 'border-rose-300 dark:border-rose-500/40 text-rose-900 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20'
+          : 'border-blue-300 dark:border-blue-500/40 text-blue-900 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20',
+      };
+    });
+
+  const allPresets = [...basePresets, ...dynamicPresets];
+  // Filter presets to show matching active role first, followed by others
+  const quickPresets = allPresets.filter((p) => p.role === selectedRole).concat(allPresets.filter((p) => p.role !== selectedRole));
 
   const handleRoleSelect = (role: 'student' | 'teacher' | 'superadmin' | 'parent') => {
     setSelectedRole(role);
@@ -357,8 +385,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers =
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1.5">
                   <label htmlFor="login-identifier" className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                    <span>Username, Roll No, or Institutional Email</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">e.g. student.rohan</span>
+                    <span>Username, Roll No, Mobile, or Email</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">e.g. student.rohan, NRES-10A-01, or phone</span>
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
@@ -368,7 +396,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers =
                       required
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
-                      placeholder="Enter username or institutional ID"
+                      placeholder="Username, Roll No (e.g. NRES-10A-01), Phone, or Email"
                       className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-900 dark:border-slate-800 rounded-2xl pl-10 pr-3.5 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 focus:bg-white dark:focus:bg-slate-900 focus-visible:ring-2 focus-visible:ring-amber-500 transition-colors"
                     />
                   </div>

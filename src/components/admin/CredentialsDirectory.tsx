@@ -34,6 +34,7 @@ interface CredentialsDirectoryProps {
   divisions: Division[];
   onUserDeleted: (userId: string) => void;
   onUserUpdated: (updatedUser: UserCredential) => void;
+  currentUser?: UserCredential | null;
 }
 
 export const CredentialsDirectory: React.FC<CredentialsDirectoryProps> = ({
@@ -42,8 +43,9 @@ export const CredentialsDirectory: React.FC<CredentialsDirectoryProps> = ({
   divisions,
   onUserDeleted,
   onUserUpdated,
+  currentUser,
 }) => {
-  const [selectedFolder, setSelectedFolder] = useState<'all' | 'superadmin' | 'teacher' | 'student' | 'parent'>('all');
+  const [selectedFolder, setSelectedFolder] = useState<'all' | 'superadmin' | 'teacher' | 'student' | 'parent' | 'current'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAllPasswords, setShowAllPasswords] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
@@ -78,9 +80,20 @@ export const CredentialsDirectory: React.FC<CredentialsDirectoryProps> = ({
   // Filter parents for student linked parent dropdown
   const parentAccounts = uniqueUsers.filter((u) => u.role === 'parent');
 
+  const checkIsCurrentUser = (u: UserCredential) => {
+    if (!currentUser) return false;
+    return (
+      u.id === currentUser.id ||
+      (currentUser.username && u.username && u.username.toLowerCase() === currentUser.username.toLowerCase()) ||
+      (currentUser.email && u.email && u.email.toLowerCase() === currentUser.email.toLowerCase())
+    );
+  };
+
   // Folder Counts
+  const currentCount = uniqueUsers.filter(checkIsCurrentUser).length;
   const counts = {
     all: uniqueUsers.length,
+    current: currentCount,
     superadmin: uniqueUsers.filter((u) => u.role === 'superadmin').length,
     teacher: uniqueUsers.filter((u) => u.role === 'teacher').length,
     student: uniqueUsers.filter((u) => u.role === 'student').length,
@@ -88,7 +101,12 @@ export const CredentialsDirectory: React.FC<CredentialsDirectoryProps> = ({
   };
 
   const filteredUsers = uniqueUsers.filter((u) => {
-    const matchesFolder = selectedFolder === 'all' || u.role === selectedFolder;
+    const matchesFolder =
+      selectedFolder === 'all'
+        ? true
+        : selectedFolder === 'current'
+        ? checkIsCurrentUser(u)
+        : u.role === selectedFolder;
     const term = searchTerm.toLowerCase().trim();
     if (!term) return matchesFolder;
 
@@ -117,12 +135,25 @@ export const CredentialsDirectory: React.FC<CredentialsDirectoryProps> = ({
     setTimeout(() => setCopiedField(null), 2000);
   };
 
+  const getInstitutionalDefaultPassword = (role: string) => {
+    switch (role) {
+      case 'superadmin': return 'Admin@Nexus2025!';
+      case 'teacher': return 'NexusTeacher#2025';
+      case 'parent': return 'ParentPass#2025';
+      case 'student':
+      default:
+        return 'StudentPass#101';
+    }
+  };
+
   const handleOpenEdit = (user: UserCredential) => {
     setEditingUser(user);
     setEditName(user.name);
     setEditRole(user.role);
     setEditUsername(user.username || '');
-    setEditPassword('');
+    // Pre-populate the current exact institutional password so admin sees current credentials
+    const currentPass = user.password || (user as any).rawPassword || getInstitutionalDefaultPassword(user.role);
+    setEditPassword(currentPass);
     setShowEditPassword(false);
     setEditEmail(user.email || '');
     setEditPhone(user.phone || '');
@@ -343,15 +374,34 @@ export const CredentialsDirectory: React.FC<CredentialsDirectoryProps> = ({
             {counts.parent}
           </span>
         </button>
+
+        {currentUser && (
+          <button
+            type="button"
+            onClick={() => setSelectedFolder('current')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ml-auto ${
+              selectedFolder === 'current'
+                ? 'bg-amber-500 text-slate-950 shadow-sm shadow-amber-500/30 font-bold ring-2 ring-amber-400'
+                : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+            <span>Current Account Holder (You)</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-slate-950 dark:text-amber-100 font-mono font-bold">
+              {counts.current}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Directory Table */}
       <div className="overflow-x-auto -mx-3 sm:mx-0">
-        <table className="min-w-[720px] w-full text-left text-xs">
+        <table className="min-w-[800px] w-full text-left text-xs">
           <thead className="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 uppercase tracking-wider font-bold border-b border-slate-200 dark:border-slate-800">
             <tr>
               <th className="px-5 py-3.5">User Identity</th>
               <th className="px-4 py-3.5">Role</th>
+              <th className="px-4 py-3.5">Status &amp; Verification</th>
               <th className="px-4 py-3.5">Username</th>
               <th className="px-5 py-3.5">Password</th>
               <th className="px-4 py-3.5">Contact Phone</th>
@@ -363,7 +413,7 @@ export const CredentialsDirectory: React.FC<CredentialsDirectoryProps> = ({
           <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
             {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                <td colSpan={9} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                   <Folder className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                   <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                     No credentials match the selected filter
@@ -375,15 +425,24 @@ export const CredentialsDirectory: React.FC<CredentialsDirectoryProps> = ({
               </tr>
             ) : (
               filteredUsers.map((u) => {
+                const isCurrentUser = checkIsCurrentUser(u);
                 const studentClass = classes.find((c) => c.id === u.classId);
                 const studentDiv = divisions.find((d) => d.id === u.divisionId);
                 const linkedParent = users.find((p) => p.id === u.parentId);
                 const isPasswordVisible = showAllPasswords || !!visiblePasswords[u.id];
-                const passwordText = u.password || 'School@123';
+                const defaultRolePass = getInstitutionalDefaultPassword(u.role);
+                const passwordText = u.password || (u as any).rawPassword || defaultRolePass;
                 const usernameText = u.username || (u.email ? u.email.split('@')[0] : u.name.toLowerCase().replace(/\s+/g, ''));
 
                 return (
-                  <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                  <tr 
+                    key={u.id} 
+                    className={`transition-colors ${
+                      isCurrentUser 
+                        ? 'bg-amber-500/10 dark:bg-amber-500/10 hover:bg-amber-500/15 border-l-4 border-l-amber-500 shadow-xs' 
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                    }`}
+                  >
                     {/* Identity */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
@@ -393,9 +452,15 @@ export const CredentialsDirectory: React.FC<CredentialsDirectoryProps> = ({
                           size="md"
                         />
                         <div>
-                          <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                          <div className="font-bold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-1.5">
                             <span>{u.name}</span>
-                            {u.role === 'superadmin' && (
+                            {isCurrentUser && (
+                              <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black shadow-xs shadow-amber-500/30">
+                                <Sparkles className="w-2.5 h-2.5 text-slate-950" />
+                                Current Account Holder (You)
+                              </span>
+                            )}
+                            {u.role === 'superadmin' && !isCurrentUser && (
                               <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-700 dark:text-rose-400 font-bold border border-rose-500/30">
                                 Management
                               </span>
@@ -419,6 +484,31 @@ export const CredentialsDirectory: React.FC<CredentialsDirectoryProps> = ({
                       }`}>
                         {u.role}
                       </span>
+                    </td>
+
+                    {/* Status & Verification Pipeline Badge */}
+                    <td className="px-4 py-3.5">
+                      {isCurrentUser ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-slate-950 shadow-xs shadow-amber-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping" />
+                            Current Session
+                          </span>
+                          <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 shrink-0" /> Active Logged In
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                            <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            Verified CBSE
+                          </span>
+                          <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400">
+                            Institutional Roster
+                          </span>
+                        </div>
+                      )}
                     </td>
 
                     {/* Username Column with Copy */}

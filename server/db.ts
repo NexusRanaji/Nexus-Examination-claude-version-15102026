@@ -24,6 +24,18 @@ function loadEnvFile() {
         }
       }
     }
+
+    // Secondary fallback: check data/supabase_config.json if .env is missing or deleted
+    const configPath = path.resolve(process.cwd(), 'data/supabase_config.json');
+    if (!process.env.DATABASE_URL && fs.existsSync(configPath)) {
+      try {
+        const conf = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (conf.databaseUrl) {
+          process.env.DATABASE_URL = conf.databaseUrl;
+          console.log('[DB] Loaded database URL from data/supabase_config.json');
+        }
+      } catch {}
+    }
   } catch (err: any) {
     console.warn('[DB] Could not load .env file:', err.message);
   }

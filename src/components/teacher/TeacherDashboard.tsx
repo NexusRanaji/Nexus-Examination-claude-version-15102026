@@ -29,7 +29,8 @@ import {
   GraduationCap,
   Key,
   FileSpreadsheet,
-  RefreshCw
+  RefreshCw,
+  X
 } from 'lucide-react';
 import { 
   UserCredential, 
@@ -184,6 +185,38 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         if (d.subjects?.length > 0 && !matSubjectId) {
           setMatSubjectId(d.subjects[0].id);
           setNewBankSubject(d.subjects[0].id);
+        }
+      } else {
+        // Fallback: load academic structure from /api/classes or presets
+        try {
+          const fallbackRes = await apiClient.get('/api/classes');
+          if (fallbackRes.ok && fallbackRes.data) {
+            const d = fallbackRes.data;
+            setClasses(d.classes || []);
+            setDivisionsList(d.divisions || []);
+            setSubjects(d.subjects || []);
+            if (d.classes?.length > 0 && !matClassId) {
+              setMatClassId(d.classes[0].id);
+            }
+            if (d.subjects?.length > 0 && !matSubjectId) {
+              setMatSubjectId(d.subjects[0].id);
+              setNewBankSubject(d.subjects[0].id);
+            }
+          }
+        } catch {
+          // Standard presets fallback
+          setClasses([
+            { id: 'cls-10', name: 'Standard 10 (SSC)', level: 10, archived: false },
+            { id: 'cls-9', name: 'Standard 9', level: 9, archived: false },
+            { id: 'cls-8', name: 'Standard 8', level: 8, archived: false }
+          ]);
+          setSubjects([
+            { id: 'sub-phy', name: 'Physics & Applied Science', code: 'SCI-101', icon: 'Atom' },
+            { id: 'sub-math', name: 'Advanced Mathematics', code: 'MTH-102', icon: 'Calculator' },
+            { id: 'sub-eng', name: 'English Literature & Composition', code: 'ENG-103', icon: 'BookOpen' },
+            { id: 'sub-cs', name: 'Computer Science & Logic', code: 'CS-104', icon: 'Cpu' },
+            { id: 'sub-soc', name: 'Social Studies & History', code: 'SOC-105', icon: 'Globe' }
+          ]);
         }
       }
     } catch (err: any) {
@@ -502,14 +535,25 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             <AlertTriangle className="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" aria-hidden="true" />
             <span className="text-xs sm:text-sm font-medium">{loadError}</span>
           </div>
-          <button
-            type="button"
-            onClick={fetchAllData}
-            className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-          >
-            <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Retry</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={fetchAllData}
+              className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Retry</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLoadError(null)}
+              className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer"
+              title="Dismiss error"
+              aria-label="Dismiss error"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 

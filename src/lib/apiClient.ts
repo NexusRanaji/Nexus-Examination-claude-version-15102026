@@ -130,9 +130,11 @@ async function executeRequest<T = any>(
       // Handle 401 Unauthorized
       if (
         response.status === 401 &&
+        !options.skipAuth &&
         !url.includes('/api/auth/login') &&
         !url.includes('/api/auth/student/login') &&
-        !url.includes('/api/auth/faculty/login')
+        !url.includes('/api/auth/faculty/login') &&
+        !url.includes('/api/auth/public-users')
       ) {
         clearAuthSession();
         if (typeof window !== 'undefined') {
