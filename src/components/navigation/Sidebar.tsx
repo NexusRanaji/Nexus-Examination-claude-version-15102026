@@ -15,8 +15,6 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
-  Sun,
-  Moon,
   Sparkles,
   Layers,
   BarChart3,
@@ -26,7 +24,6 @@ import {
   UserCheck
 } from 'lucide-react';
 import { UserCredential } from '../../types';
-import { useTheme } from '../../context/ThemeContext';
 import { UserAvatar } from '../common/UserAvatar';
 
 interface SidebarProps {
@@ -56,7 +53,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose,
   isMobile = false,
 }) => {
-  const { theme, toggleTheme } = useTheme();
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
 
   // Define navigational links for each role
@@ -298,22 +294,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         )}
 
-        <div className="flex items-center gap-2 pt-1">
-          <button
-            onClick={toggleTheme}
-            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-          >
-            {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-600" />}
-            <span>{theme === 'dark' ? 'Light' : 'Dark'} Mode</span>
-          </button>
-
+        <div className="pt-1">
           <button
             onClick={onLogout}
             title="Sign Out to Login Page"
-            className="px-3 py-2 rounded-xl border border-rose-500/30 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            className="w-full px-3 py-2 rounded-xl border border-rose-500/30 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Logout</span>
+            <span>Logout</span>
           </button>
         </div>
       </div>

@@ -32,7 +32,8 @@ import {
   Home,
   FileSpreadsheet,
   RefreshCw,
-  Database
+  Database,
+  Trash2
 } from 'lucide-react';
 import { UserCredential, SchoolClass, Division, Subject, SchoolStats, ExamSubmission } from '../../types';
 import { apiClient } from '../../lib/apiClient';
@@ -155,13 +156,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       }
       if (classesRes.ok && classesRes.data) {
         const cData = classesRes.data;
-        setClassesList(cData.classes || []);
+        const validClasses: SchoolClass[] = cData.classes || [];
+        setClassesList(validClasses);
         setDivisionsList(cData.divisions || []);
         setSubjectsList(cData.subjects || []);
-        if (cData.classes?.length > 0 && !newUserClassId) {
-          setNewUserClassId(cData.classes[0].id);
-          setNewDivClassId(cData.classes[0].id);
-          setAssignClassId(cData.classes[0].id);
+        if (validClasses.length > 0) {
+          setNewUserClassId((prev) => (prev && validClasses.some((c) => c.id === prev) ? prev : validClasses[0].id));
+          setNewDivClassId((prev) => (prev && validClasses.some((c) => c.id === prev) ? prev : validClasses[0].id));
+          setAssignClassId((prev) => (prev && validClasses.some((c) => c.id === prev) ? prev : validClasses[0].id));
         }
       }
       if (submRes.ok && submRes.data) {
@@ -219,74 +221,173 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleAddClass = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClassName) return;
+    if (!newClassName.trim()) {
+      setStatusMessage({ type: 'error', text: 'Please enter a valid class or standard name (e.g. Standard 11).' });
+      return;
+    }
     try {
-      const res = await apiClient.post('/api/admin/classes', { name: newClassName, level: newClassLevel });
+      setStatusMessage(null);
+      const res = await apiClient.post('/api/admin/classes', {
+        name: newClassName.trim(),
+        level: newClassLevel,
+      });
       if (res.ok) {
         setNewClassName('');
-        fetchData();
-        setStatusMessage({ type: 'success', text: 'New Class created successfully!' });
+        setNewClassLevel('10');
+        await fetchData();
+        setStatusMessage({ type: 'success', text: res.data?.message || 'New Class created successfully!' });
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Failed to create class:', err);
+      setStatusMessage({ type: 'error', text: err?.message || 'Failed to create class.' });
     }
   };
 
   const handleAddDivision = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newDivName || !newDivClassId) return;
+    const targetClassId = newDivClassId || (classesList.length > 0 ? classesList[0].id : '');
+    if (!targetClassId) {
+      setStatusMessage({ type: 'error', text: 'Please select a valid parent class for this division.' });
+      return;
+    }
+    if (!newDivName.trim()) {
+      setStatusMessage({ type: 'error', text: 'Please enter a division name (e.g. Division C).' });
+      return;
+    }
     try {
-      const res = await apiClient.post('/api/admin/divisions', { classId: newDivClassId, name: newDivName, roomNumber: newDivRoom });
+      setStatusMessage(null);
+      const res = await apiClient.post('/api/admin/divisions', {
+        classId: targetClassId,
+        name: newDivName.trim(),
+        roomNumber: newDivRoom.trim(),
+      });
       if (res.ok) {
         setNewDivName('');
         setNewDivRoom('');
-        fetchData();
-        setStatusMessage({ type: 'success', text: 'Division added successfully!' });
+        await fetchData();
+        setStatusMessage({ type: 'success', text: res.data?.message || 'Division added successfully!' });
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Failed to add division:', err);
+      setStatusMessage({ type: 'error', text: err?.message || 'Failed to add division.' });
     }
   };
 
   const handleAddSubject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newSubName || !newSubCode) return;
+    if (!newSubName.trim() || !newSubCode.trim()) {
+      setStatusMessage({ type: 'error', text: 'Both Subject Name and Subject Code (e.g. SCI-101) are required.' });
+      return;
+    }
     try {
-      const res = await apiClient.post('/api/admin/subjects', { name: newSubName, code: newSubCode });
+      setStatusMessage(null);
+      const res = await apiClient.post('/api/admin/subjects', {
+        name: newSubName.trim(),
+        code: newSubCode.trim().toUpperCase(),
+      });
       if (res.ok) {
         setNewSubName('');
         setNewSubCode('');
-        fetchData();
-        setStatusMessage({ type: 'success', text: 'Subject created successfully!' });
+        await fetchData();
+        setStatusMessage({ type: 'success', text: res.data?.message || 'Subject created successfully!' });
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Failed to create subject:', err);
+      setStatusMessage({ type: 'error', text: err?.message || 'Failed to create subject.' });
     }
   };
 
   const handleAssignTeacher = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTeacherId || !assignClassId || !assignDivisionId || !assignSubjectId) return;
+    const targetClassId = assignClassId || (classesList.length > 0 ? classesList[0].id : '');
+    if (!selectedTeacherId || !targetClassId || !assignDivisionId || !assignSubjectId) {
+      setStatusMessage({ type: 'error', text: 'Please select a Teacher, Target Class, Division, and Subject.' });
+      return;
+    }
+
     const teacher = usersList.find((u) => u.id === selectedTeacherId);
-    if (!teacher) return;
+    if (!teacher) {
+      setStatusMessage({ type: 'error', text: 'Selected teacher was not found in directory.' });
+      return;
+    }
+
+    // Verify division belongs to class
+    const divObj = divisionsList.find((d) => d.id === assignDivisionId && d.classId === targetClassId);
+    if (!divObj) {
+      setStatusMessage({ type: 'error', text: 'Selected division does not belong to the selected class.' });
+      return;
+    }
 
     const existingAssignments = teacher.assignedSubjects || [];
+    const isDuplicate = existingAssignments.some(
+      (a: any) => a.classId === targetClassId && a.divisionId === assignDivisionId && a.subjectId === assignSubjectId
+    );
+
+    if (isDuplicate) {
+      setStatusMessage({
+        type: 'error',
+        text: `Faculty member ${teacher.name} is already assigned to this exact Class, Division, and Subject!`,
+      });
+      return;
+    }
+
     const updatedAssignments = [
       ...existingAssignments,
-      { classId: assignClassId, divisionId: assignDivisionId, subjectId: assignSubjectId },
+      { classId: targetClassId, divisionId: assignDivisionId, subjectId: assignSubjectId },
     ];
 
     try {
+      setStatusMessage(null);
       const res = await apiClient.post('/api/admin/teachers/assign', {
         teacherId: selectedTeacherId,
         assignments: updatedAssignments,
       });
       if (res.ok) {
-        fetchData();
-        setStatusMessage({ type: 'success', text: `Assigned teacher to new class/subject mapping!` });
+        setAssignDivisionId('');
+        setAssignSubjectId('');
+        await fetchData();
+        onRefreshUsers();
+        setStatusMessage({
+          type: 'success',
+          text: `Successfully linked ${teacher.name} to the new class & subject allocation!`,
+        });
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Failed to assign teacher:', err);
+      setStatusMessage({ type: 'error', text: err?.message || 'Failed to assign teacher.' });
+    }
+  };
+
+  const handleRemoveAssignment = async (
+    teacherId: string,
+    classId: string,
+    divisionId: string,
+    subjectId: string
+  ) => {
+    const teacher = usersList.find((u) => u.id === teacherId);
+    if (!teacher) return;
+    const existing = teacher.assignedSubjects || [];
+    const filtered = existing.filter(
+      (a: any) => !(a.classId === classId && a.divisionId === divisionId && a.subjectId === subjectId)
+    );
+
+    try {
+      setStatusMessage(null);
+      const res = await apiClient.post('/api/admin/teachers/assign', {
+        teacherId,
+        assignments: filtered,
+      });
+      if (res.ok) {
+        await fetchData();
+        onRefreshUsers();
+        setStatusMessage({
+          type: 'success',
+          text: `Assignment removed from ${teacher.name}.`,
+        });
+      }
+    } catch (err: any) {
+      console.error('Failed to remove assignment:', err);
+      setStatusMessage({ type: 'error', text: err?.message || 'Failed to remove assignment.' });
     }
   };
 
@@ -1568,6 +1669,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {/* Tab 3: Academic Hierarchy Management */}
       {activeTab === 'academic' && (
         <div className="space-y-8">
+          {/* Real-time Status Notification for Academic Operations */}
+          {statusMessage && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className={`p-3.5 rounded-2xl border text-xs font-semibold flex items-center justify-between gap-3 transition-colors ${
+                statusMessage.type === 'success'
+                  ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
+                  : 'bg-rose-500/10 text-rose-800 dark:text-rose-300 border-rose-500/30'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {statusMessage.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                )}
+                <span>{statusMessage.text}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStatusMessage(null)}
+                className="text-xs opacity-70 hover:opacity-100 cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Add New Class */}
             <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs transition-colors">
@@ -1588,6 +1718,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 />
                 <input
                   type="number"
+                  min="1"
+                  max="12"
                   placeholder="Level / Grade Number (e.g. 11)"
                   value={newClassLevel}
                   onChange={(e) => setNewClassLevel(e.target.value)}
@@ -1612,7 +1744,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <form onSubmit={handleAddDivision} className="space-y-3">
                 <select
-                  value={newDivClassId}
+                  value={newDivClassId || (classesList[0]?.id || '')}
                   onChange={(e) => setNewDivClassId(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-amber-500"
                 >
@@ -1699,7 +1831,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 >
                   <option value="">Choose Faculty</option>
                   {teacherUsers.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name} ({t.employeeId})</option>
+                    <option key={t.id} value={t.id}>{t.name} ({t.employeeId || 'Faculty'})</option>
                   ))}
                 </select>
               </div>
@@ -1707,8 +1839,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Target Class</label>
                 <select
-                  value={assignClassId}
-                  onChange={(e) => setAssignClassId(e.target.value)}
+                  value={assignClassId || (classesList[0]?.id || '')}
+                  onChange={(e) => {
+                    const nextClassId = e.target.value;
+                    setAssignClassId(nextClassId);
+                    setAssignDivisionId('');
+                  }}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-amber-500"
                 >
                   {classesList.map((c) => (
@@ -1726,9 +1862,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 >
                   <option value="">Choose Division</option>
                   {divisionsList
-                    .filter((d) => d.classId === assignClassId)
+                    .filter((d) => d.classId === (assignClassId || classesList[0]?.id))
                     .map((d) => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
+                      <option key={d.id} value={d.id}>{d.name} {d.roomNumber ? `(${d.roomNumber})` : ''}</option>
                     ))}
                 </select>
               </div>
@@ -1750,13 +1886,168 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="sm:col-span-4 mt-2">
                 <button
                   type="submit"
-                  disabled={!selectedTeacherId || !assignClassId || !assignDivisionId || !assignSubjectId}
+                  disabled={!selectedTeacherId || !assignDivisionId || !assignSubjectId}
                   className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-xl transition-all cursor-pointer"
                 >
                   Link Teacher Assignment
                 </button>
               </div>
             </form>
+          </div>
+
+          {/* Current Academic Structure & Faculty Allocations Explorer */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-amber-500" />
+                  Academic Structure &amp; Active Faculty Directory
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Real-time persistence across standards, classroom divisions, subjects, and teacher allocations.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fetchData}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Refresh</span>
+              </button>
+            </div>
+
+            {/* Classes & Divisions Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {classesList.map((cls) => {
+                const classDivs = divisionsList.filter((d) => d.classId === cls.id && !d.archived);
+                const classStudents = usersList.filter((u) => u.role === 'student' && u.classId === cls.id);
+                return (
+                  <div
+                    key={cls.id}
+                    className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">{cls.name}</h4>
+                        <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                          Grade Level: {cls.level}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+                        {classStudents.length} Students
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        Divisions ({classDivs.length}):
+                      </span>
+                      {classDivs.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {classDivs.map((d) => (
+                            <span
+                              key={d.id}
+                              className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-medium"
+                            >
+                              {d.name} {d.roomNumber ? `• ${d.roomNumber}` : ''}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-400 italic">No divisions added yet.</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Registered Subjects Overview */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+              <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-blue-500" />
+                Curriculum Subjects ({subjectsList.length})
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+                {subjectsList.map((s) => (
+                  <div
+                    key={s.id}
+                    className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40"
+                  >
+                    <span className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded bg-blue-500/10 inline-block mb-1">
+                      {s.code}
+                    </span>
+                    <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate" title={s.name}>
+                      {s.name}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Active Teacher Allocations Matrix Table */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+              <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Users className="w-4 h-4 text-emerald-500" />
+                Active Faculty Teaching Allocations
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold">
+                      <th className="pb-2">Faculty Member</th>
+                      <th className="pb-2">Standard / Class</th>
+                      <th className="pb-2">Division</th>
+                      <th className="pb-2">Subject Assigned</th>
+                      <th className="pb-2 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                    {teacherUsers.flatMap((t) => {
+                      const assignments: any[] = t.assignedSubjects || [];
+                      return assignments.map((a, idx) => {
+                        const clsObj = classesList.find((c) => c.id === a.classId);
+                        const divObj = divisionsList.find((d) => d.id === a.divisionId);
+                        const subObj = subjectsList.find((s) => s.id === a.subjectId);
+                        return (
+                          <tr key={`${t.id}-${a.classId}-${a.divisionId}-${a.subjectId}-${idx}`} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                            <td className="py-2.5 font-medium text-slate-900 dark:text-slate-100">
+                              {t.name} <span className="text-[10px] text-slate-400 font-mono">({t.employeeId || 'Faculty'})</span>
+                            </td>
+                            <td className="py-2.5 text-slate-700 dark:text-slate-300">
+                              {clsObj?.name || a.classId}
+                            </td>
+                            <td className="py-2.5 text-slate-700 dark:text-slate-300">
+                              {divObj?.name || a.divisionId}
+                            </td>
+                            <td className="py-2.5 text-slate-700 dark:text-slate-300">
+                              <span className="font-medium">{subObj?.name || a.subjectId}</span>{' '}
+                              {subObj?.code && (
+                                <span className="text-[10px] font-mono px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                                  {subObj.code}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveAssignment(t.id, a.classId, a.divisionId, a.subjectId)}
+                                className="px-2.5 py-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
+                                title="Remove assignment"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>Unlink</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       )}

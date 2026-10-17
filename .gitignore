@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+# Local database and private application data
+data/nexus_school_db.json
+data/supabase_config.json

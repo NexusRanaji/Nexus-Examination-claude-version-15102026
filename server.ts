@@ -3611,10 +3611,31 @@ app.get('/api/admin/classes/', handleGetClasses);
 
 app.post('/api/admin/classes', requireAuth, requireRole('superadmin'), (req, res) => {
   const { name, level } = req.body;
-  if (!name) return res.status(400).json({ error: 'Class name required' });
-  const newClass = { id: `cls-${Date.now().toString().slice(-4)}`, name, level: Number(level) || 10, archived: false };
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Class name is required' });
+  }
+  const trimmedName = name.trim();
+  const parsedLevel = Number(level);
+  if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 12) {
+    return res.status(400).json({ error: 'Valid standard/grade level between 1 and 12 is required' });
+  }
+
+  // Prevent duplicate active class by name (case-insensitive)
+  const duplicate = classes.find(
+    (c) => !c.archived && c.name.toLowerCase() === trimmedName.toLowerCase()
+  );
+  if (duplicate) {
+    return res.status(409).json({ error: `A class named "${trimmedName}" already exists.` });
+  }
+
+  const newClass = {
+    id: `cls-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    name: trimmedName,
+    level: parsedLevel,
+    archived: false,
+  };
   classes.push(newClass);
-  res.status(201).json({ class: newClass });
+  res.status(201).json({ message: `Class "${trimmedName}" created successfully!`, class: newClass });
 });
 
 app.put('/api/admin/classes/:id', requireAuth, requireRole('superadmin'), (req, res) => {
@@ -3623,8 +3644,21 @@ app.put('/api/admin/classes/:id', requireAuth, requireRole('superadmin'), (req, 
   const c = classes.find((item) => item.id === id);
   if (!c) return res.status(404).json({ error: 'Class not found' });
 
-  if (name !== undefined) c.name = name.trim();
-  if (level !== undefined) c.level = Number(level);
+  if (name !== undefined) {
+    const trimmed = name.trim();
+    if (!trimmed) return res.status(400).json({ error: 'Class name cannot be empty' });
+    const duplicate = classes.find(
+      (other) => other.id !== id && !other.archived && other.name.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (duplicate) return res.status(409).json({ error: `A class named "${trimmed}" already exists.` });
+    c.name = trimmed;
+  }
+  if (level !== undefined) {
+    const parsedLevel = Number(level);
+    if (!isNaN(parsedLevel) && parsedLevel >= 1 && parsedLevel <= 12) {
+      c.level = parsedLevel;
+    }
+  }
   if (archived !== undefined) c.archived = Boolean(archived);
 
   res.json({ message: 'Class updated successfully', class: c });
@@ -3671,10 +3705,37 @@ app.delete('/api/admin/classes/:id', requireAuth, requireRole('superadmin'), (re
 
 app.post('/api/admin/divisions', requireAuth, requireRole('superadmin'), (req, res) => {
   const { classId, name, roomNumber } = req.body;
-  if (!classId || !name) return res.status(400).json({ error: 'Class ID and Division name required' });
-  const newDiv = { id: `div-${Date.now().toString().slice(-4)}`, classId, name, roomNumber, archived: false };
+  if (!classId || typeof classId !== 'string' || !classId.trim()) {
+    return res.status(400).json({ error: 'Target Class is required' });
+  }
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Division name is required' });
+  }
+
+  // Validate that the parent class exists and is not archived
+  const targetClass = classes.find((c) => c.id === classId.trim() && !c.archived);
+  if (!targetClass) {
+    return res.status(404).json({ error: 'Target Class does not exist or has been archived' });
+  }
+
+  const trimmedName = name.trim();
+  // Prevent duplicate division within the same class (case-insensitive)
+  const duplicate = divisions.find(
+    (d) => !d.archived && d.classId === targetClass.id && d.name.toLowerCase() === trimmedName.toLowerCase()
+  );
+  if (duplicate) {
+    return res.status(409).json({ error: `Division "${trimmedName}" already exists in ${targetClass.name}.` });
+  }
+
+  const newDiv = {
+    id: `div-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    classId: targetClass.id,
+    name: trimmedName,
+    roomNumber: (roomNumber || '').trim(),
+    archived: false,
+  };
   divisions.push(newDiv);
-  res.status(201).json({ division: newDiv });
+  res.status(201).json({ message: `Division "${trimmedName}" added to ${targetClass.name} successfully!`, division: newDiv });
 });
 
 app.put('/api/admin/divisions/:id', requireAuth, requireRole('superadmin'), (req, res) => {
@@ -3683,7 +3744,15 @@ app.put('/api/admin/divisions/:id', requireAuth, requireRole('superadmin'), (req
   const div = divisions.find((d) => d.id === id);
   if (!div) return res.status(404).json({ error: 'Division not found' });
 
-  if (name !== undefined) div.name = name.trim();
+  if (name !== undefined) {
+    const trimmed = name.trim();
+    if (!trimmed) return res.status(400).json({ error: 'Division name cannot be empty' });
+    const duplicate = divisions.find(
+      (other) => other.id !== id && !other.archived && other.classId === div.classId && other.name.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (duplicate) return res.status(409).json({ error: `Division "${trimmed}" already exists in this class.` });
+    div.name = trimmed;
+  }
   if (roomNumber !== undefined) div.roomNumber = roomNumber.trim();
   if (archived !== undefined) div.archived = Boolean(archived);
 
@@ -3717,18 +3786,113 @@ app.delete('/api/admin/divisions/:id', requireAuth, requireRole('superadmin'), (
 
 app.post('/api/admin/subjects', requireAuth, requireRole('superadmin'), (req, res) => {
   const { name, code, icon } = req.body;
-  if (!name || !code) return res.status(400).json({ error: 'Subject name and code required' });
-  const newSub = { id: `sub-${Date.now().toString().slice(-4)}`, name, code, icon: icon || 'BookOpen' };
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Subject name is required' });
+  }
+  if (!code || typeof code !== 'string' || !code.trim()) {
+    return res.status(400).json({ error: 'Subject code is required' });
+  }
+
+  const trimmedName = name.trim();
+  const trimmedCode = code.trim().toUpperCase();
+
+  // Prevent duplicate subject code (e.g. SCI-101)
+  const existingCode = subjects.find((s) => s.code.toUpperCase() === trimmedCode);
+  if (existingCode) {
+    return res.status(409).json({ error: `Subject code "${trimmedCode}" is already assigned to "${existingCode.name}".` });
+  }
+
+  // Prevent duplicate subject name (case-insensitive)
+  const existingName = subjects.find((s) => s.name.toLowerCase() === trimmedName.toLowerCase());
+  if (existingName) {
+    return res.status(409).json({ error: `A subject named "${trimmedName}" already exists with code ${existingName.code}.` });
+  }
+
+  const newSub = {
+    id: `sub-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    name: trimmedName,
+    code: trimmedCode,
+    icon: (icon && typeof icon === 'string' ? icon.trim() : 'BookOpen'),
+  };
   subjects.push(newSub);
-  res.status(201).json({ subject: newSub });
+  res.status(201).json({ message: `Subject "${trimmedName}" (${trimmedCode}) created successfully!`, subject: newSub });
+});
+
+// Safe deletion check for Subject
+app.delete('/api/admin/subjects/:id', requireAuth, requireRole('superadmin'), (req, res) => {
+  const { id } = req.params;
+  const subIndex = subjects.findIndex((s) => s.id === id);
+  if (subIndex === -1) return res.status(404).json({ error: 'Subject not found' });
+
+  const targetSub = subjects[subIndex];
+  const dependentExams = exams.filter((e) => e.subjectId === id || (e.subject && e.subject.toLowerCase() === targetSub.name.toLowerCase()));
+  const dependentQuestions = questionBank.filter((q) => q.subjectId === id || (q.subject && q.subject.toLowerCase() === targetSub.name.toLowerCase()));
+  const dependentTeachers = users.filter((u) => u.role === 'teacher' && Array.isArray(u.assignedSubjects) && u.assignedSubjects.some((a: any) => a.subjectId === id));
+
+  if (dependentExams.length > 0 || dependentQuestions.length > 0 || dependentTeachers.length > 0) {
+    return res.status(400).json({
+      error: `Cannot delete Subject "${targetSub.name}": It has active dependencies (${dependentExams.length} exams, ${dependentQuestions.length} questions, ${dependentTeachers.length} teacher assignments).`,
+    });
+  }
+
+  subjects.splice(subIndex, 1);
+  // Also clean up any classSubjects mapping
+  classSubjects = classSubjects.filter((cs) => cs.subjectId !== id);
+  res.json({ message: `Subject "${targetSub.name}" removed successfully.`, deletedId: id });
 });
 
 app.post('/api/admin/teachers/assign', requireAuth, requireRole('superadmin'), (req, res) => {
   const { teacherId, assignments } = req.body;
+  if (!teacherId) return res.status(400).json({ error: 'Teacher ID is required' });
+
   const teacher = users.find((u) => u.id === teacherId && u.role === 'teacher');
-  if (!teacher) return res.status(404).json({ error: 'Teacher not found' });
-  teacher.assignedSubjects = assignments;
-  res.json({ message: 'Teacher assignments updated', teacher: publicUser(teacher) });
+  if (!teacher) return res.status(404).json({ error: 'Teacher not found or is not a faculty member' });
+
+  if (!Array.isArray(assignments)) {
+    return res.status(400).json({ error: 'Assignments must be provided as an array' });
+  }
+
+  // Validate each assignment against valid, existing classes, divisions, and subjects
+  const validatedAssignments: any[] = [];
+  const seenKeys = new Set<string>();
+
+  for (const item of assignments) {
+    if (!item.classId || !item.divisionId || !item.subjectId) {
+      return res.status(400).json({ error: 'Each assignment requires a valid class, division, and subject' });
+    }
+
+    const c = classes.find((cls) => cls.id === item.classId && !cls.archived);
+    if (!c) {
+      return res.status(400).json({ error: `Invalid class specified in assignment (ID: ${item.classId})` });
+    }
+
+    const d = divisions.find((div) => div.id === item.divisionId && div.classId === item.classId && !div.archived);
+    if (!d) {
+      return res.status(400).json({ error: `Division does not exist or does not belong to ${c.name}` });
+    }
+
+    const s = subjects.find((subj) => subj.id === item.subjectId);
+    if (!s) {
+      return res.status(400).json({ error: `Invalid subject specified in assignment (ID: ${item.subjectId})` });
+    }
+
+    const key = `${item.classId}|${item.divisionId}|${item.subjectId}`;
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      validatedAssignments.push({
+        classId: item.classId,
+        divisionId: item.divisionId,
+        subjectId: item.subjectId,
+      });
+    }
+  }
+
+  teacher.assignedSubjects = validatedAssignments;
+  res.json({
+    message: `Teacher assignments updated for ${teacher.name} (${validatedAssignments.length} active allocation(s)).`,
+    teacher: publicUser(teacher),
+    assignmentsCount: validatedAssignments.length,
+  });
 });
 
 app.get('/api/admin/stats', requireAuth, requireRole('superadmin'), (req, res) => {
