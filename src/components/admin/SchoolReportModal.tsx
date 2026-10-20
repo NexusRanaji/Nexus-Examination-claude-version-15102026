@@ -158,11 +158,11 @@ export const SchoolReportModal: React.FC<SchoolReportModalProps> = ({
       doc.text('1. INSTITUTIONAL EXECUTIVE PERFORMANCE CENSUS', 14, y);
 
       const kpis = [
-        { label: 'Total Teachers', val: String(data.summary?.totalTeachers || data.overview?.totalTeachers || 12) },
-        { label: 'Total Students', val: String(data.summary?.totalStudents || data.overview?.totalStudents || 48) },
-        { label: 'Exams Conducted', val: String(data.summary?.totalExamsConducted || data.overview?.totalExamsCreated || 6) },
-        { label: 'Submissions Graded', val: String(data.summary?.totalSubmissionsEvaluated || data.overview?.totalSubmissionsRecorded || 42) },
-        { label: 'School Pass Rate', val: `${data.summary?.overallPassRate || 94.2}%` },
+        { label: 'Total Teachers', val: String(data.summary?.totalTeachers ?? data.overview?.totalTeachers ?? 0) },
+        { label: 'Total Students', val: String(data.summary?.totalStudents ?? data.overview?.totalStudents ?? 0) },
+        { label: 'Exams Conducted', val: String(data.summary?.totalExamsConducted ?? data.overview?.totalExamsCreated ?? 0) },
+        { label: 'Submissions Graded', val: String(data.summary?.totalSubmissionsEvaluated ?? data.overview?.totalSubmissionsRecorded ?? 0) },
+        { label: 'School Pass Rate', val: `${data.summary?.overallPassRate ?? 0}%` },
       ];
 
       let kpiX = 14;
@@ -211,13 +211,13 @@ export const SchoolReportModal: React.FC<SchoolReportModalProps> = ({
       doc.setTextColor(30, 41, 59);
 
       const gradeData = data.cbseGradeDistribution || [
-        { grade: 'A1', range: '91% - 100%', description: 'Outstanding', count: 18, percentage: 36 },
-        { grade: 'A2', range: '81% - 90%', description: 'Excellent', count: 14, percentage: 28 },
-        { grade: 'B1', range: '71% - 80%', description: 'Very Good', count: 9, percentage: 18 },
-        { grade: 'B2', range: '61% - 70%', description: 'Good', count: 5, percentage: 10 },
-        { grade: 'C1', range: '51% - 60%', description: 'Fair', count: 2, percentage: 4 },
-        { grade: 'C2', range: '41% - 50%', description: 'Average', count: 1, percentage: 2 },
-        { grade: 'D', range: '33% - 40%', description: 'Pass Threshold', count: 1, percentage: 2 },
+        { grade: 'A1', range: '91% - 100%', description: 'Outstanding', count: 0, percentage: 0 },
+        { grade: 'A2', range: '81% - 90%', description: 'Excellent', count: 0, percentage: 0 },
+        { grade: 'B1', range: '71% - 80%', description: 'Very Good', count: 0, percentage: 0 },
+        { grade: 'B2', range: '61% - 70%', description: 'Good', count: 0, percentage: 0 },
+        { grade: 'C1', range: '51% - 60%', description: 'Fair', count: 0, percentage: 0 },
+        { grade: 'C2', range: '41% - 50%', description: 'Average', count: 0, percentage: 0 },
+        { grade: 'D', range: '33% - 40%', description: 'Pass Threshold', count: 0, percentage: 0 },
         { grade: 'E', range: 'Below 33%', description: 'Remedial Support Required', count: 0, percentage: 0 },
       ];
 
@@ -507,9 +507,9 @@ export const SchoolReportModal: React.FC<SchoolReportModalProps> = ({
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 col-span-2 sm:col-span-1">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">School Pass Rate</div>
                 <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">
-                  {data.summary?.overallPassRate || 94.2}%
+                  {data.summary?.overallPassRate ?? 0}%
                 </div>
-                <div className="text-[11px] text-slate-500 font-medium mt-0.5">Avg: {data.summary?.overallAverageScore || 78.4}%</div>
+                <div className="text-[11px] text-slate-500 font-medium mt-0.5">Avg: {data.summary?.overallAverageScore ?? 0}%</div>
               </div>
             </div>
 

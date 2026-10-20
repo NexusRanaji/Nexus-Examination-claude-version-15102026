@@ -72,8 +72,13 @@ export const BulkCredentialUploadModal: React.FC<BulkCredentialUploadModalProps>
   if (!isOpen) return null;
 
   // 1. Download Blank Sample Credential Template
+  // Class Name values must match existing classes (e.g. "Standard 10 (SSC)", "Standard 9", "Standard 8")
   const handleDownloadTemplate = async (format: 'xlsx' | 'csv') => {
     const XLSX = await import('xlsx');
+    // Prefer first real class name from props so template stays in sync
+    const sampleClassName = classes[0]?.name || 'Standard 10 (SSC)';
+    const sampleDivName = divisions.find((d) => d.classId === classes[0]?.id)?.name || 'Division A';
+
     const templateData = [
       {
         'Full Name': 'Ananya Sharma',
@@ -83,8 +88,8 @@ export const BulkCredentialUploadModal: React.FC<BulkCredentialUploadModalProps>
         'Password': 'StudentPass#2026',
         'Roll Number': 'NRES-10A-15',
         'Employee ID': '',
-        'Class Name': 'Standard 10',
-        'Division Name': 'Division A',
+        'Class Name': sampleClassName,
+        'Division Name': sampleDivName,
         'Phone Number': '+91 98201 11223',
       },
       {
@@ -95,8 +100,8 @@ export const BulkCredentialUploadModal: React.FC<BulkCredentialUploadModalProps>
         'Password': '',
         'Roll Number': 'NRES-10A-16',
         'Employee ID': '',
-        'Class Name': 'Standard 10',
-        'Division Name': 'Division A',
+        'Class Name': sampleClassName,
+        'Division Name': sampleDivName,
         'Phone Number': '',
       },
       {
@@ -298,20 +303,24 @@ export const BulkCredentialUploadModal: React.FC<BulkCredentialUploadModalProps>
     if (createdUsers.length === 0) return;
     const XLSX = await import('xlsx');
 
-    const exportData = createdUsers.map((u, i) => ({
-      'S.No': i + 1,
-      'Full Name': u.name,
-      'Institutional Role': u.role.toUpperCase(),
-      'Username': u.username,
-      'Assigned Password': u.password,
-      'Roll Number': u.rollNo || 'N/A',
-      'Employee ID': u.employeeId || 'N/A',
-      'Class': u.classId || 'N/A',
-      'Division': u.divisionId || 'N/A',
-      'Email': u.email || 'N/A',
-      'Phone': u.phone || 'N/A',
-      'Portal URL': window.location.origin,
-    }));
+    const exportData = createdUsers.map((u, i) => {
+      const className = classes.find((c) => c.id === u.classId)?.name || u.classId || 'N/A';
+      const divisionName = divisions.find((d) => d.id === u.divisionId)?.name || u.divisionId || 'N/A';
+      return {
+        'S.No': i + 1,
+        'Full Name': u.name,
+        'Institutional Role': u.role.toUpperCase(),
+        'Username': u.username,
+        'Assigned Password': u.password,
+        'Roll Number': u.rollNo || 'N/A',
+        'Employee ID': u.employeeId || 'N/A',
+        'Class': className,
+        'Division': divisionName,
+        'Email': u.email || 'N/A',
+        'Phone': u.phone || 'N/A',
+        'Portal URL': window.location.origin,
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();

@@ -2709,13 +2709,22 @@ initCloudDatabasePersistence();
 function ensureHashedPasswords() {
   let modified = false;
   for (const u of users) {
+    const defaultPlain = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
+
     if (!u.password || typeof u.password !== 'string' || u.password.trim().length === 0) {
-      const defaultPlain = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
       u.password = bcrypt.hashSync(defaultPlain, 10);
+      if (!u.rawPassword) u.rawPassword = defaultPlain;
       modified = true;
     } else if (!u.password.startsWith('$2a$') && !u.password.startsWith('$2b$') && !u.password.startsWith('$2y$')) {
-      u.password = bcrypt.hashSync(u.password, 10);
+      // Plaintext stored — hash it and keep rawPassword for admin directory
+      const plain = u.password.trim();
+      u.password = bcrypt.hashSync(plain, 10);
+      u.rawPassword = plain;
       u.mustChangePassword = false;
+      modified = true;
+    } else if (!u.rawPassword) {
+      // Hashed but no rawPassword — seed from map so Master Directory shows correct password
+      u.rawPassword = defaultPlain;
       modified = true;
     }
   }
@@ -3191,7 +3200,8 @@ app.get('/api/auth/users', requireAuth, requireRole('superadmin'), (req, res) =>
       rawPassword: plain,
     };
   });
-  const { items, pagination } = paginateArray(usersWithCredentials, req);
+  // Admin directory needs the full roster; raise limits significantly for real-world school sizes
+  const { items, pagination } = paginateArray(usersWithCredentials, req, 2000, 5000);
   return res.json({ users: items, pagination, total: pagination.total });
 });
 
@@ -3204,7 +3214,8 @@ app.get('/api/admin/credentials', requireAuth, requireRole('superadmin'), (req, 
       rawPassword: plain,
     };
   });
-  const { items, pagination } = paginateArray(usersWithCredentials, req);
+  // Admin directory needs the full roster; raise limits significantly for real-world school sizes
+  const { items, pagination } = paginateArray(usersWithCredentials, req, 2000, 5000);
   return res.json({ users: items, pagination, total: pagination.total });
 });
 
@@ -3290,7 +3301,17 @@ app.post('/api/admin/create-credential', requireAuth, requireRole('superadmin'),
   let cleanUsername = (username || '').trim();
   if (!cleanUsername) {
     const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    cleanUsername = `${role.slice(0, 3)}_${cleanName.slice(0, 8)}_${Math.floor(100 + Math.random() * 900)}`;
+    const base = `${role.slice(0, 3)}_${cleanName.slice(0, 8)}`;
+    cleanUsername = `${base}_${Math.floor(100 + Math.random() * 900)}`;
+    // Retry loop to avoid username collisions under concurrent creation
+    let attempts = 0;
+    while (users.some((x) => x.username && x.username.toLowerCase() === cleanUsername.toLowerCase()) && attempts < 15) {
+      cleanUsername = `${base}_${Math.floor(100 + Math.random() * 900)}`;
+      attempts++;
+    }
+    if (attempts >= 15) {
+      cleanUsername = `${base}_${Date.now().toString(36).slice(-5)}`;
+    }
   }
 
   const rawPassword = (password || '').trim() || generateSecureTemporaryPassword();
@@ -3390,49 +3411,125 @@ app.post('/api/admin/credentials/bulk', requireAuth, requireRole('superadmin'), 
   const createdList: any[] = [];
   const skippedDuplicates: any[] = [];
 
+  // Helper: fuzzy class name match (handles "Standard 10" vs "Standard 10 (SSC)")
+  const resolveClassId = (rawClassId?: string, rawClassName?: string): string | null => {
+    if (rawClassId) {
+      const byId = classes.find((c) => c.id === rawClassId);
+      if (byId) return byId.id;
+    }
+    if (rawClassName) {
+      const name = String(rawClassName).toLowerCase().trim();
+      // Exact match first
+      let found = classes.find((c) => c.name.toLowerCase() === name || c.id === name);
+      if (found) return found.id;
+      // Fuzzy: "standard 10" matches "Standard 10 (SSC)"
+      found = classes.find((c) => {
+        const cn = c.name.toLowerCase();
+        return cn.includes(name) || name.includes(cn.replace(/\s*\(.*\)\s*/g, '').trim());
+      });
+      if (found) return found.id;
+    }
+    return null;
+  };
+
+  const resolveDivisionId = (rawDivId?: string, rawDivName?: string, classId?: string | null): string | null => {
+    if (rawDivId) {
+      const byId = divisions.find((d) => d.id === rawDivId);
+      if (byId) return byId.id;
+    }
+    if (rawDivName) {
+      const name = String(rawDivName).toLowerCase().trim();
+      let candidates = divisions;
+      if (classId) candidates = divisions.filter((d) => d.classId === classId);
+      let found = candidates.find((d) => d.name.toLowerCase() === name || d.id === name);
+      if (found) return found.id;
+      found = candidates.find((d) => d.name.toLowerCase().includes(name) || name.includes(d.name.toLowerCase()));
+      if (found) return found.id;
+    }
+    return null;
+  };
+
+  const generateUniqueUsername = (role: string, cleanName: string, preferred?: string): string => {
+    let base = (preferred || '').trim();
+    if (!base) {
+      base = `${role}.${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10)}`;
+    }
+    let candidate = base;
+    let attempts = 0;
+    while (users.some((x) => x.username && x.username.toLowerCase() === candidate.toLowerCase()) ||
+           createdList.some((x) => x.username && x.username.toLowerCase() === candidate.toLowerCase())) {
+      attempts++;
+      candidate = `${base}${Math.floor(100 + Math.random() * 900)}`;
+      if (attempts > 20) {
+        candidate = `${base}_${Date.now().toString(36).slice(-4)}`;
+        break;
+      }
+    }
+    return candidate;
+  };
+
   rawUsers.forEach((u: any, idx: number) => {
     const role = (u.role || 'student').toLowerCase();
+    const validRoles = ['superadmin', 'teacher', 'student', 'parent'];
     const cleanName = (u.name || '').trim();
-    if (!cleanName) return;
 
-    let cleanUsername = (u.username || '').trim();
-    if (!cleanUsername) {
-      cleanUsername = `${role}.${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10)}${Math.floor(100 + Math.random() * 900)}`;
+    if (!cleanName) {
+      skippedDuplicates.push({ name: u.name || '(empty)', username: u.username || '', reason: 'Full Name is required' });
+      return;
+    }
+    if (!validRoles.includes(role)) {
+      skippedDuplicates.push({ name: cleanName, username: u.username || '', reason: `Invalid role: ${role}` });
+      return;
     }
 
-    const exists = users.find((x) => x.username && x.username.toLowerCase() === cleanUsername.toLowerCase());
-    if (exists) {
-      skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: 'Username already taken' });
-      return;
+    const cleanUsername = generateUniqueUsername(role, cleanName, u.username);
+
+    // Strict validation matching single-create rules
+    let classId: string | null = null;
+    let divisionId: string | null = null;
+    let rollNo: string | undefined;
+    let employeeId: string | undefined;
+
+    if (role === 'student') {
+      classId = resolveClassId(u.classId, u.className || u['Class Name']);
+      divisionId = resolveDivisionId(u.divisionId, u.divisionName || u['Division Name'], classId);
+      rollNo = (u.rollNo || u['Roll Number'] || '').trim() || undefined;
+
+      if (!classId) {
+        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: 'Class could not be resolved (provide Class Name or classId matching existing classes)' });
+        return;
+      }
+      if (!divisionId) {
+        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: 'Division could not be resolved (provide Division Name or divisionId matching existing divisions)' });
+        return;
+      }
+      if (!rollNo) {
+        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: 'Roll Number is compulsory for students' });
+        return;
+      }
+    }
+
+    if (role === 'teacher' || role === 'superadmin') {
+      employeeId = (u.employeeId || u['Employee ID'] || '').trim() || undefined;
+      if (!employeeId) {
+        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: 'Employee / Faculty ID is compulsory for staff' });
+        return;
+      }
     }
 
     const prefix = role === 'superadmin' ? 'admin' : role === 'teacher' ? 'teach' : role === 'student' ? 'stud' : 'parent';
     const newId = `usr-${prefix}-${Date.now().toString().slice(-6)}${idx}`;
-    const rawPass = (u.password && typeof u.password === 'string' && u.password.trim().length >= 8)
+    const rawPass = (u.password && typeof u.password === 'string' && u.password.trim().length >= 6)
       ? u.password.trim()
       : generateSecureTemporaryPassword();
     const defaultPassword = bcrypt.hashSync(rawPass, 12);
 
-    let classId = u.classId || '';
-    if (!classId && u.className) {
-      const foundCls = classes.find((c) => c.name.toLowerCase() === u.className.toLowerCase() || c.id === u.className);
-      if (foundCls) classId = foundCls.id;
-    }
-    if (!classId && role === 'student') classId = 'cls-10';
-
-    let divisionId = u.divisionId || '';
-    if (!divisionId && u.divisionName) {
-      const foundDiv = divisions.find((d) => d.name.toLowerCase() === u.divisionName.toLowerCase() || d.id === u.divisionName);
-      if (foundDiv) divisionId = foundDiv.id;
-    }
-    if (!divisionId && role === 'student') divisionId = 'div-10a';
-
     const newUser: any = {
       id: newId,
       name: cleanName,
-      email: u.email || `${cleanUsername}@nexusrana.edu`,
+      email: (u.email || '').trim() || undefined,
       role,
-      phone: u.phone || undefined,
+      phone: (u.phone || u['Phone Number'] || '').trim() || undefined,
       username: cleanUsername,
       password: defaultPassword,
       rawPassword: rawPass,
@@ -3442,12 +3539,12 @@ app.post('/api/admin/credentials/bulk', requireAuth, requireRole('superadmin'), 
     };
 
     if (role === 'superadmin' || role === 'teacher') {
-      newUser.employeeId = u.employeeId || `NRES-${role === 'superadmin' ? 'DIR' : 'FAC'}-${100 + users.length}`;
+      newUser.employeeId = employeeId;
       if (role === 'teacher') newUser.assignedSubjects = u.assignedSubjects || [];
     } else if (role === 'student') {
       newUser.classId = classId;
       newUser.divisionId = divisionId;
-      newUser.rollNo = u.rollNo || `NRES-10A-${String(users.length + 1).padStart(2, '0')}`;
+      newUser.rollNo = rollNo;
       if (u.parentId) newUser.parentId = u.parentId;
     } else if (role === 'parent') {
       newUser.childrenIds = Array.isArray(u.childrenIds) ? u.childrenIds : [];
@@ -3590,6 +3687,16 @@ app.delete('/api/admin/credentials/:id', requireAuth, requireRole('superadmin'),
     const parent = users.find((u) => u.id === user.parentId);
     if (parent && parent.childrenIds) {
       parent.childrenIds = parent.childrenIds.filter((cid: string) => cid !== user.id);
+    }
+  }
+
+  // If parent is deleted, clear parentId on all linked children (prevent orphans)
+  if (user.role === 'parent' && Array.isArray(user.childrenIds)) {
+    for (const childId of user.childrenIds) {
+      const child = users.find((u) => u.id === childId);
+      if (child) {
+        child.parentId = undefined;
+      }
     }
   }
 
@@ -5981,12 +6088,51 @@ app.delete('/api/ai/threads/:id', (req, res) => {
 // ==========================================
 // COMPREHENSIVE SCHOOL & EXAM ANALYTICS REPORT
 // ==========================================
-app.get('/api/admin/reports/school-analytics', (req, res) => {
+app.get('/api/admin/reports/school-analytics', requireAuth, requireRole('superadmin'), (req, res) => {
   const teachersCount = users.filter((u) => u.role === 'teacher').length;
   const students = users.filter((u) => u.role === 'student');
   const parentsCount = users.filter((u) => u.role === 'parent').length;
 
-  // Test conducted class and division wise
+  // Real overall averages from actual submissions only (no fabricated defaults)
+  const allPercentages = submissions.map((s) => Number(s.percentage) || 0).filter((p) => !isNaN(p));
+  const overallAverageScore = allPercentages.length > 0
+    ? Math.round((allPercentages.reduce((a, b) => a + b, 0) / allPercentages.length) * 10) / 10
+    : 0;
+  const overallPassCount = allPercentages.filter((p) => p >= 40).length;
+  const overallPassRate = allPercentages.length > 0
+    ? Math.round((overallPassCount / allPercentages.length) * 1000) / 10
+    : 0;
+
+  // Real CBSE grade distribution computed from student average percentages
+  const studentAvgs = students.map((s) => {
+    const sSubs = submissions.filter((sub) => sub.studentId === s.id);
+    if (sSubs.length === 0) return null;
+    return sSubs.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / sSubs.length;
+  }).filter((v): v is number => v !== null);
+
+  const gradeBuckets = [
+    { grade: 'A1', range: '91% - 100%', description: 'Outstanding', min: 91, max: 100 },
+    { grade: 'A2', range: '81% - 90%', description: 'Excellent', min: 81, max: 90.999 },
+    { grade: 'B1', range: '71% - 80%', description: 'Very Good', min: 71, max: 80.999 },
+    { grade: 'B2', range: '61% - 70%', description: 'Good', min: 61, max: 70.999 },
+    { grade: 'C1', range: '51% - 60%', description: 'Fair', min: 51, max: 60.999 },
+    { grade: 'C2', range: '41% - 50%', description: 'Average', min: 41, max: 50.999 },
+    { grade: 'D', range: '33% - 40%', description: 'Pass Threshold', min: 33, max: 40.999 },
+    { grade: 'E', range: 'Below 33%', description: 'Remedial Support Required', min: 0, max: 32.999 },
+  ];
+  const totalGraded = studentAvgs.length || 1;
+  const cbseGradeDistribution = gradeBuckets.map((b) => {
+    const count = studentAvgs.filter((avg) => avg >= b.min && avg <= b.max).length;
+    return {
+      grade: b.grade,
+      range: b.range,
+      description: b.description,
+      count,
+      percentage: Math.round((count / totalGraded) * 1000) / 10,
+    };
+  });
+
+  // Class & division stats — real data only
   const classDivisionStats = classes.map((c) => {
     const classDivs = divisions.filter((d) => d.classId === c.id);
     return {
@@ -5994,14 +6140,17 @@ app.get('/api/admin/reports/school-analytics', (req, res) => {
       className: c.name,
       divisions: classDivs.map((div) => {
         const divStudents = students.filter((s) => s.classId === c.id && s.divisionId === div.id);
-        const divExams = exams.filter((ex) => ex.targetClassId === c.id);
+        const divExams = exams.filter((ex) => ex.targetClassId === c.id || ex.classId === c.id);
         const divSubmissions = submissions.filter((sub) =>
           divStudents.some((s) => s.id === sub.studentId)
         );
-        const avgScore =
-          divSubmissions.length > 0
-            ? Math.round(divSubmissions.reduce((a, b) => a + b.percentage, 0) / divSubmissions.length)
-            : 74;
+        const avgScore = divSubmissions.length > 0
+          ? Math.round(divSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / divSubmissions.length)
+          : 0;
+        const passCount = divSubmissions.filter((s) => (Number(s.percentage) || 0) >= 40).length;
+        const passRate = divSubmissions.length > 0
+          ? Math.round((passCount / divSubmissions.length) * 100)
+          : 0;
 
         return {
           divisionId: div.id,
@@ -6010,56 +6159,55 @@ app.get('/api/admin/reports/school-analytics', (req, res) => {
           totalExamsConducted: divExams.length,
           totalSubmissions: divSubmissions.length,
           averageScorePercentage: avgScore,
+          passRatePercentage: passRate,
         };
       }),
     };
   });
 
-  // Class and Roll No wise student progress
+  // Student progress — real averages only; standing only when data exists
   const studentProgressList = students.map((s) => {
     const sSubmissions = submissions.filter((sub) => sub.studentId === s.id);
-    const avgScore =
-      sSubmissions.length > 0
-        ? Math.round(sSubmissions.reduce((a, b) => a + b.percentage, 0) / sSubmissions.length)
-        : Math.min(100, Math.round((s.bonusPoints || 100) / 3));
+    const avgScore = sSubmissions.length > 0
+      ? Math.round(sSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / sSubmissions.length)
+      : 0;
     const cls = classes.find((c) => c.id === s.classId);
     const div = divisions.find((d) => d.id === s.divisionId);
 
+    let standing = 'No Attempts Yet';
+    if (sSubmissions.length > 0) {
+      standing = avgScore >= 90 ? 'Diamond Scholar (Distinction)'
+        : avgScore >= 75 ? 'Gold Scholar (First Class)'
+        : avgScore >= 60 ? 'Silver Scholar (Second Class)'
+        : avgScore >= 40 ? 'Pass'
+        : 'Needs Improvement';
+    }
+
     return {
       id: s.id,
-      rollNo: s.rollNo || 'NRES-001',
+      rollNo: s.rollNo || 'N/A',
       name: s.name,
-      className: cls?.name || 'Standard 10',
-      divisionName: div?.name || 'Division A',
+      className: cls?.name || 'N/A',
+      divisionName: div?.name || 'N/A',
       examsAttempted: sSubmissions.length,
       averagePercentage: avgScore,
-      bonusPoints: s.bonusPoints || 100,
-      standing:
-        avgScore >= 90
-          ? 'Diamond Scholar (Distinction)'
-          : avgScore >= 75
-          ? 'Gold Scholar (First Class)'
-          : avgScore >= 60
-          ? 'Silver Scholar (Second Class)'
-          : 'Developing',
+      bonusPoints: s.bonusPoints ?? 0,
+      standing,
     };
   });
 
-  // Overall performance class-wise & subject-wise
+  // Subject performance — real data only
   const subjectPerformance = subjects.map((subj) => {
     const subjExams = exams.filter((e) => e.subjectId === subj.id);
     const examIds = new Set(subjExams.map((e) => e.id));
     const subjSubmissions = submissions.filter((sub) => examIds.has(sub.examId));
-
-    const avg =
-      subjSubmissions.length > 0
-        ? Math.round(subjSubmissions.reduce((a, b) => a + b.percentage, 0) / subjSubmissions.length)
-        : 78;
-    const passCount = subjSubmissions.filter((s) => s.percentage >= 40).length;
-    const passRate =
-      subjSubmissions.length > 0
-        ? Math.round((passCount / subjSubmissions.length) * 100)
-        : 95;
+    const avg = subjSubmissions.length > 0
+      ? Math.round(subjSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / subjSubmissions.length)
+      : 0;
+    const passCount = subjSubmissions.filter((s) => (Number(s.percentage) || 0) >= 40).length;
+    const passRate = subjSubmissions.length > 0
+      ? Math.round((passCount / subjSubmissions.length) * 100)
+      : 0;
 
     return {
       subjectId: subj.id,
@@ -6072,7 +6220,7 @@ app.get('/api/admin/reports/school-analytics', (req, res) => {
     };
   });
 
-  // Hierarchical class-wise -> division-wise -> subject-wise performance
+  // Hierarchical performance — real data only
   const hierarchicalPerformance = classes.map((c) => {
     const classDivs = divisions.filter((d) => d.classId === c.id);
     const classStudents = students.filter((s) => s.classId === c.id);
@@ -6080,33 +6228,26 @@ app.get('/api/admin/reports/school-analytics', (req, res) => {
     const classSubmissions = submissions.filter((sub) =>
       classStudents.some((s) => s.id === sub.studentId)
     );
-
-    const classAvg =
-      classSubmissions.length > 0
-        ? Math.round(classSubmissions.reduce((a, b) => a + b.percentage, 0) / classSubmissions.length)
-        : 78;
-    const classPassCount = classSubmissions.filter((s) => s.percentage >= 40).length;
-    const classPassRate =
-      classSubmissions.length > 0
-        ? Math.round((classPassCount / classSubmissions.length) * 100)
-        : 92;
+    const classAvg = classSubmissions.length > 0
+      ? Math.round(classSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / classSubmissions.length)
+      : 0;
+    const classPassCount = classSubmissions.filter((s) => (Number(s.percentage) || 0) >= 40).length;
+    const classPassRate = classSubmissions.length > 0
+      ? Math.round((classPassCount / classSubmissions.length) * 100)
+      : 0;
 
     const divisionsData = classDivs.map((div) => {
       const divStudents = classStudents.filter((s) => s.divisionId === div.id);
       const divStudentIds = new Set(divStudents.map((s) => s.id));
       const divSubmissions = classSubmissions.filter((sub) => divStudentIds.has(sub.studentId));
+      const divAvg = divSubmissions.length > 0
+        ? Math.round(divSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / divSubmissions.length)
+        : 0;
+      const divPassCount = divSubmissions.filter((s) => (Number(s.percentage) || 0) >= 40).length;
+      const divPassRate = divSubmissions.length > 0
+        ? Math.round((divPassCount / divSubmissions.length) * 100)
+        : 0;
 
-      const divAvg =
-        divSubmissions.length > 0
-          ? Math.round(divSubmissions.reduce((a, b) => a + b.percentage, 0) / divSubmissions.length)
-          : classAvg;
-      const divPassCount = divSubmissions.filter((s) => s.percentage >= 40).length;
-      const divPassRate =
-        divSubmissions.length > 0
-          ? Math.round((divPassCount / divSubmissions.length) * 100)
-          : 90;
-
-      // Subject-wise performance specifically for this class and division
       const subjectsData = subjects.map((subj) => {
         const subjExams = classExams.filter(
           (e) =>
@@ -6114,44 +6255,38 @@ app.get('/api/admin/reports/school-analytics', (req, res) => {
             (!e.targetDivisionId || e.targetDivisionId === 'all' || e.targetDivisionId === div.id || e.divisionId === div.id)
         );
         const subjExamIds = new Set(subjExams.map((e) => e.id));
-        
         const subjSubmissions = divSubmissions.filter(
           (sub) => subjExamIds.has(sub.examId) || sub.subjectName === subj.name || (sub as any).subjectId === subj.id
         );
-
         const subCount = subjSubmissions.length;
-        const avgScore =
-          subCount > 0
-            ? Math.round(subjSubmissions.reduce((a, b) => a + b.percentage, 0) / subCount)
-            : Math.round(72 + ((subj.name.length * 7 + div.name.length * 3) % 20));
-        const passedCount = subjSubmissions.filter((s) => s.percentage >= 40).length;
-        const passRate =
-          subCount > 0
-            ? Math.round((passedCount / subCount) * 100)
-            : Math.round(85 + ((subj.name.length * 3) % 12));
-        const highestScore = subCount > 0 ? Math.max(...subjSubmissions.map((s) => s.percentage)) : Math.min(100, avgScore + 14);
-        const lowestScore = subCount > 0 ? Math.min(...subjSubmissions.map((s) => s.percentage)) : Math.max(35, avgScore - 20);
+        const avgScore = subCount > 0
+          ? Math.round(subjSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / subCount)
+          : 0;
+        const passedCount = subjSubmissions.filter((s) => (Number(s.percentage) || 0) >= 40).length;
+        const passRate = subCount > 0 ? Math.round((passedCount / subCount) * 100) : 0;
+        const highestScore = subCount > 0 ? Math.max(...subjSubmissions.map((s) => Number(s.percentage) || 0)) : 0;
+        const lowestScore = subCount > 0 ? Math.min(...subjSubmissions.map((s) => Number(s.percentage) || 0)) : 0;
 
         return {
           subjectId: subj.id,
           subjectName: subj.name,
           subjectCode: subj.code,
           icon: subj.icon || 'BookOpen',
-          totalExams: Math.max(subjExams.length, subCount > 0 ? 1 : 0),
+          totalExams: subjExams.length,
           totalEvaluations: subCount,
           averageScore: avgScore,
           passRatePercentage: passRate,
           highestScore,
           lowestScore,
-          totalPassed: subCount > 0 ? passedCount : Math.round(subCount * (passRate / 100)),
-          totalFailed: subCount > 0 ? subCount - passedCount : 0,
+          totalPassed: passedCount,
+          totalFailed: subCount - passedCount,
         };
       });
 
       return {
         divisionId: div.id,
         divisionName: div.name,
-        roomNumber: div.roomNumber || 'Room 101',
+        roomNumber: div.roomNumber || 'N/A',
         studentCount: divStudents.length,
         totalSubmissions: divSubmissions.length,
         averageScorePercentage: divAvg,
@@ -6174,30 +6309,40 @@ app.get('/api/admin/reports/school-analytics', (req, res) => {
     };
   });
 
-  // Generate standard CBSE Class & Division Breakdown for Report Cards
+  // Class & Division breakdown for report cards — real pass rates
   const classDivisionBreakdown = classDivisionStats.flatMap((cls) =>
-    cls.divisions.map((div) => {
-      const passRate = div.totalSubmissions > 0 ? div.averageScorePercentage >= 40 ? 96 : 80 : 94;
-      return {
-        className: cls.className,
-        divisionName: div.divisionName,
-        studentCount: div.studentCount,
-        testsConducted: div.totalExamsConducted || 2,
-        totalSubmissions: div.totalSubmissions,
-        averagePercentage: div.averageScorePercentage,
-        passRate,
-      };
-    })
+    cls.divisions.map((div) => ({
+      className: cls.className,
+      divisionName: div.divisionName,
+      studentCount: div.studentCount,
+      testsConducted: div.totalExamsConducted,
+      totalSubmissions: div.totalSubmissions,
+      averagePercentage: div.averageScorePercentage,
+      passRate: div.passRatePercentage ?? 0,
+    }))
   );
 
-  res.json({
-    generatedAt: new Date().toISOString(),
+  // Real proctoring numbers (no padding)
+  const cleanSubmissions = submissions.filter((s) => !s.cheatingFlagged).length;
+  const windowBlurIncidents = cheatingAudits.filter((a) => a.action === 'focus_loss' || a.action === 'tab_switch').length;
+  const fullscreenExits = cheatingAudits.filter((a) => a.action === 'fullscreen_exit').length;
+  const complianceRate = submissions.length > 0
+    ? Math.round((cleanSubmissions / submissions.length) * 1000) / 10
+    : 100;
+
+  // School config (single source of truth for branding)
+  const schoolConfig = {
     schoolName: 'Nexus Ranaji English Medium High School',
     boardAffiliation: 'Central Board of Secondary Education (CBSE)',
     affiliationCode: '41029',
     schoolCode: '10482',
-    academicYear: '2025-2026',
-    reportReferenceNumber: 'NRES/EXAM/2025-26/REP-0492',
+    academicYear: academicYears?.find((ay: any) => ay.isCurrent)?.name || '2025-2026',
+  };
+
+  res.json({
+    generatedAt: new Date().toISOString(),
+    ...schoolConfig,
+    reportReferenceNumber: `NRES/EXAM/${schoolConfig.academicYear.replace('-', '-')}/REP-${Date.now().toString().slice(-4)}`,
     examinationCycle: 'Term 1 & Term 2 Annual Assessment Report',
     summary: {
       totalTeachers: teachersCount,
@@ -6205,8 +6350,8 @@ app.get('/api/admin/reports/school-analytics', (req, res) => {
       totalParents: parentsCount,
       totalExamsConducted: exams.length,
       totalSubmissionsEvaluated: submissions.length,
-      overallPassRate: 94.2,
-      overallAverageScore: 78.4,
+      overallPassRate,
+      overallAverageScore,
       totalActiveClasses: classes.length,
       totalDivisions: divisions.length,
       systemCheatingIncidents: cheatingAudits.length,
@@ -6221,32 +6366,23 @@ app.get('/api/admin/reports/school-analytics', (req, res) => {
       totalDivisions: divisions.length,
       systemCheatingIncidents: cheatingAudits.length,
     },
-    cbseGradeDistribution: [
-      { grade: 'A1', range: '91% - 100%', description: 'Outstanding', count: 18, percentage: 36 },
-      { grade: 'A2', range: '81% - 90%', description: 'Excellent', count: 14, percentage: 28 },
-      { grade: 'B1', range: '71% - 80%', description: 'Very Good', count: 9, percentage: 18 },
-      { grade: 'B2', range: '61% - 70%', description: 'Good', count: 5, percentage: 10 },
-      { grade: 'C1', range: '51% - 60%', description: 'Fair', count: 2, percentage: 4 },
-      { grade: 'C2', range: '41% - 50%', description: 'Average', count: 1, percentage: 2 },
-      { grade: 'D', range: '33% - 40%', description: 'Pass Threshold', count: 1, percentage: 2 },
-      { grade: 'E', range: 'Below 33%', description: 'Remedial Support Required', count: 0, percentage: 0 },
-    ],
+    cbseGradeDistribution,
     proctoringAudit: {
-      totalProctoredSessions: Math.max(submissions.length, 38),
-      cleanSubmissions: submissions.filter((s) => !s.cheatingFlagged).length,
+      totalProctoredSessions: submissions.length,
+      cleanSubmissions,
       flaggedViolations: cheatingAudits.length,
-      windowBlurIncidents: cheatingAudits.filter((a) => a.action === 'focus_loss' || a.action === 'tab_switch').length,
-      fullscreenExits: cheatingAudits.filter((a) => a.action === 'fullscreen_exit').length,
-      complianceRate: '98.2%',
+      windowBlurIncidents,
+      fullscreenExits,
+      complianceRate: `${complianceRate}%`,
     },
     classDivisionBreakdown,
     classDivisionStats,
     studentProgressList: (() => {
-      const { limit, offset } = parsePagination(req, 100, 100);
+      const { limit, offset } = parsePagination(req, 500, 2000);
       return studentProgressList.slice(offset, offset + limit);
     })(),
     pagination: (() => {
-      const { limit, offset } = parsePagination(req, 100, 100);
+      const { limit, offset } = parsePagination(req, 500, 2000);
       return {
         total: studentProgressList.length,
         limit,
