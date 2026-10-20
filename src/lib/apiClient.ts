@@ -31,7 +31,7 @@ export class ApiError extends Error {
   }
 }
 
-const DEFAULT_TIMEOUT_MS = 20000; // 20 seconds
+const DEFAULT_TIMEOUT_MS = 60000; // 60 seconds
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
 function sleep(ms: number) {

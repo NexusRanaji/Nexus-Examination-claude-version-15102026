@@ -379,7 +379,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
           message: text,
           taskComplexity,
           roleId: selectedRole,
-        });
+        }, { timeoutMs: 60000 });
       } else {
         res = await apiClient.post('/api/ai/chat', {
           message: text,
@@ -391,7 +391,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
             role: currentUser.role,
             className: currentUser.classId || 'Standard 10',
           },
-        });
+        }, { timeoutMs: 60000 });
       }
 
       const data = res.data;

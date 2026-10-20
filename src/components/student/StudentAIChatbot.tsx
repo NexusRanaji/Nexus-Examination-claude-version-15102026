@@ -106,7 +106,7 @@ export const StudentAIChatbot: React.FC<StudentAIChatbotProps> = ({ currentUser 
         studentClass: currentUser.classId || 'Standard 10',
         subject: subject,
         history: history,
-      });
+      }, { timeoutMs: 60000 });
 
       if (!res.ok) {
         throw new Error('Could not retrieve tutor response');

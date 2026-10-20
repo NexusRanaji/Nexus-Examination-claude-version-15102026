@@ -61,7 +61,7 @@ export const DatabaseSettingsModal: React.FC<DatabaseSettingsModalProps> = ({ is
   const [showPassword, setShowPassword] = useState(false);
 
   // Tab 2: Guided Builder
-  const [builderProjectRef, setBuilderProjectRef] = useState('uxidiqydvqneacocrirf');
+  const [builderProjectRef, setBuilderProjectRef] = useState('');
   const [builderPassword, setBuilderPassword] = useState('');
   const [builderRegion, setBuilderRegion] = useState('aws-0-ap-southeast-1');
   const [builderMode, setBuilderMode] = useState<'pooler' | 'direct'>('pooler');
@@ -69,7 +69,7 @@ export const DatabaseSettingsModal: React.FC<DatabaseSettingsModalProps> = ({ is
 
   // Tab 3: Supabase Frontend Client Credentials
   const clientCreds = getSupabaseCredentials();
-  const [clientUrl, setClientUrl] = useState(clientCreds.url || 'https://uxidiqydvqneacocrirf.supabase.co');
+  const [clientUrl, setClientUrl] = useState(clientCreds.url || '');
   const [clientAnonKey, setClientAnonKey] = useState('');
 
   // UI state

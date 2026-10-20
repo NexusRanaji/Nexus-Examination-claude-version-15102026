@@ -91,7 +91,7 @@ export const AIQuizGeneratorModal: React.FC<AIQuizGeneratorModalProps> = ({
         educationalBoard,
         difficultyLevel,
         totalQuestions,
-      });
+      }, { timeoutMs: 90000 });
 
       if (!res.ok) {
         throw new Error(res.data?.error || 'Failed to generate quiz');

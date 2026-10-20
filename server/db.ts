@@ -247,11 +247,14 @@ export async function ensureStateTable(): Promise<boolean> {
   }
 }
 
+let _dbSyncDisabledDueToAuth = false;
+
 // Load persisted state snapshot from Supabase PostgreSQL
 export async function loadStateFromPostgres(): Promise<any | null> {
-  if (!connectionString) return null;
+  if (!connectionString || _dbSyncDisabledDueToAuth) return null;
   try {
-    await ensureStateTable();
+    const tableReady = await ensureStateTable();
+    if (!tableReady) return null;
     const res = await pool.query(`
       SELECT payload, updated_at 
       FROM nexus_system_state 
@@ -264,14 +267,19 @@ export async function loadStateFromPostgres(): Promise<any | null> {
     }
     return null;
   } catch (err: any) {
-    console.warn('[DB] Could not load state from Supabase PostgreSQL:', err.message);
+    if (err.message && (err.message.includes('authentication failed') || err.message.includes('password authentication'))) {
+      _dbSyncDisabledDueToAuth = true;
+      console.warn('[DB] Supabase authentication failed. Pausing remote sync and using local storage.');
+    } else {
+      console.warn('[DB] Could not load state from Supabase PostgreSQL:', err.message);
+    }
     return null;
   }
 }
 
 // Save persisted state snapshot to Supabase PostgreSQL
 export async function saveStateToPostgres(payload: any): Promise<boolean> {
-  if (!connectionString) return false;
+  if (!connectionString || _dbSyncDisabledDueToAuth) return false;
   try {
     await pool.query(`
       INSERT INTO nexus_system_state (id, payload, updated_at)
@@ -281,7 +289,12 @@ export async function saveStateToPostgres(payload: any): Promise<boolean> {
     `, [payload]);
     return true;
   } catch (err: any) {
-    console.error('[DB] Failed to save state to Supabase PostgreSQL:', err.message);
+    if (err.message && (err.message.includes('authentication failed') || err.message.includes('password authentication'))) {
+      _dbSyncDisabledDueToAuth = true;
+      console.warn('[DB] Supabase authentication failed. Paused remote database sync. Active state preserved in local JSON storage.');
+    } else {
+      console.warn('[DB] Notice: Could not sync state to Supabase PostgreSQL:', err.message);
+    }
     return false;
   }
 }
@@ -319,6 +332,7 @@ export async function setDatabaseUrl(newConnStr: string): Promise<{ success: boo
     // Switch active pool
     connectionString = cleanUrl;
     process.env.DATABASE_URL = cleanUrl;
+    _dbSyncDisabledDueToAuth = false;
     pool = testPool;
     if (process.env.NODE_ENV !== 'production') {
       global._nexusPgPool = pool;

@@ -184,8 +184,8 @@ export class GeminiServicePool {
 
         const isNotFound = status === 404 || msg.includes('404') || msg.includes('not found') || msg.includes('no longer available');
 
-        // If it's a 503 High Demand, 429 Quota/Rate Limit, or 404 Not Found and the caller has model fallback (retryOn503 is false), fail fast
-        if ((is503 || isRateLimit || isNotFound) && !retryOn503) {
+        // If caller has model fallback (retryOn503 is false), fail fast immediately so next candidate model can be attempted without blocking delays
+        if (!retryOn503) {
           throw err;
         }
 
@@ -223,10 +223,9 @@ export class GeminiServicePool {
     preferredModel?: string;
   }): Promise<string> {
     const defaultOrder = [
-      'gemini-flash-lite-latest',
-      'gemini-3.5-flash-lite',
+      'gemini-3-flash-preview',
+      'gemini-3.5-flash',
       'gemini-3.8-flash',
-      'gemini-3.1-flash-lite',
       'gemini-flash-latest',
     ];
 
@@ -770,36 +769,34 @@ Please feel free to ask any question regarding your subjects, textbook concepts,
     // - gemini-3.1-pro-preview for particularly complex tasks
     // - gemini-3.8-flash for general tasks
     // - gemini-3.1-flash-lite for tasks that should happen fast
-    let targetModel = 'gemini-flash-lite-latest';
+    let targetModel = 'gemini-3-flash-preview';
     let fallbackChain: string[] = [
-      'gemini-flash-lite-latest',
-      'gemini-3.5-flash-lite',
+      'gemini-3-flash-preview',
+      'gemini-3.5-flash',
       'gemini-3.8-flash',
-      'gemini-3.1-flash-lite',
       'gemini-flash-latest',
     ];
 
     if (effectiveComplexity === 'complex') {
-      targetModel = 'gemini-flash-lite-latest';
+      targetModel = 'gemini-3-flash-preview';
       fallbackChain = [
-        'gemini-flash-lite-latest',
-        'gemini-3.5-flash-lite',
+        'gemini-3-flash-preview',
+        'gemini-3.5-flash',
         'gemini-3.8-flash',
-        'gemini-3.1-flash-lite',
       ];
     } else if (effectiveComplexity === 'fast') {
-      targetModel = 'gemini-flash-lite-latest';
+      targetModel = 'gemini-3-flash-preview';
       fallbackChain = [
-        'gemini-flash-lite-latest',
-        'gemini-3.5-flash-lite',
+        'gemini-3-flash-preview',
+        'gemini-3.5-flash',
         'gemini-flash-latest',
       ];
     } else {
       // general tasks
-      targetModel = 'gemini-flash-lite-latest';
+      targetModel = 'gemini-3-flash-preview';
       fallbackChain = [
-        'gemini-flash-lite-latest',
-        'gemini-3.5-flash-lite',
+        'gemini-3-flash-preview',
+        'gemini-3.5-flash',
         'gemini-3.8-flash',
         'gemini-flash-latest',
       ];
@@ -854,10 +851,15 @@ Please feel free to ask any question regarding your subjects, textbook concepts,
 
     let reply = '';
     let modelSuccessfullyUsed = targetModel;
+    const chatStartTime = Date.now();
     let lastError: any = null;
 
     // Try models in sequence with failover
     for (const modelToTry of orderedFallbackChain) {
+      if (Date.now() - chatStartTime > 14000) {
+        console.info('[Gemini Chatbot] Reached 14s threshold, breaking loop to deliver academic fallback guidance.');
+        break;
+      }
       try {
         reply = await this.executeWithFailover(async (ai) => {
           const config: any = {
@@ -5941,15 +5943,15 @@ app.get('/api/ai/chat/config', (req, res) => {
       {
         id: 'fast',
         name: 'Fast Mode',
-        model: 'gemini-flash-lite-latest',
-        badge: '⚡ Fast (gemini-flash-lite-latest)',
+        model: 'gemini-3-flash-preview',
+        badge: '⚡ Fast (gemini-3-flash-preview)',
         description: 'Ultra-low latency for quick definitions, rapid lookups & instant Q&A',
       },
       {
         id: 'general',
         name: 'Balanced Mode',
-        model: 'gemini-3.5-flash-lite',
-        badge: '⭐ General (gemini-3.5-flash-lite)',
+        model: 'gemini-3.5-flash',
+        badge: '⭐ General (gemini-3.5-flash)',
         description: 'Optimal intelligence and speed for general study, tutoring & discussions',
       },
       {
