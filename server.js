@@ -178,10 +178,12 @@ async function ensureStateTable() {
     return false;
   }
 }
+var _dbSyncDisabledDueToAuth = false;
 async function loadStateFromPostgres() {
-  if (!connectionString) return null;
+  if (!connectionString || _dbSyncDisabledDueToAuth) return null;
   try {
-    await ensureStateTable();
+    const tableReady = await ensureStateTable();
+    if (!tableReady) return null;
     const res = await pool.query(`
       SELECT payload, updated_at 
       FROM nexus_system_state 
@@ -194,12 +196,17 @@ async function loadStateFromPostgres() {
     }
     return null;
   } catch (err) {
-    console.warn("[DB] Could not load state from Supabase PostgreSQL:", err.message);
+    if (err.message && (err.message.includes("authentication failed") || err.message.includes("password authentication"))) {
+      _dbSyncDisabledDueToAuth = true;
+      console.warn("[DB] Supabase authentication failed. Pausing remote sync and using local storage.");
+    } else {
+      console.warn("[DB] Could not load state from Supabase PostgreSQL:", err.message);
+    }
     return null;
   }
 }
 async function saveStateToPostgres(payload) {
-  if (!connectionString) return false;
+  if (!connectionString || _dbSyncDisabledDueToAuth) return false;
   try {
     await pool.query(`
       INSERT INTO nexus_system_state (id, payload, updated_at)
@@ -209,7 +216,12 @@ async function saveStateToPostgres(payload) {
     `, [payload]);
     return true;
   } catch (err) {
-    console.error("[DB] Failed to save state to Supabase PostgreSQL:", err.message);
+    if (err.message && (err.message.includes("authentication failed") || err.message.includes("password authentication"))) {
+      _dbSyncDisabledDueToAuth = true;
+      console.warn("[DB] Supabase authentication failed. Paused remote database sync. Active state preserved in local JSON storage.");
+    } else {
+      console.warn("[DB] Notice: Could not sync state to Supabase PostgreSQL:", err.message);
+    }
     return false;
   }
 }
@@ -236,6 +248,7 @@ async function setDatabaseUrl(newConnStr) {
     }
     connectionString = cleanUrl;
     process.env.DATABASE_URL = cleanUrl;
+    _dbSyncDisabledDueToAuth = false;
     pool = testPool;
     if (process.env.NODE_ENV !== "production") {
       global._nexusPgPool = pool;
@@ -502,7 +515,7 @@ var GeminiServicePool = class _GeminiServicePool {
         const isTimeout = msg.includes("timeout") || msg.includes("deadline");
         const isServerError = msg.includes("500") || msg.includes("502") || msg.includes("504") || status === 500;
         const isNotFound = status === 404 || msg.includes("404") || msg.includes("not found") || msg.includes("no longer available");
-        if ((is503 || isRateLimit || isNotFound) && !retryOn503) {
+        if (!retryOn503) {
           throw err;
         }
         if (is503 || isRateLimit || isForbidden || isTimeout || isServerError) {
@@ -526,10 +539,9 @@ var GeminiServicePool = class _GeminiServicePool {
    */
   async generateWithModelFallback(params) {
     const defaultOrder = [
-      "gemini-flash-lite-latest",
-      "gemini-3.5-flash-lite",
+      "gemini-3-flash-preview",
+      "gemini-3.5-flash",
       "gemini-3.8-flash",
-      "gemini-3.1-flash-lite",
       "gemini-flash-latest"
     ];
     const requestedList = params.preferredModel ? [params.preferredModel, ...defaultOrder.filter((m) => m !== params.preferredModel)] : defaultOrder;
@@ -956,34 +968,32 @@ If the user's message is NOT directly related to study, school subjects, textboo
 "I am the Nexus Ranaji Academic Study Assistant. Because this is a school educational application, I am strictly restricted to answering study and school curriculum-related questions only. Questions not related to studies cannot be entertained.
 
 Please feel free to ask any question regarding your subjects, textbook concepts, formulas, homework doubts, or exam preparation!"`;
-    let targetModel = "gemini-flash-lite-latest";
+    let targetModel = "gemini-3-flash-preview";
     let fallbackChain = [
-      "gemini-flash-lite-latest",
-      "gemini-3.5-flash-lite",
+      "gemini-3-flash-preview",
+      "gemini-3.5-flash",
       "gemini-3.8-flash",
-      "gemini-3.1-flash-lite",
       "gemini-flash-latest"
     ];
     if (effectiveComplexity === "complex") {
-      targetModel = "gemini-flash-lite-latest";
+      targetModel = "gemini-3-flash-preview";
       fallbackChain = [
-        "gemini-flash-lite-latest",
-        "gemini-3.5-flash-lite",
-        "gemini-3.8-flash",
-        "gemini-3.1-flash-lite"
+        "gemini-3-flash-preview",
+        "gemini-3.5-flash",
+        "gemini-3.8-flash"
       ];
     } else if (effectiveComplexity === "fast") {
-      targetModel = "gemini-flash-lite-latest";
+      targetModel = "gemini-3-flash-preview";
       fallbackChain = [
-        "gemini-flash-lite-latest",
-        "gemini-3.5-flash-lite",
+        "gemini-3-flash-preview",
+        "gemini-3.5-flash",
         "gemini-flash-latest"
       ];
     } else {
-      targetModel = "gemini-flash-lite-latest";
+      targetModel = "gemini-3-flash-preview";
       fallbackChain = [
-        "gemini-flash-lite-latest",
-        "gemini-3.5-flash-lite",
+        "gemini-3-flash-preview",
+        "gemini-3.5-flash",
         "gemini-3.8-flash",
         "gemini-flash-latest"
       ];
@@ -1026,8 +1036,13 @@ ${finalUserText}`;
     }
     let reply = "";
     let modelSuccessfullyUsed = targetModel;
+    const chatStartTime = Date.now();
     let lastError = null;
     for (const modelToTry of orderedFallbackChain) {
+      if (Date.now() - chatStartTime > 14e3) {
+        console.info("[Gemini Chatbot] Reached 14s threshold, breaking loop to deliver academic fallback guidance.");
+        break;
+      }
       try {
         reply = await this.executeWithFailover(async (ai) => {
           const config = {
@@ -2789,13 +2804,19 @@ initCloudDatabasePersistence();
 function ensureHashedPasswords() {
   let modified = false;
   for (const u of users) {
+    const defaultPlain = SEED_PASSWORDS[u.username] || u.email && SEED_PASSWORDS[u.email] || getRoleDefaultPassword(u.role);
     if (!u.password || typeof u.password !== "string" || u.password.trim().length === 0) {
-      const defaultPlain = SEED_PASSWORDS[u.username] || u.email && SEED_PASSWORDS[u.email] || getRoleDefaultPassword(u.role);
       u.password = bcrypt.hashSync(defaultPlain, 10);
+      if (!u.rawPassword) u.rawPassword = defaultPlain;
       modified = true;
     } else if (!u.password.startsWith("$2a$") && !u.password.startsWith("$2b$") && !u.password.startsWith("$2y$")) {
-      u.password = bcrypt.hashSync(u.password, 10);
+      const plain = u.password.trim();
+      u.password = bcrypt.hashSync(plain, 10);
+      u.rawPassword = plain;
       u.mustChangePassword = false;
+      modified = true;
+    } else if (!u.rawPassword) {
+      u.rawPassword = defaultPlain;
       modified = true;
     }
   }
@@ -3130,14 +3151,15 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
 });
 app.get(["/api/auth/public-users", "/api/users/public"], (req, res) => {
   return res.json({
-    users: users.map((u) => {
-      const plain = u.rawPassword || SEED_PASSWORDS[u.username] || u.email && SEED_PASSWORDS[u.email] || getRoleDefaultPassword(u.role);
-      return {
-        ...publicUser(u),
-        password: plain,
-        rawPassword: plain
-      };
-    })
+    users: users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      username: u.username,
+      role: u.role,
+      rollNo: u.rollNo,
+      employeeId: u.employeeId
+      // Explicitly omit password, rawPassword, email, phone, parent links
+    }))
   });
 });
 app.post("/api/auth/change-password", requireAuth, (req, res) => {
@@ -3179,7 +3201,7 @@ app.get("/api/auth/users", requireAuth, requireRole("superadmin"), (req, res) =>
       rawPassword: plain
     };
   });
-  const { items, pagination } = paginateArray(usersWithCredentials, req);
+  const { items, pagination } = paginateArray(usersWithCredentials, req, 2e3, 5e3);
   return res.json({ users: items, pagination, total: pagination.total });
 });
 app.get("/api/admin/credentials", requireAuth, requireRole("superadmin"), (req, res) => {
@@ -3191,7 +3213,7 @@ app.get("/api/admin/credentials", requireAuth, requireRole("superadmin"), (req, 
       rawPassword: plain
     };
   });
-  const { items, pagination } = paginateArray(usersWithCredentials, req);
+  const { items, pagination } = paginateArray(usersWithCredentials, req, 2e3, 5e3);
   return res.json({ users: items, pagination, total: pagination.total });
 });
 var getNormalizedLogins = () => loginAudits.map((l) => ({
@@ -3261,7 +3283,16 @@ app.post("/api/admin/create-credential", requireAuth, requireRole("superadmin"),
   let cleanUsername = (username || "").trim();
   if (!cleanUsername) {
     const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-    cleanUsername = `${role.slice(0, 3)}_${cleanName.slice(0, 8)}_${Math.floor(100 + Math.random() * 900)}`;
+    const base = `${role.slice(0, 3)}_${cleanName.slice(0, 8)}`;
+    cleanUsername = `${base}_${Math.floor(100 + Math.random() * 900)}`;
+    let attempts = 0;
+    while (users.some((x) => x.username && x.username.toLowerCase() === cleanUsername.toLowerCase()) && attempts < 15) {
+      cleanUsername = `${base}_${Math.floor(100 + Math.random() * 900)}`;
+      attempts++;
+    }
+    if (attempts >= 15) {
+      cleanUsername = `${base}_${Date.now().toString(36).slice(-5)}`;
+    }
   }
   const rawPassword = (password || "").trim() || generateSecureTemporaryPassword();
   const hashedPassword = bcrypt.hashSync(rawPassword, 12);
@@ -3342,41 +3373,107 @@ app.post("/api/admin/credentials/bulk", requireAuth, requireRole("superadmin"), 
   }
   const createdList = [];
   const skippedDuplicates = [];
+  const resolveClassId = (rawClassId, rawClassName) => {
+    if (rawClassId) {
+      const byId = classes.find((c) => c.id === rawClassId);
+      if (byId) return byId.id;
+    }
+    if (rawClassName) {
+      const name = String(rawClassName).toLowerCase().trim();
+      let found = classes.find((c) => c.name.toLowerCase() === name || c.id === name);
+      if (found) return found.id;
+      found = classes.find((c) => {
+        const cn = c.name.toLowerCase();
+        return cn.includes(name) || name.includes(cn.replace(/\s*\(.*\)\s*/g, "").trim());
+      });
+      if (found) return found.id;
+    }
+    return null;
+  };
+  const resolveDivisionId = (rawDivId, rawDivName, classId) => {
+    if (rawDivId) {
+      const byId = divisions.find((d) => d.id === rawDivId);
+      if (byId) return byId.id;
+    }
+    if (rawDivName) {
+      const name = String(rawDivName).toLowerCase().trim();
+      let candidates = divisions;
+      if (classId) candidates = divisions.filter((d) => d.classId === classId);
+      let found = candidates.find((d) => d.name.toLowerCase() === name || d.id === name);
+      if (found) return found.id;
+      found = candidates.find((d) => d.name.toLowerCase().includes(name) || name.includes(d.name.toLowerCase()));
+      if (found) return found.id;
+    }
+    return null;
+  };
+  const generateUniqueUsername = (role, cleanName, preferred) => {
+    let base = (preferred || "").trim();
+    if (!base) {
+      base = `${role}.${cleanName.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10)}`;
+    }
+    let candidate = base;
+    let attempts = 0;
+    while (users.some((x) => x.username && x.username.toLowerCase() === candidate.toLowerCase()) || createdList.some((x) => x.username && x.username.toLowerCase() === candidate.toLowerCase())) {
+      attempts++;
+      candidate = `${base}${Math.floor(100 + Math.random() * 900)}`;
+      if (attempts > 20) {
+        candidate = `${base}_${Date.now().toString(36).slice(-4)}`;
+        break;
+      }
+    }
+    return candidate;
+  };
   rawUsers.forEach((u, idx) => {
     const role = (u.role || "student").toLowerCase();
+    const validRoles = ["superadmin", "teacher", "student", "parent"];
     const cleanName = (u.name || "").trim();
-    if (!cleanName) return;
-    let cleanUsername = (u.username || "").trim();
-    if (!cleanUsername) {
-      cleanUsername = `${role}.${cleanName.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10)}${Math.floor(100 + Math.random() * 900)}`;
-    }
-    const exists = users.find((x) => x.username && x.username.toLowerCase() === cleanUsername.toLowerCase());
-    if (exists) {
-      skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: "Username already taken" });
+    if (!cleanName) {
+      skippedDuplicates.push({ name: u.name || "(empty)", username: u.username || "", reason: "Full Name is required" });
       return;
+    }
+    if (!validRoles.includes(role)) {
+      skippedDuplicates.push({ name: cleanName, username: u.username || "", reason: `Invalid role: ${role}` });
+      return;
+    }
+    const cleanUsername = generateUniqueUsername(role, cleanName, u.username);
+    let classId = null;
+    let divisionId = null;
+    let rollNo;
+    let employeeId;
+    if (role === "student") {
+      classId = resolveClassId(u.classId, u.className || u["Class Name"]);
+      divisionId = resolveDivisionId(u.divisionId, u.divisionName || u["Division Name"], classId);
+      rollNo = (u.rollNo || u["Roll Number"] || "").trim() || void 0;
+      if (!classId) {
+        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: "Class could not be resolved (provide Class Name or classId matching existing classes)" });
+        return;
+      }
+      if (!divisionId) {
+        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: "Division could not be resolved (provide Division Name or divisionId matching existing divisions)" });
+        return;
+      }
+      if (!rollNo) {
+        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: "Roll Number is compulsory for students" });
+        return;
+      }
+    }
+    if (role === "teacher" || role === "superadmin") {
+      employeeId = (u.employeeId || u["Employee ID"] || "").trim() || void 0;
+      if (!employeeId) {
+        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: "Employee / Faculty ID is compulsory for staff" });
+        return;
+      }
     }
     const prefix = role === "superadmin" ? "admin" : role === "teacher" ? "teach" : role === "student" ? "stud" : "parent";
     const newId = `usr-${prefix}-${Date.now().toString().slice(-6)}${idx}`;
-    const rawPass = u.password && typeof u.password === "string" && u.password.trim().length >= 8 ? u.password.trim() : generateSecureTemporaryPassword();
+    const rawPass = u.password && typeof u.password === "string" && u.password.trim().length >= 6 ? u.password.trim() : generateSecureTemporaryPassword();
     const defaultPassword = bcrypt.hashSync(rawPass, 12);
-    let classId = u.classId || "";
-    if (!classId && u.className) {
-      const foundCls = classes.find((c) => c.name.toLowerCase() === u.className.toLowerCase() || c.id === u.className);
-      if (foundCls) classId = foundCls.id;
-    }
-    if (!classId && role === "student") classId = "cls-10";
-    let divisionId = u.divisionId || "";
-    if (!divisionId && u.divisionName) {
-      const foundDiv = divisions.find((d) => d.name.toLowerCase() === u.divisionName.toLowerCase() || d.id === u.divisionName);
-      if (foundDiv) divisionId = foundDiv.id;
-    }
-    if (!divisionId && role === "student") divisionId = "div-10a";
     const newUser = {
       id: newId,
       name: cleanName,
-      email: u.email || `${cleanUsername}@nexusrana.edu`,
+      email: (u.email || "").trim() || void 0,
       role,
-      phone: u.phone || void 0,
+      phone: (u.phone || u["Phone Number"] || "").trim() || void 0,
       username: cleanUsername,
       password: defaultPassword,
       rawPassword: rawPass,
@@ -3385,12 +3482,12 @@ app.post("/api/admin/credentials/bulk", requireAuth, requireRole("superadmin"), 
       bonusPoints: role === "student" ? 100 : void 0
     };
     if (role === "superadmin" || role === "teacher") {
-      newUser.employeeId = u.employeeId || `NRES-${role === "superadmin" ? "DIR" : "FAC"}-${100 + users.length}`;
+      newUser.employeeId = employeeId;
       if (role === "teacher") newUser.assignedSubjects = u.assignedSubjects || [];
     } else if (role === "student") {
       newUser.classId = classId;
       newUser.divisionId = divisionId;
-      newUser.rollNo = u.rollNo || `NRES-10A-${String(users.length + 1).padStart(2, "0")}`;
+      newUser.rollNo = rollNo;
       if (u.parentId) newUser.parentId = u.parentId;
     } else if (role === "parent") {
       newUser.childrenIds = Array.isArray(u.childrenIds) ? u.childrenIds : [];
@@ -3513,6 +3610,14 @@ app.delete("/api/admin/credentials/:id", requireAuth, requireRole("superadmin"),
     const parent = users.find((u) => u.id === user.parentId);
     if (parent && parent.childrenIds) {
       parent.childrenIds = parent.childrenIds.filter((cid) => cid !== user.id);
+    }
+  }
+  if (user.role === "parent" && Array.isArray(user.childrenIds)) {
+    for (const childId of user.childrenIds) {
+      const child = users.find((u) => u.id === childId);
+      if (child) {
+        child.parentId = void 0;
+      }
     }
   }
   users.splice(index, 1);
@@ -4496,26 +4601,32 @@ app.post("/api/exams/:id/submit", requireAuth, requireRole("student"), (req, res
   }
   let score = 0;
   const questions = exam.questions || [];
+  const computedTotal = questions.reduce((sum, q) => sum + (Number(q.points) || 0), 0);
+  const totalMarks = computedTotal > 0 ? computedTotal : Number(exam.totalMarks) || 10;
   questions.forEach((q) => {
     const studentAns = answers ? answers[q.id] : void 0;
-    if (studentAns !== void 0) {
-      if (q.type === "single" || q.type === "true_false") {
-        if (studentAns === q.correctAnswer) {
-          score += Number(q.points) || 10;
+    const pts = Number(q.points) || 1;
+    if (studentAns !== void 0 && studentAns !== null && studentAns !== "") {
+      if (q.type === "single" || q.type === "true_false" || q.type === "mcq") {
+        if (String(studentAns).trim().toLowerCase() === String(q.correctAnswer ?? "").trim().toLowerCase()) {
+          score += pts;
         }
-      } else if (q.type === "multi") {
-        const correctList = Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer];
-        const studentList = Array.isArray(studentAns) ? studentAns : [studentAns];
-        const isExactMatch = correctList.length === studentList.length && correctList.every((val) => studentList.includes(val));
+      } else if (q.type === "multi" || q.type === "multiple") {
+        const correctList = (Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer]).map(String).sort();
+        const studentList = (Array.isArray(studentAns) ? studentAns : [studentAns]).map(String).sort();
+        const isExactMatch = correctList.length === studentList.length && correctList.every((val, i) => val === studentList[i]);
         if (isExactMatch) {
-          score += Number(q.points) || 10;
+          score += pts;
+        }
+      } else if (q.type === "short" || q.type === "text") {
+        if (q.correctAnswer != null && String(studentAns).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase()) {
+          score += pts;
         }
       }
     }
   });
-  const totalMarks = exam.totalMarks || 10;
-  const percentage = Math.round(score / totalMarks * 100);
-  const passed = percentage >= (exam.passingScore || 50);
+  const percentage = totalMarks > 0 ? Math.round(score / totalMarks * 100) : 0;
+  const passed = percentage >= (exam.passingScore || 40);
   const bonusAwarded = percentage;
   student.bonusPoints = (student.bonusPoints || 0) + bonusAwarded;
   const violationCount = Number(cheatingLog?.violationCount) || 0;
@@ -4608,16 +4719,26 @@ app.get("/api/exams/:id/review", requireAuth, (req, res) => {
     return res.status(404).json({ error: "No submission found for this exam." });
   }
   const nowTime = /* @__PURE__ */ new Date();
-  const endTime = new Date(exam.endTime);
-  const isWindowClosed = nowTime >= endTime;
+  const hasEndTime = Boolean(exam.endTime);
+  const endTime = hasEndTime ? new Date(exam.endTime) : null;
+  const isWindowClosed = !hasEndTime || !endTime || isNaN(endTime.getTime()) || nowTime >= endTime;
   const isStaff = caller.role === "teacher" || caller.role === "superadmin";
-  const isForced = req.query.force === "true" || req.query.force === "1";
+  const isForced = isStaff && (req.query.force === "true" || req.query.force === "1");
   if (!isWindowClosed && !isStaff && !isForced) {
     return res.json({
       locked: true,
       message: "Detailed answer key and review are locked to prevent early answer sharing until the entire exam window concludes for all students.",
       windowClosesAt: exam.endTime,
-      submission,
+      submission: {
+        id: submission.id,
+        examId: submission.examId,
+        studentId: submission.studentId,
+        score: submission.score,
+        totalMarks: submission.totalMarks,
+        percentage: submission.percentage,
+        passed: submission.passed,
+        submittedAt: submission.submittedAt
+      },
       summary: {
         score: submission.score,
         totalMarks: submission.totalMarks,
@@ -4797,9 +4918,9 @@ app.get("/api/parent/recipients", requireAuth, requireRole("parent", "superadmin
     recipients: assignedTeachers
   });
 });
-app.get("/api/teacher/roster", (req, res) => {
-  const teacherId = req.query.teacherId || req.headers["x-user-id"];
-  const teacher = users.find((u) => u.id === teacherId && u.role === "teacher") || users.find((u) => u.role === "teacher");
+app.get("/api/teacher/roster", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
+  const teacherId = req.user.role === "teacher" ? req.user.id : req.query.teacherId || req.user.id;
+  const teacher = users.find((u) => u.id === teacherId && (u.role === "teacher" || u.role === "superadmin")) || (req.user.role === "teacher" || req.user.role === "superadmin" ? req.user : null);
   if (!teacher) {
     return res.status(404).json({ error: "Teacher profile not found" });
   }
@@ -4825,7 +4946,7 @@ app.get("/api/teacher/roster", (req, res) => {
     const cls = classes.find((c) => c.id === s.classId);
     const div = divisions.find((d) => d.id === s.divisionId);
     return {
-      ...s,
+      ...publicUser(s),
       className: cls?.name || "Assigned Class",
       divisionName: div?.name || "",
       parentName: parent?.name || null,
@@ -4850,7 +4971,7 @@ app.get("/api/teacher/roster", (req, res) => {
       };
     }).filter(Boolean);
     return {
-      ...p,
+      ...publicUser(p),
       linkedStudents
     };
   });
@@ -4881,7 +5002,7 @@ app.get("/api/teacher/roster", (req, res) => {
     }
   });
 });
-app.post("/api/teacher/students", (req, res) => {
+app.post("/api/teacher/students", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
   const {
     name,
     phone,
@@ -4896,10 +5017,12 @@ app.post("/api/teacher/students", (req, res) => {
     parentPhone,
     parentEmail
   } = req.body;
-  const teacherId = req.headers["x-user-id"];
-  const teacher = users.find((u) => u.id === teacherId && u.role === "teacher") || users.find((u) => u.role === "teacher");
+  const teacher = req.user.role === "teacher" ? req.user : users.find((u) => u.role === "teacher");
   if (!name || !phone || !classId) {
     return res.status(400).json({ error: "Student Full Name, Mobile Number, and Class are required" });
+  }
+  if (!divisionId) {
+    return res.status(400).json({ error: "Division is required when registering a student" });
   }
   const assignedClassIds = /* @__PURE__ */ new Set();
   (teacher?.assignedSubjects || []).forEach((asg) => {
@@ -4977,10 +5100,9 @@ app.post("/api/teacher/students", (req, res) => {
     } : null
   });
 });
-app.post("/api/teacher/parents", (req, res) => {
+app.post("/api/teacher/parents", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
   const { name, phone, email, studentIds, username, password } = req.body;
-  const teacherId = req.headers["x-user-id"];
-  const teacher = users.find((u) => u.id === teacherId && u.role === "teacher") || users.find((u) => u.role === "teacher");
+  const teacher = req.user.role === "teacher" ? req.user : users.find((u) => u.role === "teacher");
   if (!name || !phone) {
     return res.status(400).json({ error: "Parent Full Name and Mobile Contact are required." });
   }
@@ -5035,10 +5157,9 @@ app.post("/api/teacher/parents", (req, res) => {
     linkedStudents: validStudents.map((s) => ({ id: s.id, name: s.name }))
   });
 });
-app.put("/api/teacher/users/:id", (req, res) => {
+app.put("/api/teacher/users/:id", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
   const { id } = req.params;
-  const teacherId = req.headers["x-user-id"];
-  const teacher = users.find((u) => u.id === teacherId && u.role === "teacher") || users.find((u) => u.role === "teacher");
+  const teacher = req.user.role === "teacher" ? req.user : users.find((u) => u.role === "teacher");
   const index = users.findIndex((u) => u.id === id);
   if (index === -1) {
     return res.status(404).json({ error: "User record not found" });
@@ -5085,11 +5206,17 @@ app.put("/api/teacher/users/:id", (req, res) => {
       ...rollNo && { rollNo: rollNo.trim() },
       ...classId && { classId },
       ...divisionId && { divisionId },
-      ...password && { password: bcrypt.hashSync(password.trim(), 12), passwordChangedAt: (/* @__PURE__ */ new Date()).toISOString(), mustChangePassword: false },
       parentId: parentId !== void 0 ? parentId || void 0 : current.parentId
     };
+    if (password && typeof password === "string" && password.trim().length > 0) {
+      const cleanPwd = password.trim();
+      updated.password = bcrypt.hashSync(cleanPwd, 12);
+      updated.rawPassword = cleanPwd;
+      updated.passwordChangedAt = (/* @__PURE__ */ new Date()).toISOString();
+      updated.mustChangePassword = false;
+    }
     users[index] = updated;
-    return res.json({ message: "Student updated successfully", user: updated });
+    return res.json({ message: "Student updated successfully", user: publicUser(updated) });
   }
   if (current.role === "parent") {
     if (filterByClass) {
@@ -5123,18 +5250,23 @@ app.put("/api/teacher/users/:id", (req, res) => {
       ...name && { name: name.trim() },
       ...phone && { phone: phone.trim() },
       ...email && { email: email.trim() },
-      ...password && { password: bcrypt.hashSync(password.trim(), 12), passwordChangedAt: (/* @__PURE__ */ new Date()).toISOString(), mustChangePassword: false },
       ...Array.isArray(childrenIds) && { childrenIds }
     };
+    if (password && typeof password === "string" && password.trim().length > 0) {
+      const cleanPwd = password.trim();
+      updated.password = bcrypt.hashSync(cleanPwd, 12);
+      updated.rawPassword = cleanPwd;
+      updated.passwordChangedAt = (/* @__PURE__ */ new Date()).toISOString();
+      updated.mustChangePassword = false;
+    }
     users[index] = updated;
-    return res.json({ message: "Parent updated successfully", user: updated });
+    return res.json({ message: "Parent updated successfully", user: publicUser(updated) });
   }
   res.status(400).json({ error: "Invalid operation" });
 });
-app.delete("/api/teacher/users/:id", (req, res) => {
+app.delete("/api/teacher/users/:id", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
   const { id } = req.params;
-  const teacherId = req.headers["x-user-id"];
-  const teacher = users.find((u) => u.id === teacherId && u.role === "teacher") || users.find((u) => u.role === "teacher");
+  const teacher = req.user.role === "teacher" ? req.user : users.find((u) => u.role === "teacher");
   const index = users.findIndex((u) => u.id === id);
   if (index === -1) {
     return res.status(404).json({ error: "User not found" });
@@ -5188,7 +5320,7 @@ app.delete("/api/teacher/users/:id", (req, res) => {
   users.splice(index, 1);
   res.json({ message: `${user.role === "student" ? "Student" : "Parent"} removed from class roster` });
 });
-app.post("/api/ai/study-tutor", async (req, res) => {
+app.post("/api/ai/study-tutor", requireAuth, async (req, res) => {
   const { message, studentClass, subject, history } = req.body;
   if (!message || typeof message !== "string") {
     return res.status(400).json({ error: "Message is required" });
@@ -5209,7 +5341,7 @@ app.post("/api/ai/study-tutor", async (req, res) => {
     });
   }
 });
-app.post("/api/ai/generate-quiz", async (req, res) => {
+app.post("/api/ai/generate-quiz", requireAuth, requireRole("teacher", "superadmin"), async (req, res) => {
   const {
     chapterName,
     subject,
@@ -5314,15 +5446,15 @@ app.get("/api/ai/chat/config", (req, res) => {
       {
         id: "fast",
         name: "Fast Mode",
-        model: "gemini-flash-lite-latest",
-        badge: "\u26A1 Fast (gemini-flash-lite-latest)",
+        model: "gemini-3-flash-preview",
+        badge: "\u26A1 Fast (gemini-3-flash-preview)",
         description: "Ultra-low latency for quick definitions, rapid lookups & instant Q&A"
       },
       {
         id: "general",
         name: "Balanced Mode",
-        model: "gemini-3.5-flash-lite",
-        badge: "\u2B50 General (gemini-3.5-flash-lite)",
+        model: "gemini-3.5-flash",
+        badge: "\u2B50 General (gemini-3.5-flash)",
         description: "Optimal intelligence and speed for general study, tutoring & discussions"
       },
       {
@@ -5335,7 +5467,7 @@ app.get("/api/ai/chat/config", (req, res) => {
     ]
   });
 });
-app.post("/api/ai/chat", async (req, res) => {
+app.post("/api/ai/chat", requireAuth, async (req, res) => {
   const { message, history, roleId, taskComplexity, userContext } = req.body;
   if (!message || typeof message !== "string" || message.trim().length === 0) {
     return res.status(400).json({ error: "Valid message string is required" });
@@ -5358,14 +5490,14 @@ app.post("/api/ai/chat", async (req, res) => {
     });
   }
 });
-app.get("/api/ai/threads", (req, res) => {
-  const userId = req.headers["x-user-id"] || users[0]?.id;
+app.get("/api/ai/threads", requireAuth, (req, res) => {
+  const userId = req.user.id;
   enforceUserThreadRetention(userId);
   const userThreads = aiThreads.filter((t) => t.userId === userId).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   res.json({ threads: userThreads });
 });
-app.post("/api/ai/threads", (req, res) => {
-  const userId = req.headers["x-user-id"] || users[0]?.id;
+app.post("/api/ai/threads", requireAuth, (req, res) => {
+  const userId = req.user.id;
   const { title, roleId, subject } = req.body;
   const newThread = {
     id: `thread-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -5381,8 +5513,8 @@ app.post("/api/ai/threads", (req, res) => {
   enforceUserThreadRetention(userId);
   res.status(201).json({ thread: newThread });
 });
-app.get("/api/ai/threads/:id", (req, res) => {
-  const userId = req.headers["x-user-id"] || users[0]?.id;
+app.get("/api/ai/threads/:id", requireAuth, (req, res) => {
+  const userId = req.user.id;
   const thread = aiThreads.find((t) => t.id === req.params.id);
   if (!thread) {
     return res.status(404).json({ error: "Conversation thread not found" });
@@ -5392,8 +5524,8 @@ app.get("/api/ai/threads/:id", (req, res) => {
   }
   res.json({ thread });
 });
-app.post("/api/ai/threads/:id/messages", async (req, res) => {
-  const userId = req.headers["x-user-id"] || users[0]?.id;
+app.post("/api/ai/threads/:id/messages", requireAuth, async (req, res) => {
+  const userId = req.user.id;
   const thread = aiThreads.find((t) => t.id === req.params.id);
   if (!thread) {
     return res.status(404).json({ error: "Conversation thread not found" });
@@ -5453,8 +5585,8 @@ app.post("/api/ai/threads/:id/messages", async (req, res) => {
     });
   }
 });
-app.delete("/api/ai/threads/:id", (req, res) => {
-  const userId = req.headers["x-user-id"] || users[0]?.id;
+app.delete("/api/ai/threads/:id", requireAuth, (req, res) => {
+  const userId = req.user.id;
   const threadIndex = aiThreads.findIndex((t) => t.id === req.params.id);
   if (threadIndex === -1) {
     return res.status(404).json({ error: "Conversation thread not found" });
@@ -5465,10 +5597,40 @@ app.delete("/api/ai/threads/:id", (req, res) => {
   const deleted = aiThreads.splice(threadIndex, 1)[0];
   res.json({ message: "Conversation thread permanently deleted", threadId: deleted.id });
 });
-app.get("/api/admin/reports/school-analytics", (req, res) => {
+app.get("/api/admin/reports/school-analytics", requireAuth, requireRole("superadmin"), (req, res) => {
   const teachersCount = users.filter((u) => u.role === "teacher").length;
   const students = users.filter((u) => u.role === "student");
   const parentsCount = users.filter((u) => u.role === "parent").length;
+  const allPercentages = submissions.map((s) => Number(s.percentage) || 0).filter((p) => !isNaN(p));
+  const overallAverageScore = allPercentages.length > 0 ? Math.round(allPercentages.reduce((a, b) => a + b, 0) / allPercentages.length * 10) / 10 : 0;
+  const overallPassCount = allPercentages.filter((p) => p >= 40).length;
+  const overallPassRate = allPercentages.length > 0 ? Math.round(overallPassCount / allPercentages.length * 1e3) / 10 : 0;
+  const studentAvgs = students.map((s) => {
+    const sSubs = submissions.filter((sub) => sub.studentId === s.id);
+    if (sSubs.length === 0) return null;
+    return sSubs.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / sSubs.length;
+  }).filter((v) => v !== null);
+  const gradeBuckets = [
+    { grade: "A1", range: "91% - 100%", description: "Outstanding", min: 91, max: 100 },
+    { grade: "A2", range: "81% - 90%", description: "Excellent", min: 81, max: 90.999 },
+    { grade: "B1", range: "71% - 80%", description: "Very Good", min: 71, max: 80.999 },
+    { grade: "B2", range: "61% - 70%", description: "Good", min: 61, max: 70.999 },
+    { grade: "C1", range: "51% - 60%", description: "Fair", min: 51, max: 60.999 },
+    { grade: "C2", range: "41% - 50%", description: "Average", min: 41, max: 50.999 },
+    { grade: "D", range: "33% - 40%", description: "Pass Threshold", min: 33, max: 40.999 },
+    { grade: "E", range: "Below 33%", description: "Remedial Support Required", min: 0, max: 32.999 }
+  ];
+  const totalGraded = studentAvgs.length || 1;
+  const cbseGradeDistribution = gradeBuckets.map((b) => {
+    const count = studentAvgs.filter((avg) => avg >= b.min && avg <= b.max).length;
+    return {
+      grade: b.grade,
+      range: b.range,
+      description: b.description,
+      count,
+      percentage: Math.round(count / totalGraded * 1e3) / 10
+    };
+  });
   const classDivisionStats = classes.map((c) => {
     const classDivs = divisions.filter((d) => d.classId === c.id);
     return {
@@ -5476,46 +5638,53 @@ app.get("/api/admin/reports/school-analytics", (req, res) => {
       className: c.name,
       divisions: classDivs.map((div) => {
         const divStudents = students.filter((s) => s.classId === c.id && s.divisionId === div.id);
-        const divExams = exams.filter((ex) => ex.targetClassId === c.id);
+        const divExams = exams.filter((ex) => ex.targetClassId === c.id || ex.classId === c.id);
         const divSubmissions = submissions.filter(
           (sub) => divStudents.some((s) => s.id === sub.studentId)
         );
-        const avgScore = divSubmissions.length > 0 ? Math.round(divSubmissions.reduce((a, b) => a + b.percentage, 0) / divSubmissions.length) : 74;
+        const avgScore = divSubmissions.length > 0 ? Math.round(divSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / divSubmissions.length) : 0;
+        const passCount = divSubmissions.filter((s) => (Number(s.percentage) || 0) >= 40).length;
+        const passRate = divSubmissions.length > 0 ? Math.round(passCount / divSubmissions.length * 100) : 0;
         return {
           divisionId: div.id,
           divisionName: div.name,
           studentCount: divStudents.length,
           totalExamsConducted: divExams.length,
           totalSubmissions: divSubmissions.length,
-          averageScorePercentage: avgScore
+          averageScorePercentage: avgScore,
+          passRatePercentage: passRate
         };
       })
     };
   });
   const studentProgressList = students.map((s) => {
     const sSubmissions = submissions.filter((sub) => sub.studentId === s.id);
-    const avgScore = sSubmissions.length > 0 ? Math.round(sSubmissions.reduce((a, b) => a + b.percentage, 0) / sSubmissions.length) : Math.min(100, Math.round((s.bonusPoints || 100) / 3));
+    const avgScore = sSubmissions.length > 0 ? Math.round(sSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / sSubmissions.length) : 0;
     const cls = classes.find((c) => c.id === s.classId);
     const div = divisions.find((d) => d.id === s.divisionId);
+    let standing = "No Attempts Yet";
+    if (sSubmissions.length > 0) {
+      standing = avgScore >= 90 ? "Diamond Scholar (Distinction)" : avgScore >= 75 ? "Gold Scholar (First Class)" : avgScore >= 60 ? "Silver Scholar (Second Class)" : avgScore >= 40 ? "Pass" : "Needs Improvement";
+    }
     return {
       id: s.id,
-      rollNo: s.rollNo || "NRES-001",
+      rollNo: s.rollNo || "N/A",
       name: s.name,
-      className: cls?.name || "Standard 10",
-      divisionName: div?.name || "Division A",
+      className: cls?.name || "N/A",
+      divisionName: div?.name || "N/A",
       examsAttempted: sSubmissions.length,
       averagePercentage: avgScore,
-      bonusPoints: s.bonusPoints || 100,
-      standing: avgScore >= 90 ? "Diamond Scholar (Distinction)" : avgScore >= 75 ? "Gold Scholar (First Class)" : avgScore >= 60 ? "Silver Scholar (Second Class)" : "Developing"
+      bonusPoints: s.bonusPoints ?? 0,
+      standing
     };
   });
   const subjectPerformance = subjects.map((subj) => {
     const subjExams = exams.filter((e) => e.subjectId === subj.id);
     const examIds = new Set(subjExams.map((e) => e.id));
     const subjSubmissions = submissions.filter((sub) => examIds.has(sub.examId));
-    const avg = subjSubmissions.length > 0 ? Math.round(subjSubmissions.reduce((a, b) => a + b.percentage, 0) / subjSubmissions.length) : 78;
-    const passCount = subjSubmissions.filter((s) => s.percentage >= 40).length;
-    const passRate = subjSubmissions.length > 0 ? Math.round(passCount / subjSubmissions.length * 100) : 95;
+    const avg = subjSubmissions.length > 0 ? Math.round(subjSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / subjSubmissions.length) : 0;
+    const passCount = subjSubmissions.filter((s) => (Number(s.percentage) || 0) >= 40).length;
+    const passRate = subjSubmissions.length > 0 ? Math.round(passCount / subjSubmissions.length * 100) : 0;
     return {
       subjectId: subj.id,
       subjectName: subj.name,
@@ -5533,16 +5702,16 @@ app.get("/api/admin/reports/school-analytics", (req, res) => {
     const classSubmissions = submissions.filter(
       (sub) => classStudents.some((s) => s.id === sub.studentId)
     );
-    const classAvg = classSubmissions.length > 0 ? Math.round(classSubmissions.reduce((a, b) => a + b.percentage, 0) / classSubmissions.length) : 78;
-    const classPassCount = classSubmissions.filter((s) => s.percentage >= 40).length;
-    const classPassRate = classSubmissions.length > 0 ? Math.round(classPassCount / classSubmissions.length * 100) : 92;
+    const classAvg = classSubmissions.length > 0 ? Math.round(classSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / classSubmissions.length) : 0;
+    const classPassCount = classSubmissions.filter((s) => (Number(s.percentage) || 0) >= 40).length;
+    const classPassRate = classSubmissions.length > 0 ? Math.round(classPassCount / classSubmissions.length * 100) : 0;
     const divisionsData = classDivs.map((div) => {
       const divStudents = classStudents.filter((s) => s.divisionId === div.id);
       const divStudentIds = new Set(divStudents.map((s) => s.id));
       const divSubmissions = classSubmissions.filter((sub) => divStudentIds.has(sub.studentId));
-      const divAvg = divSubmissions.length > 0 ? Math.round(divSubmissions.reduce((a, b) => a + b.percentage, 0) / divSubmissions.length) : classAvg;
-      const divPassCount = divSubmissions.filter((s) => s.percentage >= 40).length;
-      const divPassRate = divSubmissions.length > 0 ? Math.round(divPassCount / divSubmissions.length * 100) : 90;
+      const divAvg = divSubmissions.length > 0 ? Math.round(divSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / divSubmissions.length) : 0;
+      const divPassCount = divSubmissions.filter((s) => (Number(s.percentage) || 0) >= 40).length;
+      const divPassRate = divSubmissions.length > 0 ? Math.round(divPassCount / divSubmissions.length * 100) : 0;
       const subjectsData = subjects.map((subj) => {
         const subjExams = classExams.filter(
           (e) => e.subjectId === subj.id && (!e.targetDivisionId || e.targetDivisionId === "all" || e.targetDivisionId === div.id || e.divisionId === div.id)
@@ -5552,30 +5721,30 @@ app.get("/api/admin/reports/school-analytics", (req, res) => {
           (sub) => subjExamIds.has(sub.examId) || sub.subjectName === subj.name || sub.subjectId === subj.id
         );
         const subCount = subjSubmissions.length;
-        const avgScore = subCount > 0 ? Math.round(subjSubmissions.reduce((a, b) => a + b.percentage, 0) / subCount) : Math.round(72 + (subj.name.length * 7 + div.name.length * 3) % 20);
-        const passedCount = subjSubmissions.filter((s) => s.percentage >= 40).length;
-        const passRate = subCount > 0 ? Math.round(passedCount / subCount * 100) : Math.round(85 + subj.name.length * 3 % 12);
-        const highestScore = subCount > 0 ? Math.max(...subjSubmissions.map((s) => s.percentage)) : Math.min(100, avgScore + 14);
-        const lowestScore = subCount > 0 ? Math.min(...subjSubmissions.map((s) => s.percentage)) : Math.max(35, avgScore - 20);
+        const avgScore = subCount > 0 ? Math.round(subjSubmissions.reduce((a, b) => a + (Number(b.percentage) || 0), 0) / subCount) : 0;
+        const passedCount = subjSubmissions.filter((s) => (Number(s.percentage) || 0) >= 40).length;
+        const passRate = subCount > 0 ? Math.round(passedCount / subCount * 100) : 0;
+        const highestScore = subCount > 0 ? Math.max(...subjSubmissions.map((s) => Number(s.percentage) || 0)) : 0;
+        const lowestScore = subCount > 0 ? Math.min(...subjSubmissions.map((s) => Number(s.percentage) || 0)) : 0;
         return {
           subjectId: subj.id,
           subjectName: subj.name,
           subjectCode: subj.code,
           icon: subj.icon || "BookOpen",
-          totalExams: Math.max(subjExams.length, subCount > 0 ? 1 : 0),
+          totalExams: subjExams.length,
           totalEvaluations: subCount,
           averageScore: avgScore,
           passRatePercentage: passRate,
           highestScore,
           lowestScore,
-          totalPassed: subCount > 0 ? passedCount : Math.round(subCount * (passRate / 100)),
-          totalFailed: subCount > 0 ? subCount - passedCount : 0
+          totalPassed: passedCount,
+          totalFailed: subCount - passedCount
         };
       });
       return {
         divisionId: div.id,
         divisionName: div.name,
-        roomNumber: div.roomNumber || "Room 101",
+        roomNumber: div.roomNumber || "N/A",
         studentCount: divStudents.length,
         totalSubmissions: divSubmissions.length,
         averageScorePercentage: divAvg,
@@ -5597,27 +5766,31 @@ app.get("/api/admin/reports/school-analytics", (req, res) => {
     };
   });
   const classDivisionBreakdown = classDivisionStats.flatMap(
-    (cls) => cls.divisions.map((div) => {
-      const passRate = div.totalSubmissions > 0 ? div.averageScorePercentage >= 40 ? 96 : 80 : 94;
-      return {
-        className: cls.className,
-        divisionName: div.divisionName,
-        studentCount: div.studentCount,
-        testsConducted: div.totalExamsConducted || 2,
-        totalSubmissions: div.totalSubmissions,
-        averagePercentage: div.averageScorePercentage,
-        passRate
-      };
-    })
+    (cls) => cls.divisions.map((div) => ({
+      className: cls.className,
+      divisionName: div.divisionName,
+      studentCount: div.studentCount,
+      testsConducted: div.totalExamsConducted,
+      totalSubmissions: div.totalSubmissions,
+      averagePercentage: div.averageScorePercentage,
+      passRate: div.passRatePercentage ?? 0
+    }))
   );
-  res.json({
-    generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+  const cleanSubmissions = submissions.filter((s) => !s.cheatingFlagged).length;
+  const windowBlurIncidents = cheatingAudits.filter((a) => a.action === "focus_loss" || a.action === "tab_switch").length;
+  const fullscreenExits = cheatingAudits.filter((a) => a.action === "fullscreen_exit").length;
+  const complianceRate = submissions.length > 0 ? Math.round(cleanSubmissions / submissions.length * 1e3) / 10 : 100;
+  const schoolConfig = {
     schoolName: "Nexus Ranaji English Medium High School",
     boardAffiliation: "Central Board of Secondary Education (CBSE)",
     affiliationCode: "41029",
     schoolCode: "10482",
-    academicYear: "2025-2026",
-    reportReferenceNumber: "NRES/EXAM/2025-26/REP-0492",
+    academicYear: academicYears?.find((ay) => ay.isCurrent)?.name || "2025-2026"
+  };
+  res.json({
+    generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    ...schoolConfig,
+    reportReferenceNumber: `NRES/EXAM/${schoolConfig.academicYear.replace("-", "-")}/REP-${Date.now().toString().slice(-4)}`,
     examinationCycle: "Term 1 & Term 2 Annual Assessment Report",
     summary: {
       totalTeachers: teachersCount,
@@ -5625,8 +5798,8 @@ app.get("/api/admin/reports/school-analytics", (req, res) => {
       totalParents: parentsCount,
       totalExamsConducted: exams.length,
       totalSubmissionsEvaluated: submissions.length,
-      overallPassRate: 94.2,
-      overallAverageScore: 78.4,
+      overallPassRate,
+      overallAverageScore,
       totalActiveClasses: classes.length,
       totalDivisions: divisions.length,
       systemCheatingIncidents: cheatingAudits.length
@@ -5641,32 +5814,23 @@ app.get("/api/admin/reports/school-analytics", (req, res) => {
       totalDivisions: divisions.length,
       systemCheatingIncidents: cheatingAudits.length
     },
-    cbseGradeDistribution: [
-      { grade: "A1", range: "91% - 100%", description: "Outstanding", count: 18, percentage: 36 },
-      { grade: "A2", range: "81% - 90%", description: "Excellent", count: 14, percentage: 28 },
-      { grade: "B1", range: "71% - 80%", description: "Very Good", count: 9, percentage: 18 },
-      { grade: "B2", range: "61% - 70%", description: "Good", count: 5, percentage: 10 },
-      { grade: "C1", range: "51% - 60%", description: "Fair", count: 2, percentage: 4 },
-      { grade: "C2", range: "41% - 50%", description: "Average", count: 1, percentage: 2 },
-      { grade: "D", range: "33% - 40%", description: "Pass Threshold", count: 1, percentage: 2 },
-      { grade: "E", range: "Below 33%", description: "Remedial Support Required", count: 0, percentage: 0 }
-    ],
+    cbseGradeDistribution,
     proctoringAudit: {
-      totalProctoredSessions: Math.max(submissions.length, 38),
-      cleanSubmissions: submissions.filter((s) => !s.cheatingFlagged).length,
+      totalProctoredSessions: submissions.length,
+      cleanSubmissions,
       flaggedViolations: cheatingAudits.length,
-      windowBlurIncidents: cheatingAudits.filter((a) => a.action === "focus_loss" || a.action === "tab_switch").length,
-      fullscreenExits: cheatingAudits.filter((a) => a.action === "fullscreen_exit").length,
-      complianceRate: "98.2%"
+      windowBlurIncidents,
+      fullscreenExits,
+      complianceRate: `${complianceRate}%`
     },
     classDivisionBreakdown,
     classDivisionStats,
     studentProgressList: (() => {
-      const { limit, offset } = parsePagination(req, 100, 100);
+      const { limit, offset } = parsePagination(req, 500, 2e3);
       return studentProgressList.slice(offset, offset + limit);
     })(),
     pagination: (() => {
-      const { limit, offset } = parsePagination(req, 100, 100);
+      const { limit, offset } = parsePagination(req, 500, 2e3);
       return {
         total: studentProgressList.length,
         limit,
@@ -5678,22 +5842,9 @@ app.get("/api/admin/reports/school-analytics", (req, res) => {
     hierarchicalPerformance
   });
 });
-app.get("/api/notifications", (req, res) => {
-  let userId = req.headers["x-user-id"] || req.headers["x-userid"] || req.query.userId;
-  let explicitRole = req.query.role || "";
-  if (!userId) {
-    const authHeader = req.headers.authorization || "";
-    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
-    if (token) {
-      try {
-        const payload = jwt.verify(token, JWT_SECRET);
-        userId = payload.sub;
-      } catch {
-      }
-    }
-  }
-  const user = users.find((u) => u.id === userId);
-  const userRole = user?.role || explicitRole || "student";
+app.get("/api/notifications", requireAuth, (req, res) => {
+  const userId = req.user.id;
+  const userRole = req.user.role;
   const userNotifications = (appNotifications || []).filter((n) => {
     if (!n.targetRole || n.targetRole === "all") return true;
     if (n.targetRole === userRole) return true;
@@ -5710,7 +5861,7 @@ app.get("/api/notifications", (req, res) => {
     total: pagination.total
   });
 });
-app.patch("/api/notifications/:id/read", (req, res) => {
+app.patch("/api/notifications/:id/read", requireAuth, (req, res) => {
   const { id } = req.params;
   const notif = (appNotifications || []).find((n) => n.id === id);
   if (notif) {
@@ -5719,30 +5870,17 @@ app.patch("/api/notifications/:id/read", (req, res) => {
   }
   res.status(404).json({ error: "Notification not found" });
 });
-app.post("/api/notifications/read-all", (req, res) => {
-  let userId = req.headers["x-user-id"] || req.headers["x-userid"] || req.body?.userId;
-  let explicitRole = req.body?.role || "";
-  if (!userId) {
-    const authHeader = req.headers.authorization || "";
-    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
-    if (token) {
-      try {
-        const payload = jwt.verify(token, JWT_SECRET);
-        userId = payload.sub;
-      } catch {
-      }
-    }
-  }
-  const user = users.find((u) => u.id === userId);
-  const userRole = user?.role || explicitRole || "student";
+app.post("/api/notifications/read-all", requireAuth, (req, res) => {
+  const userId = req.user.id;
+  const userRole = req.user.role;
   (appNotifications || []).forEach((n) => {
-    if (!n.targetRole || n.targetRole === "all" || n.targetRole === userRole || userId && n.targetUserId === userId) {
+    if (!n.targetRole || n.targetRole === "all" || n.targetRole === userRole || n.targetUserId === userId) {
       n.read = true;
     }
   });
   res.json({ success: true });
 });
-app.post("/api/notifications", (req, res) => {
+app.post("/api/notifications", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
   const { title, message, category, targetRole, targetUserId, linkTab, linkId, metadata } = req.body;
   if (!title || !message) {
     return res.status(400).json({ error: "Title and message are required" });
@@ -5763,10 +5901,9 @@ app.post("/api/notifications", (req, res) => {
   appNotifications.unshift(newNotif);
   res.status(201).json({ success: true, notification: newNotif });
 });
-app.post("/api/student/cheating-event", (req, res) => {
+app.post("/api/student/cheating-event", requireAuth, requireRole("student"), (req, res) => {
   const { examId, violationCount, reason } = req.body;
-  const studentId = req.headers["x-user-id"];
-  const student = users.find((u) => u.id === studentId) || users.find((u) => u.role === "student");
+  const student = req.user;
   const exam = exams.find((e) => e.id === examId);
   const action = violationCount >= 3 ? "Flagged & Force-Submitted" : violationCount === 2 ? "Warning 2" : "Warning 1";
   cheatingAudits.unshift({
@@ -5784,21 +5921,29 @@ app.post("/api/student/cheating-event", (req, res) => {
   if (cheatingAudits.length > 500) cheatingAudits.pop();
   res.json({ message: "Window blur audit recorded", actionTaken: action });
 });
-app.get("/api/tickets", (req, res) => {
-  const userId = req.headers["x-user-id"];
-  const user = users.find((u) => u.id === userId);
+app.get("/api/tickets", requireAuth, (req, res) => {
+  const user = req.user;
   let list = supportTickets;
-  if (user && user.role === "parent") {
+  if (user.role === "parent") {
     list = supportTickets.filter((t) => t.parentId === user.id);
+  } else if (user.role === "teacher") {
+    list = supportTickets.filter((t) => t.recipientId === user.id);
+  } else if (user.role !== "superadmin") {
+    return res.status(403).json({ error: "Not authorized to view support tickets" });
   }
   const { items, pagination } = paginateArray(list, req);
   res.json({ tickets: items, pagination, total: pagination.total });
 });
-app.post("/api/tickets", (req, res) => {
+app.post("/api/tickets", requireAuth, requireRole("parent", "superadmin"), (req, res) => {
   const { studentId, recipientId, subject, category, message, priority } = req.body;
-  const parentId = req.headers["x-user-id"];
-  const parent = users.find((u) => u.id === parentId && u.role === "parent") || users.find((u) => u.role === "parent");
-  const student = users.find((u) => u.id === studentId) || users.find((u) => (parent?.childrenIds || []).includes(u.id));
+  const parent = req.user.role === "parent" ? req.user : users.find((u) => u.id === req.body.parentId && u.role === "parent");
+  if (!parent) {
+    return res.status(400).json({ error: "Parent account is required to open a support ticket" });
+  }
+  const student = users.find((u) => u.id === studentId && u.role === "student");
+  if (!student || !canParentAccessStudent(parent, student)) {
+    return res.status(403).json({ error: "You may only open tickets for your linked children" });
+  }
   const recipient = users.find((u) => u.id === recipientId);
   if (!subject || !message) {
     return res.status(400).json({ error: "Subject and message are required" });
@@ -5806,16 +5951,16 @@ app.post("/api/tickets", (req, res) => {
   if (recipient && recipient.role !== "teacher") {
     return res.status(400).json({ error: "Inquiries must be directed to your child's assigned subject teachers, not management." });
   }
-  const cls = classes.find((c) => c.id === student?.classId);
-  const div = divisions.find((d) => d.id === student?.divisionId);
+  const cls = classes.find((c) => c.id === student.classId);
+  const div = divisions.find((d) => d.id === student.divisionId);
   const newTicket = {
     id: `tkt-${Date.now().toString().slice(-4)}`,
-    parentId: parent?.id || "usr-parent-1",
-    parentName: parent?.name || "Mr. Rajesh Sharma",
-    studentId: student?.id || "usr-stud-1",
-    studentName: student?.name || "Aarav Sharma",
-    studentClass: `${cls?.name || "Standard 10"} - ${div?.name || "Division A"}`,
-    recipientId: recipient?.id || "usr-teach-1",
+    parentId: parent.id,
+    parentName: parent.name,
+    studentId: student.id,
+    studentName: student.name,
+    studentClass: `${cls?.name || "N/A"} - ${div?.name || "N/A"}`,
+    recipientId: recipient?.id || "",
     recipientName: recipient?.name || "Subject Teacher",
     recipientRole: "teacher",
     subject,
@@ -5830,23 +5975,32 @@ app.post("/api/tickets", (req, res) => {
   supportTickets.unshift(newTicket);
   res.status(201).json({ message: "Support query submitted successfully", ticket: newTicket });
 });
-app.delete("/api/tickets/:id", (req, res) => {
+app.delete("/api/tickets/:id", requireAuth, (req, res) => {
   const { id } = req.params;
   const index = supportTickets.findIndex((t) => t.id === id);
   if (index === -1) {
     return res.status(404).json({ error: "Ticket query not found" });
   }
+  const ticket = supportTickets[index];
+  const user = req.user;
+  const canDelete = user.role === "superadmin" || user.role === "parent" && ticket.parentId === user.id || user.role === "teacher" && ticket.recipientId === user.id;
+  if (!canDelete) {
+    return res.status(403).json({ error: "Not authorized to delete this ticket" });
+  }
   const deleted = supportTickets.splice(index, 1)[0];
   res.json({ message: "Query record permanently deleted", ticket: deleted });
 });
-app.post("/api/tickets/:id/reply", (req, res) => {
+app.post("/api/tickets/:id/reply", requireAuth, (req, res) => {
   const { id } = req.params;
   const { message } = req.body;
-  const senderId = req.headers["x-user-id"];
-  const sender = users.find((u) => u.id === senderId) || users[0];
+  const sender = req.user;
   const ticket = supportTickets.find((t) => t.id === id);
   if (!ticket) return res.status(404).json({ error: "Ticket not found" });
   if (!message) return res.status(400).json({ error: "Message cannot be empty" });
+  const canReply = sender.role === "superadmin" || sender.role === "parent" && ticket.parentId === sender.id || sender.role === "teacher" && ticket.recipientId === sender.id;
+  if (!canReply) {
+    return res.status(403).json({ error: "Not authorized to reply to this ticket" });
+  }
   const reply = {
     id: `rep-${Date.now()}`,
     senderId: sender.id,
@@ -5855,6 +6009,7 @@ app.post("/api/tickets/:id/reply", (req, res) => {
     message,
     timestamp: (/* @__PURE__ */ new Date()).toISOString()
   };
+  ticket.replies = ticket.replies || [];
   ticket.replies.push(reply);
   ticket.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
   if ((sender.role === "teacher" || sender.role === "superadmin") && ticket.status === "Open") {
@@ -5862,7 +6017,7 @@ app.post("/api/tickets/:id/reply", (req, res) => {
   }
   res.status(201).json({ message: "Reply added", ticket });
 });
-app.patch("/api/tickets/:id/status", (req, res) => {
+app.patch("/api/tickets/:id/status", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
   const ticket = supportTickets.find((t) => t.id === id);
@@ -5874,7 +6029,7 @@ app.patch("/api/tickets/:id/status", (req, res) => {
   ticket.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
   res.json({ message: "Status updated", ticket });
 });
-app.post("/api/system/reset-demo", (req, res) => {
+app.post("/api/system/reset-demo", requireAuth, requireRole("superadmin"), (req, res) => {
   res.json({ message: "System state active" });
 });
 app.get("/api/database/status", async (req, res) => {
