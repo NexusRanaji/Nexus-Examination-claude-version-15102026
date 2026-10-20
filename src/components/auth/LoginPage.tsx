@@ -150,7 +150,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers =
         role: u.role,
         label: `${u.name} (${u.role === 'student' ? (u.rollNo || 'Student') : u.role})`,
         id: u.username || u.rollNo || u.email || u.id,
-        pass: (u as any).password || (u as any).rawPassword || defaultPass,
+        // Never trust passwords from public-users API (they are not returned). Use role defaults for demo quick-login only.
+        pass: defaultPass,
         badge: u.rollNo ? `Roll: ${u.rollNo}` : 'New Account',
         accent: u.role === 'student'
           ? 'border-amber-300 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20'

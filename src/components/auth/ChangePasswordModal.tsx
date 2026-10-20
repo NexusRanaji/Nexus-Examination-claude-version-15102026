@@ -37,8 +37,8 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       return;
     }
 
-    if (!newPassword || newPassword.length < 10) {
-      setError('New password must be at least 10 characters long.');
+    if (!newPassword || newPassword.length < 8) {
+      setError('New password must be at least 8 characters long.');
       return;
     }
 

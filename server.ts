@@ -3144,16 +3144,18 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
 });
 
 // Public directory for login presets and unauthenticated visitors (with login presets passwords)
+// Public directory for login-page demos ONLY — never expose passwords or sensitive fields
 app.get(['/api/auth/public-users', '/api/users/public'], (req, res) => {
   return res.json({
-    users: users.map((u) => {
-      const plain = u.rawPassword || SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
-      return {
-        ...publicUser(u),
-        password: plain,
-        rawPassword: plain,
-      };
-    }),
+    users: users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      username: u.username,
+      role: u.role,
+      rollNo: u.rollNo,
+      employeeId: u.employeeId,
+      // Explicitly omit password, rawPassword, email, phone, parent links
+    })),
   });
 });
 
@@ -4910,31 +4912,38 @@ app.post('/api/exams/:id/submit', requireAuth, requireRole('student'), (req, res
   // Evaluate answers against master questions
   let score = 0;
   const questions = exam.questions || [];
+  // Prefer sum of question points so percentage is accurate when exam.totalMarks is stale/wrong
+  const computedTotal = questions.reduce((sum: number, q: any) => sum + (Number(q.points) || 0), 0);
+  const totalMarks = computedTotal > 0 ? computedTotal : (Number(exam.totalMarks) || 10);
 
   questions.forEach((q: any) => {
     const studentAns = answers ? answers[q.id] : undefined;
-    if (studentAns !== undefined) {
-      if (q.type === 'single' || q.type === 'true_false') {
-        if (studentAns === q.correctAnswer) {
-          score += Number(q.points) || 10;
+    const pts = Number(q.points) || 1;
+    if (studentAns !== undefined && studentAns !== null && studentAns !== '') {
+      if (q.type === 'single' || q.type === 'true_false' || q.type === 'mcq') {
+        if (String(studentAns).trim().toLowerCase() === String(q.correctAnswer ?? '').trim().toLowerCase()) {
+          score += pts;
         }
-      } else if (q.type === 'multi') {
-        // Multi-choice: compare arrays
-        const correctList = Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer];
-        const studentList = Array.isArray(studentAns) ? studentAns : [studentAns];
+      } else if (q.type === 'multi' || q.type === 'multiple') {
+        const correctList = (Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer]).map(String).sort();
+        const studentList = (Array.isArray(studentAns) ? studentAns : [studentAns]).map(String).sort();
         const isExactMatch =
           correctList.length === studentList.length &&
-          correctList.every((val: any) => studentList.includes(val));
+          correctList.every((val: string, i: number) => val === studentList[i]);
         if (isExactMatch) {
-          score += Number(q.points) || 10;
+          score += pts;
+        }
+      } else if (q.type === 'short' || q.type === 'text') {
+        // Short answers: case-insensitive exact match against model answer when provided
+        if (q.correctAnswer != null && String(studentAns).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase()) {
+          score += pts;
         }
       }
     }
   });
 
-  const totalMarks = exam.totalMarks || 10;
-  const percentage = Math.round((score / totalMarks) * 100);
-  const passed = percentage >= (exam.passingScore || 50);
+  const percentage = totalMarks > 0 ? Math.round((score / totalMarks) * 100) : 0;
+  const passed = percentage >= (exam.passingScore || 40);
 
   // Gamification: Bonus points awarded directly equal to percentage score
   const bonusAwarded = percentage;
@@ -5049,21 +5058,31 @@ app.get('/api/exams/:id/review', requireAuth, (req, res) => {
     return res.status(404).json({ error: 'No submission found for this exam.' });
   }
 
-  // Check if exam window is still open
+  // Check if exam window is still open (missing endTime => treat as closed once submitted)
   const nowTime = new Date();
-  const endTime = new Date(exam.endTime);
-  const isWindowClosed = nowTime >= endTime;
+  const hasEndTime = Boolean(exam.endTime);
+  const endTime = hasEndTime ? new Date(exam.endTime) : null;
+  const isWindowClosed = !hasEndTime || !endTime || isNaN(endTime.getTime()) || nowTime >= endTime;
   const isStaff = caller.role === 'teacher' || caller.role === 'superadmin';
+  // force=true is staff-only (never allow students/parents to unlock the answer key early)
+  const isForced = isStaff && (req.query.force === 'true' || req.query.force === '1');
 
-  const isForced = req.query.force === 'true' || req.query.force === '1';
-
-  // Only lock if exam window has not closed, caller is not staff, and no force flag is provided
+  // Only lock if exam window has not closed, caller is not staff, and staff force is not set
   if (!isWindowClosed && !isStaff && !isForced) {
     return res.json({
       locked: true,
       message: 'Detailed answer key and review are locked to prevent early answer sharing until the entire exam window concludes for all students.',
       windowClosesAt: exam.endTime,
-      submission,
+      submission: {
+        id: submission.id,
+        examId: submission.examId,
+        studentId: submission.studentId,
+        score: submission.score,
+        totalMarks: submission.totalMarks,
+        percentage: submission.percentage,
+        passed: submission.passed,
+        submittedAt: submission.submittedAt,
+      },
       summary: {
         score: submission.score,
         totalMarks: submission.totalMarks,
@@ -5291,9 +5310,14 @@ app.get('/api/parent/recipients', requireAuth, requireRole('parent', 'superadmin
 // ==========================================
 // TEACHER ROSTER & USER MANAGEMENT (STUDENTS & PARENTS)
 // ==========================================
-app.get('/api/teacher/roster', (req, res) => {
-  const teacherId = (req.query.teacherId as string) || (req.headers['x-user-id'] as string);
-  const teacher = users.find((u) => u.id === teacherId && u.role === 'teacher') || users.find((u) => u.role === 'teacher');
+app.get('/api/teacher/roster', requireAuth, requireRole('teacher', 'superadmin'), (req, res) => {
+  const teacherId =
+    req.user.role === 'teacher'
+      ? req.user.id
+      : ((req.query.teacherId as string) || req.user.id);
+  const teacher =
+    users.find((u) => u.id === teacherId && (u.role === 'teacher' || u.role === 'superadmin')) ||
+    (req.user.role === 'teacher' || req.user.role === 'superadmin' ? req.user : null);
 
   if (!teacher) {
     return res.status(404).json({ error: 'Teacher profile not found' });
@@ -5323,13 +5347,13 @@ app.get('/api/teacher/roster', (req, res) => {
     return (u.childrenIds || []).some((cid: string) => studentIds.has(cid));
   });
 
-  // Enrich students with linked parent details and class/div names
+  // Enrich students with linked parent details and class/div names (never leak password hashes)
   const enrichedStudents = rosterStudents.map((s) => {
     const parent = users.find((u) => u.id === s.parentId && u.role === 'parent');
     const cls = classes.find((c) => c.id === s.classId);
     const div = divisions.find((d) => d.id === s.divisionId);
     return {
-      ...s,
+      ...publicUser(s),
       className: cls?.name || 'Assigned Class',
       divisionName: div?.name || '',
       parentName: parent?.name || null,
@@ -5357,7 +5381,7 @@ app.get('/api/teacher/roster', (req, res) => {
     }).filter(Boolean);
 
     return {
-      ...p,
+      ...publicUser(p),
       linkedStudents,
     };
   });
@@ -5392,7 +5416,7 @@ app.get('/api/teacher/roster', (req, res) => {
   });
 });
 
-app.post('/api/teacher/students', (req, res) => {
+app.post('/api/teacher/students', requireAuth, requireRole('teacher', 'superadmin'), (req, res) => {
   const {
     name,
     phone,
@@ -5408,11 +5432,13 @@ app.post('/api/teacher/students', (req, res) => {
     parentEmail,
   } = req.body;
 
-  const teacherId = req.headers['x-user-id'] as string;
-  const teacher = users.find((u) => u.id === teacherId && u.role === 'teacher') || users.find((u) => u.role === 'teacher');
+  const teacher = req.user.role === 'teacher' ? req.user : users.find((u) => u.role === 'teacher');
 
   if (!name || !phone || !classId) {
     return res.status(400).json({ error: 'Student Full Name, Mobile Number, and Class are required' });
+  }
+  if (!divisionId) {
+    return res.status(400).json({ error: 'Division is required when registering a student' });
   }
 
   // Validate that teacher is authorized for this class
@@ -5504,10 +5530,9 @@ app.post('/api/teacher/students', (req, res) => {
 });
 
 // Dedicated Register Parent Endpoint for Teachers
-app.post('/api/teacher/parents', (req, res) => {
+app.post('/api/teacher/parents', requireAuth, requireRole('teacher', 'superadmin'), (req, res) => {
   const { name, phone, email, studentIds, username, password } = req.body;
-  const teacherId = req.headers['x-user-id'] as string;
-  const teacher = users.find((u) => u.id === teacherId && u.role === 'teacher') || users.find((u) => u.role === 'teacher');
+  const teacher = req.user.role === 'teacher' ? req.user : users.find((u) => u.role === 'teacher');
 
   if (!name || !phone) {
     return res.status(400).json({ error: 'Parent Full Name and Mobile Contact are required.' });
@@ -5576,10 +5601,9 @@ app.post('/api/teacher/parents', (req, res) => {
   });
 });
 
-app.put('/api/teacher/users/:id', (req, res) => {
+app.put('/api/teacher/users/:id', requireAuth, requireRole('teacher', 'superadmin'), (req, res) => {
   const { id } = req.params;
-  const teacherId = req.headers['x-user-id'] as string;
-  const teacher = users.find((u) => u.id === teacherId && u.role === 'teacher') || users.find((u) => u.role === 'teacher');
+  const teacher = req.user.role === 'teacher' ? req.user : users.find((u) => u.role === 'teacher');
 
   const index = users.findIndex((u) => u.id === id);
   if (index === -1) {
@@ -5629,7 +5653,7 @@ app.put('/api/teacher/users/:id', (req, res) => {
       }
     }
 
-    const updated = {
+    const updated: any = {
       ...current,
       ...(name && { name: name.trim() }),
       ...(phone && { phone: phone.trim() }),
@@ -5637,12 +5661,18 @@ app.put('/api/teacher/users/:id', (req, res) => {
       ...(rollNo && { rollNo: rollNo.trim() }),
       ...(classId && { classId }),
       ...(divisionId && { divisionId }),
-      ...(password && { password: bcrypt.hashSync(password.trim(), 12), passwordChangedAt: new Date().toISOString(), mustChangePassword: false }),
       parentId: parentId !== undefined ? (parentId || undefined) : current.parentId,
     };
+    if (password && typeof password === 'string' && password.trim().length > 0) {
+      const cleanPwd = password.trim();
+      updated.password = bcrypt.hashSync(cleanPwd, 12);
+      updated.rawPassword = cleanPwd;
+      updated.passwordChangedAt = new Date().toISOString();
+      updated.mustChangePassword = false;
+    }
 
     users[index] = updated;
-    return res.json({ message: 'Student updated successfully', user: updated });
+    return res.json({ message: 'Student updated successfully', user: publicUser(updated) });
   }
 
   if (current.role === 'parent') {
@@ -5678,26 +5708,31 @@ app.put('/api/teacher/users/:id', (req, res) => {
       });
     }
 
-    const updated = {
+    const updated: any = {
       ...current,
       ...(name && { name: name.trim() }),
       ...(phone && { phone: phone.trim() }),
       ...(email && { email: email.trim() }),
-      ...(password && { password: bcrypt.hashSync(password.trim(), 12), passwordChangedAt: new Date().toISOString(), mustChangePassword: false }),
       ...(Array.isArray(childrenIds) && { childrenIds }),
     };
+    if (password && typeof password === 'string' && password.trim().length > 0) {
+      const cleanPwd = password.trim();
+      updated.password = bcrypt.hashSync(cleanPwd, 12);
+      updated.rawPassword = cleanPwd;
+      updated.passwordChangedAt = new Date().toISOString();
+      updated.mustChangePassword = false;
+    }
 
     users[index] = updated;
-    return res.json({ message: 'Parent updated successfully', user: updated });
+    return res.json({ message: 'Parent updated successfully', user: publicUser(updated) });
   }
 
   res.status(400).json({ error: 'Invalid operation' });
 });
 
-app.delete('/api/teacher/users/:id', (req, res) => {
+app.delete('/api/teacher/users/:id', requireAuth, requireRole('teacher', 'superadmin'), (req, res) => {
   const { id } = req.params;
-  const teacherId = req.headers['x-user-id'] as string;
-  const teacher = users.find((u) => u.id === teacherId && u.role === 'teacher') || users.find((u) => u.role === 'teacher');
+  const teacher = req.user.role === 'teacher' ? req.user : users.find((u) => u.role === 'teacher');
 
   const index = users.findIndex((u) => u.id === id);
   if (index === -1) {
@@ -5769,7 +5804,7 @@ app.delete('/api/teacher/users/:id', (req, res) => {
 // ==========================================
 // GEMINI AI ENDPOINTS: STUDY TUTOR & QUIZ GENERATOR
 // ==========================================
-app.post('/api/ai/study-tutor', async (req, res) => {
+app.post('/api/ai/study-tutor', requireAuth, async (req, res) => {
   const { message, studentClass, subject, history } = req.body;
 
   if (!message || typeof message !== 'string') {
@@ -5794,7 +5829,7 @@ app.post('/api/ai/study-tutor', async (req, res) => {
   }
 });
 
-app.post('/api/ai/generate-quiz', async (req, res) => {
+app.post('/api/ai/generate-quiz', requireAuth, requireRole('teacher', 'superadmin'), async (req, res) => {
   const {
     chapterName,
     subject,
@@ -5928,7 +5963,7 @@ app.get('/api/ai/chat/config', (req, res) => {
   });
 });
 
-app.post('/api/ai/chat', async (req, res) => {
+app.post('/api/ai/chat', requireAuth, async (req, res) => {
   const { message, history, roleId, taskComplexity, userContext } = req.body;
 
   if (!message || typeof message !== 'string' || message.trim().length === 0) {
@@ -5958,8 +5993,8 @@ app.post('/api/ai/chat', async (req, res) => {
 // ==========================================
 // ISOLATED PER-USER AI CONVERSATION THREADS (MAX 3 PER USER)
 // ==========================================
-app.get('/api/ai/threads', (req, res) => {
-  const userId = (req.headers['x-user-id'] as string) || users[0]?.id;
+app.get('/api/ai/threads', requireAuth, (req, res) => {
+  const userId = req.user.id;
   enforceUserThreadRetention(userId);
   const userThreads = aiThreads
     .filter((t) => t.userId === userId)
@@ -5967,8 +6002,8 @@ app.get('/api/ai/threads', (req, res) => {
   res.json({ threads: userThreads });
 });
 
-app.post('/api/ai/threads', (req, res) => {
-  const userId = (req.headers['x-user-id'] as string) || users[0]?.id;
+app.post('/api/ai/threads', requireAuth, (req, res) => {
+  const userId = req.user.id;
   const { title, roleId, subject } = req.body;
   
   const newThread: AIConversationThread = {
@@ -5987,8 +6022,8 @@ app.post('/api/ai/threads', (req, res) => {
   res.status(201).json({ thread: newThread });
 });
 
-app.get('/api/ai/threads/:id', (req, res) => {
-  const userId = (req.headers['x-user-id'] as string) || users[0]?.id;
+app.get('/api/ai/threads/:id', requireAuth, (req, res) => {
+  const userId = req.user.id;
   const thread = aiThreads.find((t) => t.id === req.params.id);
   if (!thread) {
     return res.status(404).json({ error: 'Conversation thread not found' });
@@ -6000,8 +6035,8 @@ app.get('/api/ai/threads/:id', (req, res) => {
   res.json({ thread });
 });
 
-app.post('/api/ai/threads/:id/messages', async (req, res) => {
-  const userId = (req.headers['x-user-id'] as string) || users[0]?.id;
+app.post('/api/ai/threads/:id/messages', requireAuth, async (req, res) => {
+  const userId = req.user.id;
   const thread = aiThreads.find((t) => t.id === req.params.id);
   if (!thread) {
     return res.status(404).json({ error: 'Conversation thread not found' });
@@ -6071,8 +6106,8 @@ app.post('/api/ai/threads/:id/messages', async (req, res) => {
   }
 });
 
-app.delete('/api/ai/threads/:id', (req, res) => {
-  const userId = (req.headers['x-user-id'] as string) || users[0]?.id;
+app.delete('/api/ai/threads/:id', requireAuth, (req, res) => {
+  const userId = req.user.id;
   const threadIndex = aiThreads.findIndex((t) => t.id === req.params.id);
   if (threadIndex === -1) {
     return res.status(404).json({ error: 'Conversation thread not found' });
@@ -6398,25 +6433,9 @@ app.get('/api/admin/reports/school-analytics', requireAuth, requireRole('superad
 // ==========================================
 // Centralized Notifications API Endpoints
 // ==========================================
-app.get('/api/notifications', (req, res) => {
-  let userId = (req.headers['x-user-id'] || req.headers['x-userid'] || req.query.userId) as string;
-  let explicitRole = (req.query.role as string) || '';
-
-  if (!userId) {
-    const authHeader = req.headers.authorization || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
-    if (token) {
-      try {
-        const payload = jwt.verify(token, JWT_SECRET) as { sub: string };
-        userId = payload.sub;
-      } catch {
-        // Fall back gracefully if token is expired/invalid
-      }
-    }
-  }
-
-  const user = users.find((u) => u.id === userId);
-  const userRole = user?.role || explicitRole || 'student';
+app.get('/api/notifications', requireAuth, (req, res) => {
+  const userId = req.user.id;
+  const userRole = req.user.role;
 
   const userNotifications = (appNotifications || []).filter((n) => {
     // Universal notifications
@@ -6440,7 +6459,7 @@ app.get('/api/notifications', (req, res) => {
   });
 });
 
-app.patch('/api/notifications/:id/read', (req, res) => {
+app.patch('/api/notifications/:id/read', requireAuth, (req, res) => {
   const { id } = req.params;
   const notif = (appNotifications || []).find((n) => n.id === id);
   if (notif) {
@@ -6450,28 +6469,12 @@ app.patch('/api/notifications/:id/read', (req, res) => {
   res.status(404).json({ error: 'Notification not found' });
 });
 
-app.post('/api/notifications/read-all', (req, res) => {
-  let userId = (req.headers['x-user-id'] || req.headers['x-userid'] || req.body?.userId) as string;
-  let explicitRole = (req.body?.role as string) || '';
-
-  if (!userId) {
-    const authHeader = req.headers.authorization || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
-    if (token) {
-      try {
-        const payload = jwt.verify(token, JWT_SECRET) as { sub: string };
-        userId = payload.sub;
-      } catch {
-        // Fall back gracefully
-      }
-    }
-  }
-
-  const user = users.find((u) => u.id === userId);
-  const userRole = user?.role || explicitRole || 'student';
+app.post('/api/notifications/read-all', requireAuth, (req, res) => {
+  const userId = req.user.id;
+  const userRole = req.user.role;
 
   (appNotifications || []).forEach((n) => {
-    if (!n.targetRole || n.targetRole === 'all' || n.targetRole === userRole || (userId && n.targetUserId === userId)) {
+    if (!n.targetRole || n.targetRole === 'all' || n.targetRole === userRole || n.targetUserId === userId) {
       n.read = true;
     }
   });
@@ -6479,7 +6482,7 @@ app.post('/api/notifications/read-all', (req, res) => {
   res.json({ success: true });
 });
 
-app.post('/api/notifications', (req, res) => {
+app.post('/api/notifications', requireAuth, requireRole('teacher', 'superadmin'), (req, res) => {
   const { title, message, category, targetRole, targetUserId, linkTab, linkId, metadata } = req.body;
   if (!title || !message) {
     return res.status(400).json({ error: 'Title and message are required' });
@@ -6504,10 +6507,9 @@ app.post('/api/notifications', (req, res) => {
 });
 
 // Student Window Blur Cheating Audit Logger
-app.post('/api/student/cheating-event', (req, res) => {
+app.post('/api/student/cheating-event', requireAuth, requireRole('student'), (req, res) => {
   const { examId, violationCount, reason } = req.body;
-  const studentId = req.headers['x-user-id'] as string;
-  const student = users.find((u) => u.id === studentId) || users.find((u) => u.role === 'student');
+  const student = req.user;
   const exam = exams.find((e) => e.id === examId);
 
   const action = violationCount >= 3 ? 'Flagged & Force-Submitted' : violationCount === 2 ? 'Warning 2' : 'Warning 1';
@@ -6530,24 +6532,34 @@ app.post('/api/student/cheating-event', (req, res) => {
 });
 
 // Support Ticket Helpdesk System: Open -> In Progress -> Resolved
-app.get('/api/tickets', (req, res) => {
-  const userId = req.headers['x-user-id'] as string;
-  const user = users.find((u) => u.id === userId);
+app.get('/api/tickets', requireAuth, (req, res) => {
+  const user = req.user;
 
   let list = supportTickets;
-  if (user && user.role === 'parent') {
+  if (user.role === 'parent') {
     list = supportTickets.filter((t) => t.parentId === user.id);
+  } else if (user.role === 'teacher') {
+    list = supportTickets.filter((t) => t.recipientId === user.id);
+  } else if (user.role !== 'superadmin') {
+    return res.status(403).json({ error: 'Not authorized to view support tickets' });
   }
 
   const { items, pagination } = paginateArray(list, req);
   res.json({ tickets: items, pagination, total: pagination.total });
 });
 
-app.post('/api/tickets', (req, res) => {
+app.post('/api/tickets', requireAuth, requireRole('parent', 'superadmin'), (req, res) => {
   const { studentId, recipientId, subject, category, message, priority } = req.body;
-  const parentId = req.headers['x-user-id'] as string;
-  const parent = users.find((u) => u.id === parentId && u.role === 'parent') || users.find((u) => u.role === 'parent');
-  const student = users.find((u) => u.id === studentId) || users.find((u) => (parent?.childrenIds || []).includes(u.id));
+  const parent = req.user.role === 'parent' ? req.user : users.find((u) => u.id === req.body.parentId && u.role === 'parent');
+  if (!parent) {
+    return res.status(400).json({ error: 'Parent account is required to open a support ticket' });
+  }
+
+  const student = users.find((u) => u.id === studentId && u.role === 'student');
+  if (!student || !canParentAccessStudent(parent, student)) {
+    return res.status(403).json({ error: 'You may only open tickets for your linked children' });
+  }
+
   const recipient = users.find((u) => u.id === recipientId);
 
   if (!subject || !message) {
@@ -6559,17 +6571,17 @@ app.post('/api/tickets', (req, res) => {
     return res.status(400).json({ error: 'Inquiries must be directed to your child\'s assigned subject teachers, not management.' });
   }
 
-  const cls = classes.find((c) => c.id === student?.classId);
-  const div = divisions.find((d) => d.id === student?.divisionId);
+  const cls = classes.find((c) => c.id === student.classId);
+  const div = divisions.find((d) => d.id === student.divisionId);
 
   const newTicket = {
     id: `tkt-${Date.now().toString().slice(-4)}`,
-    parentId: parent?.id || 'usr-parent-1',
-    parentName: parent?.name || 'Mr. Rajesh Sharma',
-    studentId: student?.id || 'usr-stud-1',
-    studentName: student?.name || 'Aarav Sharma',
-    studentClass: `${cls?.name || 'Standard 10'} - ${div?.name || 'Division A'}`,
-    recipientId: recipient?.id || 'usr-teach-1',
+    parentId: parent.id,
+    parentName: parent.name,
+    studentId: student.id,
+    studentName: student.name,
+    studentClass: `${cls?.name || 'N/A'} - ${div?.name || 'N/A'}`,
+    recipientId: recipient?.id || '',
     recipientName: recipient?.name || 'Subject Teacher',
     recipientRole: 'teacher',
     subject,
@@ -6587,26 +6599,43 @@ app.post('/api/tickets', (req, res) => {
 });
 
 // Permanent deletion of support queries
-app.delete('/api/tickets/:id', (req, res) => {
+app.delete('/api/tickets/:id', requireAuth, (req, res) => {
   const { id } = req.params;
   const index = supportTickets.findIndex((t) => t.id === id);
   if (index === -1) {
     return res.status(404).json({ error: 'Ticket query not found' });
   }
 
+  const ticket = supportTickets[index];
+  const user = req.user;
+  const canDelete =
+    user.role === 'superadmin' ||
+    (user.role === 'parent' && ticket.parentId === user.id) ||
+    (user.role === 'teacher' && ticket.recipientId === user.id);
+  if (!canDelete) {
+    return res.status(403).json({ error: 'Not authorized to delete this ticket' });
+  }
+
   const deleted = supportTickets.splice(index, 1)[0];
   res.json({ message: 'Query record permanently deleted', ticket: deleted });
 });
 
-app.post('/api/tickets/:id/reply', (req, res) => {
+app.post('/api/tickets/:id/reply', requireAuth, (req, res) => {
   const { id } = req.params;
   const { message } = req.body;
-  const senderId = req.headers['x-user-id'] as string;
-  const sender = users.find((u) => u.id === senderId) || users[0];
+  const sender = req.user;
 
   const ticket = supportTickets.find((t) => t.id === id);
   if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
   if (!message) return res.status(400).json({ error: 'Message cannot be empty' });
+
+  const canReply =
+    sender.role === 'superadmin' ||
+    (sender.role === 'parent' && ticket.parentId === sender.id) ||
+    (sender.role === 'teacher' && ticket.recipientId === sender.id);
+  if (!canReply) {
+    return res.status(403).json({ error: 'Not authorized to reply to this ticket' });
+  }
 
   const reply = {
     id: `rep-${Date.now()}`,
@@ -6617,6 +6646,7 @@ app.post('/api/tickets/:id/reply', (req, res) => {
     timestamp: new Date().toISOString(),
   };
 
+  ticket.replies = ticket.replies || [];
   ticket.replies.push(reply);
   ticket.updatedAt = new Date().toISOString();
 
@@ -6628,7 +6658,7 @@ app.post('/api/tickets/:id/reply', (req, res) => {
   res.status(201).json({ message: 'Reply added', ticket });
 });
 
-app.patch('/api/tickets/:id/status', (req, res) => {
+app.patch('/api/tickets/:id/status', requireAuth, requireRole('teacher', 'superadmin'), (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
   const ticket = supportTickets.find((t) => t.id === id);
@@ -6643,9 +6673,8 @@ app.patch('/api/tickets/:id/status', (req, res) => {
   res.json({ message: 'Status updated', ticket });
 });
 
-// Reset / Seed demonstration helper
-app.post('/api/system/reset-demo', (req, res) => {
-  // Can reset state if user wants fresh test
+// Reset / Seed demonstration helper — superadmin only
+app.post('/api/system/reset-demo', requireAuth, requireRole('superadmin'), (req, res) => {
   res.json({ message: 'System state active' });
 });
 
