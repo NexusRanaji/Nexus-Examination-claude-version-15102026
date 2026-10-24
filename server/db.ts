@@ -131,7 +131,7 @@ function createPool(connStr: string): pg.Pool {
 
   return new Pool({
     connectionString: connStr || undefined,
-    max: 8,
+    max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 12000,
     // Enable SSL for any cloud/remote database (Supabase, Neon, Render, etc.)

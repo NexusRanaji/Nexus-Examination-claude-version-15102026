@@ -29,11 +29,11 @@ interface LoginPageProps {
   allUsers?: UserCredential[];
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers = [] }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const { theme, toggleTheme } = useTheme();
   const [selectedRole, setSelectedRole] = useState<'student' | 'teacher' | 'superadmin' | 'parent'>('student');
-  const [identifier, setIdentifier] = useState('student.rohan');
-  const [password, setPassword] = useState('StudentPass#101');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -62,127 +62,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers =
     parent: 'Parent Sign In',
   };
 
-  // Quick preset logins combining core accounts with dynamically registered users from directory
-  const basePresets = [
-    {
-      role: 'student',
-      label: 'Student (Rohan - Class 10A)',
-      id: 'student.rohan',
-      pass: 'StudentPass#101',
-      badge: 'SSC Candidate',
-      accent: 'border-amber-300 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20',
-    },
-    {
-      role: 'student',
-      label: 'Student (Aarav - Class 10A)',
-      id: 'student.aarav',
-      pass: 'StudentPass#101',
-      badge: 'SSC Candidate',
-      accent: 'border-amber-300 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20',
-    },
-    {
-      role: 'student',
-      label: 'Student Legacy (John Doe)',
-      id: 'john@student.com',
-      pass: 'student123',
-      badge: 'Legacy Student',
-      accent: 'border-cyan-300 dark:border-cyan-500/40 text-cyan-900 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-500/10 hover:bg-cyan-100 dark:hover:bg-cyan-500/20',
-    },
-    {
-      role: 'teacher',
-      label: 'Faculty (Prof. Sharma - Physics)',
-      id: 'teacher.sharma',
-      pass: 'NexusTeacher#2025',
-      badge: 'Senior Faculty',
-      accent: 'border-emerald-300 dark:border-emerald-500/40 text-emerald-900 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20',
-    },
-    {
-      role: 'teacher',
-      label: 'Faculty Legacy (Examiner)',
-      id: 'teacher@school.com',
-      pass: 'teacher123',
-      badge: 'Legacy Faculty',
-      accent: 'border-teal-300 dark:border-teal-500/40 text-teal-900 dark:text-teal-300 bg-teal-50 dark:bg-teal-500/10 hover:bg-teal-100 dark:hover:bg-teal-500/20',
-    },
-    {
-      role: 'superadmin',
-      label: 'Super Admin (Dr. Deshmukh)',
-      id: 'admin',
-      pass: 'Admin@Nexus2025!',
-      badge: 'Principal & Director',
-      accent: 'border-rose-300 dark:border-rose-500/40 text-rose-900 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20',
-    },
-    {
-      role: 'superadmin',
-      label: 'Admin Legacy (Principal)',
-      id: 'admin@school.com',
-      pass: 'admin123',
-      badge: 'Legacy Admin',
-      accent: 'border-purple-300 dark:border-purple-500/40 text-purple-900 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20',
-    },
-    {
-      role: 'parent',
-      label: 'Parent (Mr. Rajesh Sharma)',
-      id: 'parent.sharma',
-      pass: 'ParentPass#2025',
-      badge: 'Guardian of Rohan & Ananya',
-      accent: 'border-blue-300 dark:border-blue-500/40 text-blue-900 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20',
-    },
-    {
-      role: 'superadmin',
-      label: 'Director / Evaluator (theoneandonlyking999)',
-      id: 'theoneandonlyking999@gmail.com',
-      pass: 'Admin@Nexus2025!',
-      badge: 'Evaluation Lead',
-      accent: 'border-violet-300 dark:border-violet-500/40 text-violet-900 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10 hover:bg-violet-100 dark:hover:bg-violet-500/20',
-    },
-  ];
-
-  // Dynamic presets for newly registered directory accounts
-  const existingPresetIds = new Set(basePresets.map((p) => p.id.toLowerCase()));
-  const dynamicPresets = (allUsers || [])
-    .filter((u) => u.username && !existingPresetIds.has(u.username.toLowerCase()) && !existingPresetIds.has((u.email || '').toLowerCase()))
-    .map((u) => {
-      const defaultPass = u.role === 'student' ? 'StudentPass#101' :
-        u.role === 'teacher' ? 'NexusTeacher#2025' :
-        u.role === 'parent' ? 'ParentPass#2025' : 'Admin@Nexus2025!';
-      return {
-        role: u.role,
-        label: `${u.name} (${u.role === 'student' ? (u.rollNo || 'Student') : u.role})`,
-        id: u.username || u.rollNo || u.email || u.id,
-        // Never trust passwords from public-users API (they are not returned). Use role defaults for demo quick-login only.
-        pass: defaultPass,
-        badge: u.rollNo ? `Roll: ${u.rollNo}` : 'New Account',
-        accent: u.role === 'student'
-          ? 'border-amber-300 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20'
-          : u.role === 'teacher'
-          ? 'border-emerald-300 dark:border-emerald-500/40 text-emerald-900 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20'
-          : u.role === 'superadmin'
-          ? 'border-rose-300 dark:border-rose-500/40 text-rose-900 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20'
-          : 'border-blue-300 dark:border-blue-500/40 text-blue-900 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20',
-      };
-    });
-
-  const allPresets = [...basePresets, ...dynamicPresets];
-  // Filter presets to show matching active role first, followed by others
-  const quickPresets = allPresets.filter((p) => p.role === selectedRole).concat(allPresets.filter((p) => p.role !== selectedRole));
-
   const handleRoleSelect = (role: 'student' | 'teacher' | 'superadmin' | 'parent') => {
     setSelectedRole(role);
     setError(null);
-    if (role === 'student') {
-      setIdentifier('student.rohan');
-      setPassword('StudentPass#101');
-    } else if (role === 'teacher') {
-      setIdentifier('teacher.sharma');
-      setPassword('NexusTeacher#2025');
-    } else if (role === 'superadmin') {
-      setIdentifier('admin');
-      setPassword('Admin@Nexus2025!');
-    } else if (role === 'parent') {
-      setIdentifier('parent.sharma');
-      setPassword('ParentPass#2025');
-    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -363,15 +245,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers =
               <div
                 role="alert"
                 aria-live="assertive"
-                className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/30 text-rose-800 dark:text-rose-300 text-xs flex flex-col gap-1.5 transition-colors"
+                className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/30 text-rose-800 dark:text-rose-300 text-xs flex items-center gap-2 transition-colors"
               >
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
-                  <span className="font-semibold">{error}</span>
-                </div>
-                <div className="text-[11px] text-amber-800 dark:text-amber-300/90 pl-6">
-                  Tip: Use the 1-Click Demo Fill accounts below to quickly sign in with sample credentials.
-                </div>
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                <span className="font-semibold">{error}</span>
               </div>
             )}
 
@@ -475,36 +352,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers =
               </div>
             </form>
 
-            {/* 1-Click Demo Fill Section for Testing & Evaluators */}
-            <div className="pt-4 border-t border-slate-200 dark:border-slate-800/80 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                  ⚡ Instant Demo Fill Accounts:
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">1-Click Test</span>
-              </div>
 
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                {quickPresets.map((preset, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setSelectedRole(preset.role as any);
-                      setIdentifier(preset.id);
-                      setPassword(preset.pass);
-                    }}
-                    className={`p-2.5 rounded-xl border text-left text-xs transition-all cursor-pointer flex flex-col justify-between hover:scale-101 ${preset.accent}`}
-                  >
-                    <div className="font-bold text-[11px] truncate">{preset.label}</div>
-                    <div className="flex items-center justify-between mt-1 text-[9px] opacity-90 font-mono">
-                      <span className="truncate">{preset.id}</span>
-                      <span className="font-sans px-1 rounded bg-black/10 dark:bg-black/30 text-[8px] font-medium">{preset.badge}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
 
           </div>
         </div>

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -1123,233 +1124,83 @@ let classSubjects: any[] = [
   { classId: 'cls-8', subjectId: 'sub-soc' },
 ];
 
-// Seed Users: Super Admin, Teachers, Students, Parents (NO AVATAR URLs - Lightweight Profile)
+// Seed Users: Exactly 4 Production Accounts (Super Admin, Teacher, Parent, Student)
 let users: any[] = [
   {
-    id: 'usr-admin-1',
-    name: 'Dr. R. K. Deshmukh',
+    id: 'usr-admin',
+    name: 'Super Administrator',
     username: 'admin',
     email: 'admin@nexusrana.edu',
     role: 'superadmin',
     employeeId: 'NRES-DIR-001',
     phone: '+91 98201 11000',
-    createdAt: '2025-01-10T08:00:00Z',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    password: '$2b$10$1qYG.U/osAC/1PW2Ubfzl.xlCwcgJOCpPrZyS4r/1L4q8oKVXUpES',
+    rawPassword: 'Admin@Nexus2026',
+    mustChangePassword: false,
   },
   {
-    id: 'usr-teach-1',
-    name: 'Prof. Vikram Sharma',
-    username: 'teacher.sharma',
-    email: 'vikram.sharma@nexusrana.edu',
+    id: 'usr-teacher-demo',
+    name: 'Faculty Teacher',
+    username: 'teacher.demo',
+    email: 'teacher.demo@nexusrana.edu',
     role: 'teacher',
-    employeeId: 'NRES-FAC-104',
+    employeeId: 'NRES-FAC-101',
     phone: '+91 98201 22334',
     assignedSubjects: [
       { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-phy' },
-      { classId: 'cls-10', divisionId: 'div-10b', subjectId: 'sub-phy' },
-      { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-math' },
-      { classId: 'cls-8', divisionId: 'div-8b', subjectId: 'sub-math' },
-    ],
-    createdAt: '2025-01-15T09:00:00Z',
-  },
-  {
-    id: 'usr-teach-2',
-    name: 'Mrs. Meera Nair',
-    username: 'teacher.meera',
-    email: 'meera.nair@nexusrana.edu',
-    role: 'teacher',
-    employeeId: 'NRES-FAC-118',
-    phone: '+91 98201 33445',
-    assignedSubjects: [
-      { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-eng' },
-      { classId: 'cls-9', divisionId: 'div-9a', subjectId: 'sub-cs' },
-    ],
-    createdAt: '2025-01-18T10:00:00Z',
-  },
-  {
-    id: 'usr-stud-1',
-    name: 'Aarav Sharma',
-    username: 'student.aarav',
-    email: 'aarav.sharma@student.nexusrana.edu',
-    role: 'student',
-    rollNo: 'NRES-10A-01',
-    classId: 'cls-10',
-    divisionId: 'div-10a',
-    parentId: 'usr-parent-1',
-    phone: '+91 98201 44521',
-    bonusPoints: 260,
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-stud-2',
-    name: 'Rohan Patel',
-    username: 'student.rohan',
-    email: 'rohan.patel@student.nexusrana.edu',
-    role: 'student',
-    rollNo: 'NRES-10A-02',
-    classId: 'cls-10',
-    divisionId: 'div-10a',
-    parentId: 'usr-parent-2',
-    phone: '+91 98202 88714',
-    bonusPoints: 175,
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-stud-3',
-    name: 'Ananya Sharma',
-    username: 'student.ananya',
-    email: 'ananya.sharma@student.nexusrana.edu',
-    role: 'student',
-    rollNo: 'NRES-8B-07',
-    classId: 'cls-8',
-    divisionId: 'div-8b',
-    parentId: 'usr-parent-1',
-    phone: '+91 98201 44521',
-    bonusPoints: 310,
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-stud-4',
-    name: 'Priya Verma',
-    username: 'student.priya',
-    email: 'priya.verma@student.nexusrana.edu',
-    role: 'student',
-    rollNo: 'NRES-9A-04',
-    classId: 'cls-9',
-    divisionId: 'div-9a',
-    parentId: 'usr-parent-3',
-    phone: '+91 98203 11223',
-    bonusPoints: 240,
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-parent-1',
-    name: 'Mr. Rajesh Sharma',
-    username: 'parent.sharma',
-    email: 'rajesh.sharma@parent.nexusrana.edu',
-    role: 'parent',
-    childrenIds: ['usr-stud-1', 'usr-stud-3'],
-    phone: '+91 98201 44521',
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-parent-2',
-    name: 'Mrs. Sunita Patel',
-    username: 'parent.patel',
-    email: 'sunita.patel@parent.nexusrana.edu',
-    role: 'parent',
-    childrenIds: ['usr-stud-2'],
-    phone: '+91 98202 88714',
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-parent-3',
-    name: 'Mr. Arvind Verma',
-    username: 'parent.verma',
-    email: 'arvind.verma@parent.nexusrana.edu',
-    role: 'parent',
-    childrenIds: ['usr-stud-4'],
-    phone: '+91 98203 11223',
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-admin-legacy',
-    name: 'School Principal & Admin',
-    username: 'admin@school.com',
-    email: 'admin@school.com',
-    role: 'superadmin',
-    employeeId: 'NRES-ADM-002',
-    phone: '+91 98201 11001',
-    createdAt: '2025-01-01T08:00:00Z',
-  },
-  {
-    id: 'usr-teach-legacy',
-    name: 'Senior Faculty Examiner',
-    username: 'teacher@school.com',
-    email: 'teacher@school.com',
-    role: 'teacher',
-    employeeId: 'NRES-FAC-100',
-    phone: '+91 98201 22330',
-    assignedSubjects: [
-      { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-phy' },
-      { classId: 'cls-10', divisionId: 'div-10b', subjectId: 'sub-phy' },
       { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-math' },
     ],
-    createdAt: '2025-01-01T08:00:00Z',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    password: '$2b$10$p4OogzDX6kZ3r78md6BVMubf0ruRCJIhGzrA5bwwzTJrIK98DAa.2',
+    rawPassword: 'Teacher@Nexus2026',
+    mustChangePassword: false,
   },
   {
-    id: 'usr-stud-legacy',
-    name: 'John Doe',
-    username: 'john@student.com',
-    email: 'john@student.com',
-    role: 'student',
-    rollNo: 'NRES-10A-99',
-    classId: 'cls-10',
-    divisionId: 'div-10a',
-    parentId: 'usr-parent-1',
+    id: 'usr-parent-demo',
+    name: 'Demo Parent',
+    username: 'parent.demo',
+    email: 'parent.demo@nexusrana.edu',
+    role: 'parent',
     phone: '+91 98201 44521',
-    bonusPoints: 240,
-    createdAt: '2025-01-01T08:00:00Z',
+    childrenIds: ['usr-student-demo'],
+    createdAt: '2026-01-01T00:00:00.000Z',
+    password: '$2b$10$cWMhmIgR5Kvhgn7yVE6gweIXSDABOig9iN74zllmYdLNZppZgyyJu',
+    rawPassword: 'Parent@Nexus2026',
+    mustChangePassword: false,
   },
   {
-    id: 'usr-stud-legacy-2',
-    name: 'Sarah Jenkins',
-    username: 'sarah@student.com',
-    email: 'sarah@student.com',
+    id: 'usr-student-demo',
+    name: 'Demo Student',
+    username: 'student.demo',
+    email: 'student.demo@student.nexusrana.edu',
     role: 'student',
-    rollNo: 'NRES-10A-98',
+    rollNo: '1',
     classId: 'cls-10',
     divisionId: 'div-10a',
-    parentId: 'usr-parent-2',
-    phone: '+91 98202 88714',
-    bonusPoints: 195,
-    createdAt: '2025-01-01T08:00:00Z',
-  },
-  {
-    id: 'usr-admin-owner',
-    name: 'Institutional Director',
-    username: 'theoneandonlyking999',
-    email: 'theoneandonlyking999@gmail.com',
-    role: 'superadmin',
-    employeeId: 'NRES-DIR-999',
-    phone: '+91 98201 99999',
-    createdAt: '2025-01-01T08:00:00Z',
+    parentId: 'usr-parent-demo',
+    phone: '+91 98201 44521',
+    bonusPoints: 100,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    password: '$2b$10$63xfHW4bEMxaFI7LVAdXEOkfNFkAf0TypnHN0Klwr7ecTQa4/8hl6',
+    rawPassword: 'Student@Nexus2026',
+    mustChangePassword: false,
   },
 ];
 
 const SEED_PASSWORDS: Record<string, string> = {
-  'admin': 'Admin@Nexus2025!',
-  'admin@school.com': 'admin123',
-  'teacher.sharma': 'NexusTeacher#2025',
-  'teacher.meera': 'NexusTeacher#2025',
-  'teacher@school.com': 'teacher123',
-  'student.aarav': 'StudentPass#101',
-  'student.rohan': 'StudentPass#101',
-  'student.ananya': 'StudentPass#101',
-  'student.priya': 'StudentPass#101',
-  'john@student.com': 'student123',
-  'sarah@student.com': 'student123',
-  'parent.sharma': 'ParentPass#2025',
-  'parent.patel': 'ParentPass#2025',
-  'parent.verma': 'ParentPass#2025',
-  'theoneandonlyking999': 'Admin@Nexus2025!',
-  'theoneandonlyking999@gmail.com': 'Admin@Nexus2025!',
+  'admin': 'Admin@Nexus2026',
+  'teacher.demo': 'Teacher@Nexus2026',
+  'parent.demo': 'Parent@Nexus2026',
+  'student.demo': 'Student@Nexus2026',
 };
-
-function getRoleDefaultPassword(role: string): string {
-  switch (role) {
-    case 'superadmin': return 'Admin@Nexus2025!';
-    case 'teacher': return 'NexusTeacher#2025';
-    case 'parent': return 'ParentPass#2025';
-    case 'student':
-    default:
-      return 'StudentPass#101';
-  }
-}
 
 for (const u of users) {
   if (!u.password) {
-    const plain = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
-    u.password = bcrypt.hashSync(plain, 10);
+    const plain = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]);
+    if (plain) {
+      u.password = bcrypt.hashSync(plain, 10);
+    }
   }
 }
 
@@ -2624,51 +2475,66 @@ function getSystemStatePayload() {
 
 function applyLoadedState(loaded: any) {
   if (!loaded || typeof loaded !== 'object') return;
-  if (Array.isArray(loaded.academicYears) && loaded.academicYears.length > 0) academicYears = loaded.academicYears;
-  if (Array.isArray(loaded.classes) && loaded.classes.length > 0) classes = loaded.classes;
-  if (Array.isArray(loaded.divisions) && loaded.divisions.length > 0) divisions = loaded.divisions;
-  if (Array.isArray(loaded.subjects) && loaded.subjects.length > 0) subjects = loaded.subjects;
-  if (Array.isArray(loaded.classSubjects) && loaded.classSubjects.length > 0) classSubjects = loaded.classSubjects;
-  if (Array.isArray(loaded.users) && loaded.users.length > 0) {
-    for (const u of loaded.users) {
-      const idx = users.findIndex(ex => ex.id === u.id);
-      if (idx >= 0) {
-        users[idx] = { ...users[idx], ...u };
-      } else {
-        users.push(u);
-      }
-    }
-  }
-  if (Array.isArray(loaded.questionBank) && loaded.questionBank.length > 0) questionBank = loaded.questionBank;
+  if (Array.isArray(loaded.academicYears)) academicYears = loaded.academicYears;
+  if (Array.isArray(loaded.classes)) classes = loaded.classes;
+  if (Array.isArray(loaded.divisions)) divisions = loaded.divisions;
+  if (Array.isArray(loaded.subjects)) subjects = loaded.subjects;
+  if (Array.isArray(loaded.classSubjects)) classSubjects = loaded.classSubjects;
+  if (Array.isArray(loaded.users)) users = loaded.users;
+  if (Array.isArray(loaded.questionBank)) questionBank = loaded.questionBank;
   if (Array.isArray(loaded.loginAudits)) loginAudits = loaded.loginAudits;
   if (Array.isArray(loaded.cheatingAudits)) cheatingAudits = loaded.cheatingAudits;
   if (Array.isArray(loaded.deletedCredentialAudits)) deletedCredentialAudits = loaded.deletedCredentialAudits;
-  if (Array.isArray(loaded.schoolNotices) && loaded.schoolNotices.length > 0) schoolNotices = loaded.schoolNotices;
+  if (Array.isArray(loaded.schoolNotices)) schoolNotices = loaded.schoolNotices;
   if (loaded.academicConfig) academicConfig = loaded.academicConfig;
   if (Array.isArray(loaded.appNotifications)) appNotifications = loaded.appNotifications;
-  if (Array.isArray(loaded.exams) && loaded.exams.length > 0) exams = loaded.exams;
-  if (Array.isArray(loaded.submissions) && loaded.submissions.length > 0) submissions = loaded.submissions;
-  if (Array.isArray(loaded.studyMaterials) && loaded.studyMaterials.length > 0) studyMaterials = loaded.studyMaterials;
-  if (Array.isArray(loaded.supportTickets) && loaded.supportTickets.length > 0) supportTickets = loaded.supportTickets;
+  if (Array.isArray(loaded.exams)) exams = loaded.exams;
+  if (Array.isArray(loaded.submissions)) submissions = loaded.submissions;
+  if (Array.isArray(loaded.studyMaterials)) studyMaterials = loaded.studyMaterials;
+  if (Array.isArray(loaded.supportTickets)) supportTickets = loaded.supportTickets;
   if (Array.isArray(loaded.examAttempts)) examAttempts = loaded.examAttempts;
 }
 
-function saveStateToDisk() {
-  const payload = getSystemStatePayload();
+let _stateSaveTimer: NodeJS.Timeout | null = null;
+let _isSavingState = false;
+
+function _executeStateSave() {
+  if (_isSavingState) return;
+  _isSavingState = true;
   try {
+    const payload = getSystemStatePayload();
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     fs.writeFileSync(STATE_FILE, JSON.stringify(payload, null, 2), 'utf-8');
+
+    if (isDatabaseConfigured()) {
+      saveStateToPostgres(payload).catch((err: any) => {
+        console.warn('[DB] Supabase async sync error:', err.message);
+      });
+    }
   } catch (err: any) {
     console.error('Failed to save state to disk:', err.message);
+  } finally {
+    _isSavingState = false;
+  }
+}
+
+function saveStateToDisk(immediate = false) {
+  if (immediate) {
+    if (_stateSaveTimer) {
+      clearTimeout(_stateSaveTimer);
+      _stateSaveTimer = null;
+    }
+    _executeStateSave();
+    return;
   }
 
-  // Also sync asynchronously to Supabase PostgreSQL for permanent cloud retention across container reloads
-  if (isDatabaseConfigured()) {
-    saveStateToPostgres(payload).catch((err: any) => {
-      console.warn('[DB] Supabase async sync error:', err.message);
-    });
+  if (!_stateSaveTimer) {
+    _stateSaveTimer = setTimeout(() => {
+      _stateSaveTimer = null;
+      _executeStateSave();
+    }, 800);
   }
 }
 
@@ -2711,7 +2577,7 @@ initCloudDatabasePersistence();
 function ensureHashedPasswords() {
   let modified = false;
   for (const u of users) {
-    const defaultPlain = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
+    const defaultPlain = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || u.rawPassword || '';
 
     if (!u.password || typeof u.password !== 'string' || u.password.trim().length === 0) {
       u.password = bcrypt.hashSync(defaultPlain, 10);
@@ -2908,17 +2774,14 @@ function checkUserPassword(u: any, plainPassword: string): boolean {
 
   const trimmed = plainPassword.trim();
 
-  // 1. Direct raw password check (stored upon creation or admin edit)
-  if (u.rawPassword && (u.rawPassword === plainPassword || u.rawPassword === trimmed || u.rawPassword.toLowerCase() === plainPassword.toLowerCase())) {
-    u.password = bcrypt.hashSync(trimmed, 10);
-    saveStateToDisk();
+  // 1. Direct raw password check
+  if (u.rawPassword && (u.rawPassword === plainPassword || u.rawPassword === trimmed)) {
     return true;
   }
 
   // 2. Direct plaintext match (upgrade to bcrypt hash immediately)
   if (u.password && (u.password === plainPassword || u.password === trimmed)) {
     u.password = bcrypt.hashSync(trimmed, 10);
-    u.rawPassword = trimmed;
     saveStateToDisk();
     return true;
   }
@@ -2936,34 +2799,10 @@ function checkUserPassword(u: any, plainPassword: string): boolean {
     }
   }
 
-  // 4. Evaluator / Active user recognition
-  const isEvaluator =
-    (u.email && (u.email.toLowerCase().includes('harishchandre') || u.email.toLowerCase().includes('pratik') || u.email.toLowerCase().includes('king'))) ||
-    (u.username && (u.username.toLowerCase().includes('pratik') || u.username.toLowerCase().includes('king'))) ||
-    (u.name && u.name.toLowerCase().includes('pratik')) ||
-    u.id === 'usr-stud-70363' ||
-    u.phone === '7038047688';
-
-  // 5. Role defaults and master recovery fallbacks (including 'School@123' displayed previously in directory)
-  const validDemos = [
-    'StudentPass#101', 'student123', 'NexusTeacher#2025', 'teacher123',
-    'Admin@Nexus2025!', 'admin123', 'ParentPass#2025', 'parent123',
-    'password', 'password123', 'admin', 'teacher', 'student', 'parent',
-    'School@123', 'Nres@2025', 'student'
-  ];
-  const expectedSeed = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
-
-  if (
-    trimmed === expectedSeed ||
-    (u.role === 'student' && (trimmed === 'StudentPass#101' || trimmed === 'student123' || trimmed === 'School@123' || trimmed === 'student')) ||
-    (u.role === 'teacher' && (trimmed === 'NexusTeacher#2025' || trimmed === 'teacher123' || trimmed === 'School@123' || trimmed === 'teacher')) ||
-    (u.role === 'parent' && (trimmed === 'ParentPass#2025' || trimmed === 'parent123' || trimmed === 'School@123' || trimmed === 'parent')) ||
-    (u.role === 'superadmin' && (trimmed === 'Admin@Nexus2025!' || trimmed === 'admin123' || trimmed === 'School@123' || trimmed === 'admin')) ||
-    validDemos.includes(trimmed) ||
-    (isEvaluator && (trimmed.length >= 3 || validDemos.includes(trimmed)))
-  ) {
-    u.password = bcrypt.hashSync(trimmed, 10);
-    u.rawPassword = trimmed;
+  // 4. Exact match against known seed password for that specific username
+  const expectedSeed = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]);
+  if (expectedSeed && (trimmed === expectedSeed || plainPassword === expectedSeed)) {
+    u.password = bcrypt.hashSync(expectedSeed, 10);
     saveStateToDisk();
     return true;
   }
@@ -2973,11 +2812,11 @@ function checkUserPassword(u: any, plainPassword: string): boolean {
 
 const handleLogin = (req: express.Request, res: express.Response) => {
   const { username, email, identifier, password } = req.body || {};
-  let lookup = (username || email || identifier || '').trim().toLowerCase();
+  const lookup = (username || email || identifier || '').trim().toLowerCase();
   const clientIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
   const rateLimitKey = `${lookup}:${clientIp}`;
 
-  if (isLoginRateLimited(rateLimitKey) && !lookup.includes('pratik') && !lookup.includes('harishchandre') && !lookup.includes('king')) {
+  if (isLoginRateLimited(rateLimitKey)) {
     return res.status(429).json({ error: 'Too many failed login attempts. Please try again after 15 minutes.' });
   }
 
@@ -2989,74 +2828,13 @@ const handleLogin = (req: express.Request, res: express.Response) => {
     return res.status(401).json({ error: genericError });
   }
 
-  // Friendly shorthand aliases for quick tester/evaluator convenience
-  if (lookup === 'student' || lookup === 'rohan') lookup = 'student.rohan';
-  else if (lookup === 'teacher' || lookup === 'sharma') lookup = 'teacher.sharma';
-  else if (lookup === 'admin' || lookup === 'principal' || lookup === 'director') lookup = 'admin';
-  else if (lookup === 'parent') lookup = 'parent.sharma';
-  else if (lookup === 'aarav') lookup = 'student.aarav';
-
-  const cleanDigits = lookup.replace(/\D/g, '');
-  const cleanAlphanum = lookup.replace(/[^a-z0-9]/g, '');
-
-  const candidateUsers = users.filter((u) => {
-    // 1. Username exact, prefix, or stripped
-    if (u.username) {
-      const uLower = u.username.toLowerCase();
-      if (uLower === lookup) return true;
-      if (uLower === `student.${lookup}` || uLower === `teacher.${lookup}` || uLower === `parent.${lookup}`) return true;
-      if (uLower.replace(/^(student|teacher|parent|admin)\./, '') === lookup) return true;
-      if (uLower.replace(/[^a-z0-9]/g, '') === cleanAlphanum && cleanAlphanum.length >= 3) return true;
-    }
-    // 2. Email match
+  const user = users.find((u) => {
+    if (u.username && u.username.toLowerCase() === lookup) return true;
     if (u.email && u.email.toLowerCase() === lookup) return true;
-    if (u.email && u.email.toLowerCase().split('@')[0] === lookup) return true;
-    // 3. Roll number match
-    if (u.rollNo) {
-      const rLower = u.rollNo.toLowerCase();
-      if (rLower === lookup) return true;
-      if (cleanDigits.length >= 2 && rLower.replace(/\D/g, '') === cleanDigits) return true;
-      if (rLower.replace(/[^a-z0-9]/g, '') === cleanAlphanum) return true;
-    }
-    // 4. Employee ID match
-    if (u.employeeId) {
-      const eLower = u.employeeId.toLowerCase();
-      if (eLower === lookup) return true;
-      if (eLower.replace(/[^a-z0-9]/g, '') === cleanAlphanum) return true;
-    }
-    // 5. System ID match
-    if (u.id && u.id.toLowerCase() === lookup) return true;
-    // 6. Phone match
-    if (cleanDigits.length >= 7 && u.phone && u.phone.replace(/\D/g, '').includes(cleanDigits)) return true;
-    // 7. Full name match
-    if (u.name && u.name.toLowerCase() === lookup) return true;
-    if (u.name && lookup.length >= 4 && u.name.toLowerCase().includes(lookup)) return true;
+    if (u.employeeId && u.employeeId.toLowerCase() === lookup) return true;
+    if (u.rollNo && u.rollNo.toLowerCase() === lookup) return true;
     return false;
   });
-
-  // Pick the candidate whose credentials verify, or first candidate
-  let user = candidateUsers.find((c) => checkUserPassword(c, password)) || candidateUsers[0];
-
-  // If user is evaluating with their own personal Google email or evaluator username
-  if (!user && (lookup.includes('harishchandre') || lookup.includes('pratik') || lookup.includes('king') || lookup.includes('@'))) {
-    const isPratik = lookup.includes('harishchandre') || lookup.includes('pratik');
-    user = {
-      id: isPratik ? 'usr-stud-70363' : 'usr-admin-owner',
-      name: isPratik ? 'Pratik Harishchandre' : 'Super Admin Evaluator',
-      username: lookup.includes('@') ? lookup.split('@')[0] : lookup,
-      email: lookup.includes('@') ? lookup : `${lookup}@school.edu`,
-      role: isPratik ? 'student' : 'superadmin',
-      rollNo: isPratik ? '65' : undefined,
-      employeeId: isPratik ? undefined : 'NRES-DIR-999',
-      phone: isPratik ? '7038047688' : '+91 98201 99999',
-      password: bcrypt.hashSync(password || (isPratik ? 'StudentPass#101' : 'Admin@Nexus2025!'), 10),
-      rawPassword: password || (isPratik ? 'StudentPass#101' : 'Admin@Nexus2025!'),
-      createdAt: new Date().toISOString(),
-      bonusPoints: isPratik ? 100 : undefined,
-    };
-    users.push(user);
-    saveStateToDisk();
-  }
 
   if (!user) {
     recordFailedLoginAttempt(rateLimitKey);
@@ -3067,29 +2845,14 @@ const handleLogin = (req: express.Request, res: express.Response) => {
       role: 'unauthenticated',
       identifier: lookup,
       ipAddress: clientIp,
-      userAgent: req.headers['user-agent'] || 'Browser Client',
+      userAgent: (req.headers['user-agent'] as string) || 'Browser Client',
       status: 'Failed',
       failureReason: 'Invalid credentials',
     });
     return res.status(401).json({ error: genericError });
   }
 
-  let match = checkUserPassword(user, password);
-
-  if (!match) {
-    const isEvaluator =
-      lookup.includes('harishchandre') ||
-      lookup.includes('pratik') ||
-      lookup.includes('king') ||
-      (user.email && (user.email.includes('harishchandre') || user.email.includes('king'))) ||
-      user.id === 'usr-stud-70363';
-
-    if (isEvaluator) {
-      match = true;
-      user.password = bcrypt.hashSync(password, 10);
-      saveStateToDisk();
-    }
-  }
+  const match = checkUserPassword(user, password);
 
   if (!match) {
     recordFailedLoginAttempt(rateLimitKey);
@@ -3101,7 +2864,7 @@ const handleLogin = (req: express.Request, res: express.Response) => {
       role: user.role,
       identifier: lookup,
       ipAddress: clientIp,
-      userAgent: req.headers['user-agent'] || 'Browser Client',
+      userAgent: (req.headers['user-agent'] as string) || 'Browser Client',
       status: 'Failed',
       failureReason: 'Invalid credentials',
     });
@@ -3148,17 +2911,7 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
 // Public directory for login presets and unauthenticated visitors (with login presets passwords)
 // Public directory for login-page demos ONLY — never expose passwords or sensitive fields
 app.get(['/api/auth/public-users', '/api/users/public'], (req, res) => {
-  return res.json({
-    users: users.map((u) => ({
-      id: u.id,
-      name: u.name,
-      username: u.username,
-      role: u.role,
-      rollNo: u.rollNo,
-      employeeId: u.employeeId,
-      // Explicitly omit password, rawPassword, email, phone, parent links
-    })),
-  });
+  return res.json({ users: [] });
 });
 
 app.post('/api/auth/change-password', requireAuth, (req, res) => {
@@ -3197,7 +2950,7 @@ app.post('/api/auth/change-password', requireAuth, (req, res) => {
 
 app.get('/api/auth/users', requireAuth, requireRole('superadmin'), (req, res) => {
   const usersWithCredentials = users.map((u) => {
-    const plain = u.rawPassword || SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
+    const plain = u.rawPassword || SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || '';
     return {
       ...publicUser(u),
       password: plain,
@@ -3211,7 +2964,7 @@ app.get('/api/auth/users', requireAuth, requireRole('superadmin'), (req, res) =>
 
 app.get('/api/admin/credentials', requireAuth, requireRole('superadmin'), (req, res) => {
   const usersWithCredentials = users.map((u) => {
-    const plain = u.rawPassword || SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
+    const plain = u.rawPassword || SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || '';
     return {
       ...publicUser(u),
       password: plain,
@@ -3328,12 +3081,8 @@ app.post('/api/admin/create-credential', requireAuth, requireRole('superadmin'),
     }
   }
 
-  // Staff-specific compulsory fields
-  if (role === 'teacher' || role === 'superadmin') {
-    if (!employeeId) {
-      return res.status(400).json({ error: 'Employee / Faculty ID is compulsory for staff.' });
-    }
-  }
+  // Staff-specific employee ID (auto-generated if omitted)
+  const finalEmployeeId = (employeeId || '').trim() || ((role === 'teacher' || role === 'superadmin') ? `NRES-${role === 'superadmin' ? 'DIR' : 'FAC'}-${Math.floor(100 + Math.random() * 900)}` : undefined);
 
   // Email is strictly OPTIONAL
   let finalEmail = (email || '').trim();
@@ -3368,8 +3117,8 @@ app.post('/api/admin/create-credential', requireAuth, requireRole('superadmin'),
     bonusPoints: role === 'student' ? 100 : undefined,
   };
 
-  if (role === 'superadmin') {
-    newUser.employeeId = employeeId.trim();
+  if (role === 'superadmin' || role === 'teacher') {
+    newUser.employeeId = finalEmployeeId;
   } else if (role === 'student') {
     newUser.classId = classId;
     newUser.divisionId = divisionId;
@@ -3407,7 +3156,7 @@ app.post('/api/admin/create-credential', requireAuth, requireRole('superadmin'),
 
 // Admin: Bulk Upload & Credential Generator via Excel/JSON
 app.post('/api/admin/credentials/bulk', requireAuth, requireRole('superadmin'), (req, res) => {
-  const { users: rawUsers } = req.body;
+  const rawUsers = req.body.users || req.body.credentials;
   if (!Array.isArray(rawUsers) || rawUsers.length === 0) {
     return res.status(400).json({ error: 'Users array is required and must not be empty' });
   }
@@ -3514,11 +3263,7 @@ app.post('/api/admin/credentials/bulk', requireAuth, requireRole('superadmin'), 
     }
 
     if (role === 'teacher' || role === 'superadmin') {
-      employeeId = (u.employeeId || u['Employee ID'] || '').trim() || undefined;
-      if (!employeeId) {
-        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: 'Employee / Faculty ID is compulsory for staff' });
-        return;
-      }
+      employeeId = (u.employeeId || u['Employee ID'] || '').trim() || `NRES-${role === 'superadmin' ? 'DIR' : 'FAC'}-${Math.floor(100 + Math.random() * 900)}`;
     }
 
     const prefix = role === 'superadmin' ? 'admin' : role === 'teacher' ? 'teach' : role === 'student' ? 'stud' : 'parent';
@@ -3645,7 +3390,7 @@ app.put('/api/admin/credentials/:id', requireAuth, requireRole('superadmin'), (r
   users[index] = updatedUser;
   saveStateToDisk();
 
-  const activePassword = updatedUser.rawPassword || (password && password.trim()) || current.rawPassword || SEED_PASSWORDS[updatedUser.username] || getRoleDefaultPassword(updatedUser.role);
+  const activePassword = updatedUser.rawPassword || (password && password.trim()) || current.rawPassword || SEED_PASSWORDS[updatedUser.username] || '';
   return res.json({ 
     message: 'User credential updated successfully', 
     user: {
@@ -4829,6 +4574,19 @@ app.put('/api/exams/:id/attempt/answers', requireAuth, requireRole('student'), (
   });
 });
 
+const inFlightSubmissions = new Set<string>();
+const submitRateLimits = new Map<string, { count: number; resetAt: number }>();
+function isSubmitRateLimited(key: string): boolean {
+  const now = Date.now();
+  const rec = submitRateLimits.get(key);
+  if (!rec || now > rec.resetAt) {
+    submitRateLimits.set(key, { count: 1, resetAt: now + 60000 });
+    return false;
+  }
+  rec.count++;
+  return rec.count > 10;
+}
+
 // Student Submits Exam -> Instant Server Auto-Grading & Anti-Cheating Enforcement
 app.post('/api/exams/:id/submit', requireAuth, requireRole('student'), (req, res) => {
   const { id } = req.params;
@@ -4836,8 +4594,19 @@ app.post('/api/exams/:id/submit', requireAuth, requireRole('student'), (req, res
   const student = req.user;
   const idempotencyKey = (req.headers['idempotency-key'] as string) || (req.body?.idempotencyKey as string);
 
-  const exam = exams.find((e) => e.id === id);
-  if (!exam) return res.status(404).json({ error: 'Exam not found' });
+  const concurrencyKey = `${id}:${student.id}`;
+  if (inFlightSubmissions.has(concurrencyKey)) {
+    return res.status(429).json({ error: 'Your submission is already being processed. Please wait.' });
+  }
+
+  if (isSubmitRateLimited(concurrencyKey)) {
+    return res.status(429).json({ error: 'Submission rate limit reached. Please wait a moment.' });
+  }
+
+  inFlightSubmissions.add(concurrencyKey);
+  try {
+    const exam = exams.find((e) => e.id === id);
+    if (!exam) return res.status(404).json({ error: 'Exam not found' });
 
   // Safe Idempotent Submission Replay
   if (idempotencyKey) {
@@ -5010,9 +4779,9 @@ app.post('/api/exams/:id/submit', requireAuth, requireRole('student'), (req, res
     attempt.status = 'completed';
     attempt.completedAt = new Date().toISOString();
   }
-  saveStateToDisk();
+  saveStateToDisk(true);
 
-  res.status(201).json({
+  return res.status(201).json({
     message: 'Examination submitted and auto-graded successfully',
     score,
     totalMarks,
@@ -5030,6 +4799,12 @@ app.post('/api/exams/:id/submit', requireAuth, requireRole('student'), (req, res
       isWindowClosed: new Date() > new Date(exam.endTime),
     },
   });
+  } catch (err: any) {
+    console.error('Error processing exam submission:', err);
+    return res.status(500).json({ error: 'Failed to process exam submission', details: err?.message });
+  } finally {
+    inFlightSubmissions.delete(concurrencyKey);
+  }
 });
 
 // Student Review: Locked until exam designated time window has entirely closed for all students!
@@ -6705,32 +6480,8 @@ app.get('/api/database/status', async (req, res) => {
   });
 });
 
-app.post('/api/database/connect', async (req, res) => {
-  try {
-    const { databaseUrl } = req.body;
-    if (!databaseUrl || typeof databaseUrl !== 'string' || !databaseUrl.trim()) {
-      return res.status(400).json({ error: 'Please provide a valid database connection string (URI).' });
-    }
-
-    const result = await setDatabaseUrl(databaseUrl.trim());
-
-    // Immediately sync current system state to the newly connected database
-    const payload = getSystemStatePayload();
-    await saveStateToPostgres(payload);
-
-    res.json({
-      success: true,
-      message: result.message,
-      host: result.host,
-      stats: {
-        syncedUsers: users.length,
-        syncedExams: exams.length,
-        syncedSubmissions: submissions.length
-      }
-    });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to connect to PostgreSQL database' });
-  }
+app.post('/api/database/connect', (req, res) => {
+  return res.status(403).json({ error: 'Runtime database configuration from UI is disabled. Use environment variables.' });
 });
 
 app.post('/api/database/sync', async (req, res) => {

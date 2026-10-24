@@ -44,7 +44,6 @@ import { NoticeBoardAdmin } from './NoticeBoardAdmin';
 import { SchoolReportModal } from './SchoolReportModal';
 import { UnifiedBackButton } from '../common/UnifiedBackButton';
 import { BulkCredentialUploadModal } from './BulkCredentialUploadModal';
-import { DatabaseSettingsModal } from './DatabaseSettingsModal';
 
 interface AdminDashboardProps {
   currentUser: UserCredential;
@@ -76,7 +75,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [schoolAnalytics, setSchoolAnalytics] = useState<any | null>(null);
   const [bulkCredentialModalOpen, setBulkCredentialModalOpen] = useState(false);
-  const [dbModalOpen, setDbModalOpen] = useState(false);
 
   // Hierarchical Analytics Folder Navigation (Class -> Division -> Subject)
   const [selectedFolderClassId, setSelectedFolderClassId] = useState<string | null>(null);
@@ -484,15 +482,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <button
-                  id="admin-supabase-db-btn"
-                  onClick={() => setDbModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors cursor-pointer"
-                  title="Connect Supabase PostgreSQL for permanent cloud storage across all reloads"
-                >
-                  <Database className="w-3.5 h-3.5" />
-                  <span>Cloud DB (Supabase)</span>
-                </button>
                 <button
                   id="admin-download-report-btn"
                   onClick={() => setReportModalOpen(true)}
@@ -2106,12 +2095,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           fetchData();
           onRefreshUsers();
         }}
-      />
-
-      {/* Supabase PostgreSQL Cloud Database Modal */}
-      <DatabaseSettingsModal
-        isOpen={dbModalOpen}
-        onClose={() => setDbModalOpen(false)}
       />
     </div>
   );

@@ -16,7 +16,8 @@ import {
   Wifi,
   WifiOff,
   CloudCheck,
-  RotateCcw
+  RotateCcw,
+  RefreshCw
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Question, Exam } from '../../types';
@@ -75,8 +76,9 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
   const hasAutoSubmittedRef = useRef(false);
   const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  // Persistent Idempotency Key per exam attempt
+  // Persistent Idempotency Key & Offline Resilient Storage per exam attempt
   const storageKey = `nexus_exam_answers_${examId}`;
+  const localStorageKey = `nexus_exam_answers_${examId}_${studentId}`;
   const idempKeyStorage = `nexus_exam_idemp_${examId}`;
   const idempotencyKeyRef = useRef<string>((() => {
     try {
@@ -89,6 +91,43 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
       return `subm_${examId}_${studentId}_${Date.now()}`;
     }
   })());
+
+  // Enter Fullscreen Helper
+  const enterFullscreen = useCallback(async () => {
+    try {
+      const docEl = document.documentElement as any;
+      if (docEl.requestFullscreen) {
+        await docEl.requestFullscreen();
+      } else if (docEl.webkitRequestFullscreen) {
+        await docEl.webkitRequestFullscreen();
+      } else if (docEl.mozRequestFullScreen) {
+        await docEl.mozRequestFullScreen();
+      } else if (docEl.msRequestFullscreen) {
+        await docEl.msRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } catch (err) {
+      console.warn('[ExamTestingEngine] Fullscreen request not granted automatically:', err);
+    }
+  }, []);
+
+  // Sync answers to server endpoint (PUT /api/exams/:id/attempt/answers)
+  const syncAnswersToServer = useCallback(async (currentAnswers: Record<string, any>) => {
+    if (!navigator.onLine || hasAutoSubmittedRef.current) return;
+    try {
+      setIsAutosaving(true);
+      const res = await apiClient.put(`/api/exams/${examId}/attempt/answers`, {
+        answers: currentAnswers,
+      });
+      if (res.ok) {
+        setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      }
+    } catch (err) {
+      console.warn('[Autosave] Transient sync failure, answers remain safely cached in localStorage:', err);
+    } finally {
+      setIsAutosaving(false);
+    }
+  }, [examId]);
 
   // Track Online / Offline status
   useEffect(() => {
@@ -108,25 +147,7 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [examId]);
-
-  // Sync answers to server endpoint (PUT /api/exams/:id/attempt/answers)
-  const syncAnswersToServer = useCallback(async (currentAnswers: Record<string, any>) => {
-    if (!navigator.onLine || hasAutoSubmittedRef.current) return;
-    try {
-      setIsAutosaving(true);
-      const res = await apiClient.put(`/api/exams/${examId}/attempt/answers`, {
-        answers: currentAnswers,
-      });
-      if (res.ok) {
-        setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-      }
-    } catch (err) {
-      console.warn('[Autosave] Transient sync failure, answers remain safe in sessionStorage:', err);
-    } finally {
-      setIsAutosaving(false);
-    }
-  }, [examId]);
+  }, [examId, syncAnswersToServer]);
 
   // 15-second Periodic Server Autosave Interval
   useEffect(() => {
@@ -157,11 +178,13 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
         setExam(data.exam);
         setQuestions(data.exam.questions || []);
 
-        // Restore Answers: Combine server savedAnswers and local sessionStorage
+        // Restore Answers: Combine server savedAnswers, localStorage, and sessionStorage
         let localAnswers: Record<string, any> = {};
         try {
-          const raw = sessionStorage.getItem(storageKey);
-          if (raw) localAnswers = JSON.parse(raw);
+          const storedLocal = localStorage.getItem(localStorageKey);
+          if (storedLocal) localAnswers = JSON.parse(storedLocal);
+          const storedSession = sessionStorage.getItem(storageKey);
+          if (storedSession) localAnswers = { ...localAnswers, ...JSON.parse(storedSession) };
         } catch (e) {
           // Ignore
         }
@@ -169,6 +192,7 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
         const serverAnswers = data.attempt?.savedAnswers || {};
         const mergedAnswers = { ...serverAnswers, ...localAnswers };
         setAnswers(mergedAnswers);
+        answersRef.current = mergedAnswers;
 
         // Resume remaining time based on server's authoritative timer
         if (data.attempt && typeof data.attempt.remainingSeconds === 'number') {
@@ -178,6 +202,10 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
         }
 
         setIsTimerRunning(true);
+        // Prompt fullscreen entry on exam initialization
+        setTimeout(() => {
+          enterFullscreen();
+        }, 150);
       } catch (err: any) {
         console.error('Failed to load exam:', err);
         setErrorMessage(err.message || 'Network connection failed while opening exam.');
@@ -187,7 +215,7 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
     };
 
     fetchExamData();
-  }, [examId, studentId, storageKey]);
+  }, [examId, studentId, storageKey, localStorageKey, enterFullscreen]);
 
   // Live Countdown Timer
   useEffect(() => {
@@ -207,67 +235,6 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
     return () => clearInterval(timer);
   }, [isTimerRunning, timeLeftSeconds]);
 
-  // Anti-Cheating Event Listeners (Window Blur & Visibility Change)
-  useEffect(() => {
-    if (loading || isSubmitting || submissionResult) return;
-
-    const handleFocusLoss = () => {
-      if (hasAutoSubmittedRef.current) return;
-
-      const nowIso = new Date().toISOString();
-      const nextCount = violationCount + 1;
-      setViolationCount(nextCount);
-      setBlurTimestamps((prev) => [...prev, nowIso]);
-
-      if (nextCount === 1) {
-        setWarningLevel(1);
-        setWarningModalOpen(true);
-      } else if (nextCount === 2) {
-        setWarningLevel(2);
-        setWarningModalOpen(true);
-      } else if (nextCount >= 3) {
-        setWarningLevel(3);
-        setWarningModalOpen(true);
-        handleForceAutoSubmit('Academic Malpractice: 3 window blur violations detected. Exam auto-submitted.');
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        handleFocusLoss();
-      }
-    };
-
-    const handleWindowBlur = () => {
-      handleFocusLoss();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleWindowBlur);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleWindowBlur);
-    };
-  }, [violationCount, loading, isSubmitting, submissionResult]);
-
-  // Modal accessibility: Escape key listener
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (confirmSubmitOpen) {
-          setConfirmSubmitOpen(false);
-          triggerButtonRef.current?.focus();
-        }
-        if (warningModalOpen && warningLevel < 3) {
-          setWarningModalOpen(false);
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [confirmSubmitOpen, warningModalOpen, warningLevel]);
-
   // Format Timer mm:ss
   const formatTimer = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -275,8 +242,8 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Safe Submit Logic with Idempotency Key
-  const handleForceAutoSubmit = async (reason?: string) => {
+  // Safe Submit Logic with Idempotency Key & Offline Resilience
+  const handleForceAutoSubmit = useCallback(async (reason?: string) => {
     if (hasAutoSubmittedRef.current) return;
     hasAutoSubmittedRef.current = true;
     setIsTimerRunning(false);
@@ -301,10 +268,11 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
       const data = res.data;
       setSubmissionResult(data.result);
 
-      // Clean up session storage after confirmed submission
+      // Clean up session and local storage after confirmed submission
       try {
         sessionStorage.removeItem(storageKey);
         sessionStorage.removeItem(idempKeyStorage);
+        localStorage.removeItem(localStorageKey);
       } catch (e) {
         // Ignore
       }
@@ -319,12 +287,165 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
       }
     } catch (err: any) {
       console.error('Submission failed:', err);
-      setErrorMessage(err.message || 'Submission could not be recorded. Please retry.');
+      // Persist answers safely in local storage so no student work is lost
+      try {
+        localStorage.setItem(localStorageKey, JSON.stringify(answersRef.current));
+      } catch (e) {
+        // Ignore
+      }
+      setErrorMessage(
+        navigator.onLine
+          ? (err.message || 'Submission could not be recorded. Please retry.')
+          : 'You are currently offline. All your answers are safely preserved locally. When internet returns, submission will complete automatically.'
+      );
       hasAutoSubmittedRef.current = false;
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [examId, violationCount, blurTimestamps, storageKey, idempKeyStorage, localStorageKey]);
+
+  // Centralized Focus Loss / Anti-Cheating Handler
+  const handleFocusLoss = useCallback((reason?: string) => {
+    if (hasAutoSubmittedRef.current) return;
+
+    const nowIso = new Date().toISOString();
+    const nextCount = violationCount + 1;
+    setViolationCount(nextCount);
+    setBlurTimestamps((prev) => [...prev, nowIso]);
+
+    if (nextCount === 1) {
+      setWarningLevel(1);
+      setWarningModalOpen(true);
+    } else if (nextCount === 2) {
+      setWarningLevel(2);
+      setWarningModalOpen(true);
+    } else if (nextCount >= 3) {
+      setWarningLevel(3);
+      setWarningModalOpen(true);
+      handleForceAutoSubmit(reason || 'Academic Malpractice: 3 window blur / fullscreen violations detected. Exam auto-submitted.');
+    }
+  }, [violationCount, handleForceAutoSubmit]);
+
+  // Anti-Cheating Event Listeners (Window Blur, Visibility Change, Fullscreen Change)
+  useEffect(() => {
+    if (loading || isSubmitting || submissionResult) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        handleFocusLoss('Navigated away or minimized examination tab.');
+      }
+    };
+
+    const handleWindowBlur = () => {
+      handleFocusLoss('Lost active browser window focus.');
+    };
+
+    const handleFullscreenChange = () => {
+      const isNowFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isNowFullscreen);
+
+      // If user exited fullscreen during active examination
+      if (!isNowFullscreen && !hasAutoSubmittedRef.current) {
+        handleFocusLoss('Exited fullscreen lock during active examination.');
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, [loading, isSubmitting, submissionResult, handleFocusLoss]);
+
+  // Security Lockout: Block Right Click, Copy, Paste, Cut, and Inspection Shortcuts
+  useEffect(() => {
+    if (loading || isSubmitting || submissionResult) return;
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const handleClipboardEvent = (e: ClipboardEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const handleSecurityKeyDown = (e: KeyboardEvent) => {
+      // Block F12 (DevTools)
+      if (e.key === 'F12' || e.keyCode === 123) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+
+      // Block PrintScreen
+      if (e.key === 'PrintScreen') {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+
+      const isModifier = e.ctrlKey || e.metaKey;
+      const lowerKey = e.key.toLowerCase();
+      if (isModifier) {
+        // Block Ctrl/Cmd + Shift + I/J/C (DevTools)
+        if (e.shiftKey && ['i', 'j', 'c'].includes(lowerKey)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        // Block Ctrl/Cmd + C, V, X, P, U, S (Copy, Paste, Cut, Print, View Source, Save)
+        if (['c', 'v', 'x', 'p', 'u', 's'].includes(lowerKey)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }
+    };
+
+    window.addEventListener('contextmenu', handleContextMenu);
+    window.addEventListener('copy', handleClipboardEvent);
+    window.addEventListener('paste', handleClipboardEvent);
+    window.addEventListener('cut', handleClipboardEvent);
+    window.addEventListener('keydown', handleSecurityKeyDown, true);
+
+    return () => {
+      window.removeEventListener('contextmenu', handleContextMenu);
+      window.removeEventListener('copy', handleClipboardEvent);
+      window.removeEventListener('paste', handleClipboardEvent);
+      window.removeEventListener('cut', handleClipboardEvent);
+      window.removeEventListener('keydown', handleSecurityKeyDown, true);
+    };
+  }, [loading, isSubmitting, submissionResult]);
+
+  // Modal accessibility: Escape key listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (confirmSubmitOpen) {
+          setConfirmSubmitOpen(false);
+          triggerButtonRef.current?.focus();
+        }
+        if (warningModalOpen && warningLevel < 3) {
+          setWarningModalOpen(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [confirmSubmitOpen, warningModalOpen, warningLevel]);
 
   const handleManualSubmit = () => {
     setConfirmSubmitOpen(false);
@@ -347,9 +468,10 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
     setAnswers(updatedAnswers);
     answersRef.current = updatedAnswers;
 
-    // 1. Immediate save to sessionStorage
+    // 1. Immediate dual persistence to sessionStorage & localStorage
     try {
       sessionStorage.setItem(storageKey, JSON.stringify(updatedAnswers));
+      localStorage.setItem(localStorageKey, JSON.stringify(updatedAnswers));
       setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     } catch (e) {
       // Ignore
@@ -482,6 +604,23 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col select-none selection:bg-none">
       
+      {/* Fullscreen Lockout Banner */}
+      {!isFullscreen && (
+        <div className="bg-amber-600 text-white font-bold text-xs px-4 py-2 flex items-center justify-between shadow-md shrink-0">
+          <div className="flex items-center gap-2">
+            <Maximize className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>Fullscreen Mode is mandatory for examination integrity.</span>
+          </div>
+          <button
+            type="button"
+            onClick={enterFullscreen}
+            className="px-3 py-1 bg-white text-amber-900 rounded font-bold text-xs hover:bg-amber-50 cursor-pointer shadow transition-colors"
+          >
+            Enter Fullscreen
+          </button>
+        </div>
+      )}
+
       {/* Offline Status Persistent Banner */}
       {!isOnline && (
         <div
@@ -490,7 +629,7 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
           className="bg-amber-500 text-slate-950 font-bold text-xs px-4 py-2 flex items-center justify-center gap-2 shadow-md shrink-0"
         >
           <WifiOff className="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span>You are currently offline. Answers are safely autosaved to your browser and will synchronize when reconnected.</span>
+          <span>Offline – answers saved locally. They will automatically synchronize when reconnected.</span>
         </div>
       )}
 
@@ -519,15 +658,25 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
                 {exam?.subjectName}
               </span>
             </div>
-            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
-              Candidate: <strong className="text-slate-800 dark:text-slate-200">{studentName}</strong>
-              {lastSavedTime && (
-                <span className="ml-2 text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1">
+            <div className="flex items-center gap-2 flex-wrap text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
+              <span>Candidate: <strong className="text-slate-800 dark:text-slate-200">{studentName}</strong></span>
+              {!isOnline ? (
+                <span className="text-amber-600 dark:text-amber-400 font-semibold inline-flex items-center gap-1">
+                  <WifiOff className="w-3 h-3 inline" aria-hidden="true" />
+                  Offline – answers saved locally
+                </span>
+              ) : isAutosaving ? (
+                <span className="text-blue-600 dark:text-blue-400 font-semibold inline-flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3 inline animate-spin" aria-hidden="true" />
+                  Syncing…
+                </span>
+              ) : lastSavedTime ? (
+                <span className="text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1">
                   <CloudCheck className="w-3 h-3 inline" aria-hidden="true" />
                   Saved {lastSavedTime}
                 </span>
-              )}
-            </p>
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -861,20 +1010,20 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
               </span>
 
               <h2 id="warning-modal-title" className="text-lg sm:text-2xl font-serif font-bold text-rose-600 dark:text-rose-200 mt-2 sm:mt-3">
-                {warningLevel < 3 ? 'Window Blur / Tab Switch Detected!' : 'Third Violation: Auto-Submitted'}
+                {warningLevel < 3 ? 'Window Blur or Fullscreen Exit Detected!' : 'Third Violation: Auto-Submitted'}
               </h2>
 
               <p className="text-xs text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">
                 {warningLevel === 1 && (
                   <>
-                    The system detected that you switched browser tabs, minimized the window, or lost active app focus. 
+                    The system detected that you switched browser tabs, exited fullscreen mode, minimized the window, or lost active app focus. 
                     Nexus Ranaji English School policy allows <strong className="text-amber-600 dark:text-amber-400">exactly 2 warnings</strong>. Return to your test immediately.
                   </>
                 )}
                 {warningLevel === 2 && (
                   <>
                     <strong className="text-rose-600 dark:text-rose-400">CRITICAL FINAL WARNING:</strong> This is your 2nd strike. 
-                    Any further focus loss or tab navigation will automatically submit your exam and permanently flag you for academic malpractice!
+                    Any further focus loss, fullscreen exit, or tab navigation will automatically submit your exam and permanently flag you for academic malpractice!
                   </>
                 )}
                 {warningLevel === 3 && (
@@ -888,10 +1037,13 @@ export const ExamTestingEngine: React.FC<ExamTestingEngineProps> = ({
             {warningLevel < 3 ? (
               <button
                 type="button"
-                onClick={() => setWarningModalOpen(false)}
+                onClick={() => {
+                  setWarningModalOpen(false);
+                  enterFullscreen();
+                }}
                 className="w-full py-3 min-h-[44px] bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-500/30 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
               >
-                I Understand &amp; Return to Examination
+                I Understand &amp; Return to Fullscreen Examination
               </button>
             ) : (
               <p className="text-xs font-mono text-slate-400">

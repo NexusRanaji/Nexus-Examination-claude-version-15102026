@@ -243,13 +243,13 @@ export const BulkCredentialUploadModal: React.FC<BulkCredentialUploadModalProps>
           }
         }
 
-        // 4. Student specific requirements
+        // 4. Student specific requirements: Compulsory Class Name and Roll Number
         if (role === 'student') {
-          if (!rollNo && !className) {
+          if (!rollNo || !className) {
             errorList.push({
               rowNumber: rowNum,
               originalData: row,
-              reason: 'Student records require either a Roll Number or a Class Name.',
+              reason: 'Student records require both Class Name and Roll Number. (Teachers and Parents do not require a class).',
             });
             return;
           }
@@ -575,7 +575,7 @@ export const BulkCredentialUploadModal: React.FC<BulkCredentialUploadModalProps>
                               </span>
                             </td>
                             <td className="p-2.5 font-mono text-[11px]">{u.rollNo || u.employeeId || 'Auto'}</td>
-                            <td className="p-2.5 text-[11px]">{u.className || 'Standard 10'} {u.divisionName ? `(${u.divisionName})` : ''}</td>
+                            <td className="p-2.5 text-[11px]">{u.role === 'student' ? `${u.className || 'Class 10'} ${u.divisionName ? `(${u.divisionName})` : ''}` : <span className="text-slate-400">N/A</span>}</td>
                             <td className="p-2.5 font-mono text-[10px] text-amber-600 dark:text-amber-400">
                               {u.password || 'Auto Secure'}
                             </td>

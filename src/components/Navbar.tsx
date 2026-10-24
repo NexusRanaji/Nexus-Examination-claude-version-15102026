@@ -215,35 +215,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                       </button>
 
-                      {/* Option 2: Switch User / Simulate Role */}
-                      <button
-                        onClick={() => {
-                          setHatMenuOpen(false);
-                          if (window.innerWidth < 768) {
-                            setMobileSheetOpen(true);
-                          } else {
-                            setDropdownOpen(true);
-                          }
-                        }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-xs font-medium transition-colors cursor-pointer text-left group"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                            <Users className="w-3.5 h-3.5" />
-                          </div>
-                          <div>
-                            <span className="font-semibold block text-slate-900 dark:text-slate-100">
-                              Switch Persona / Role
-                            </span>
-                            <span className="text-[10px] text-slate-400 block">
-                              Student &bull; Parent &bull; Faculty &bull; Admin
-                            </span>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
-
-                      {/* Option 3: Theme Toggle */}
+                      {/* Option 2: Theme Toggle */}
                       <button
                         onClick={() => toggleTheme()}
                         className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-xs font-medium transition-colors cursor-pointer text-left"

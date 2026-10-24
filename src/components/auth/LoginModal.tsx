@@ -3,13 +3,8 @@ import {
   X, 
   Lock, 
   User, 
-  ShieldCheck, 
-  GraduationCap, 
-  Users, 
-  BookOpen, 
   AlertCircle,
-  KeyRound,
-  CheckCircle2
+  KeyRound
 } from 'lucide-react';
 import { UserCredential } from '../../types';
 import { setAuthSession } from '../../services/auth';
@@ -58,51 +53,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
   };
 
-  const quickLogins = [
-    {
-      role: 'Super Admin',
-      user: 'admin',
-      pass: 'Admin@Nexus2025!',
-      icon: ShieldCheck,
-      color: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
-    },
-    {
-      role: 'Teacher (Physics)',
-      user: 'teacher.sharma',
-      pass: 'NexusTeacher#2025',
-      icon: BookOpen,
-      color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-    },
-    {
-      role: 'Student (Class 10)',
-      user: 'student.rohan',
-      pass: 'StudentPass#101',
-      icon: GraduationCap,
-      color: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
-    },
-    {
-      role: 'Parent (Rohan & Ananya)',
-      user: 'parent.sharma',
-      pass: 'ParentPass#2025',
-      icon: Users,
-      color: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
-    },
-    {
-      role: 'Admin (Legacy)',
-      user: 'admin@school.com',
-      pass: 'admin123',
-      icon: ShieldCheck,
-      color: 'text-purple-400 bg-purple-500/10 border-purple-500/30',
-    },
-    {
-      role: 'Student (Legacy John)',
-      user: 'john@student.com',
-      pass: 'student123',
-      icon: GraduationCap,
-      color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30',
-    },
-  ];
-
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[100dvh] overflow-y-auto p-5 sm:p-8 space-y-4 sm:space-y-5 shadow-2xl pb-[env(safe-area-inset-bottom,16px)] sm:pb-8 animate-in slide-in-from-bottom duration-200">
@@ -143,7 +93,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <input
                 type="text"
                 required
-                placeholder="e.g. teacher.sharma or student.rohan"
+                placeholder="e.g. teacher.demo or student.demo"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-base sm:text-xs text-slate-900 dark:text-slate-200 outline-none focus:border-amber-500"
@@ -176,36 +126,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             {loading ? 'Authenticating...' : 'Sign In to Portal'}
           </button>
         </form>
-
-        {/* 1-Click Quick Fill Credentials for testing */}
-        <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80 space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Or Click to Auto-Fill Role Account:
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {quickLogins.map((ql, idx) => {
-              const Icon = ql.icon;
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    setUsername(ql.user);
-                    setPassword(ql.pass);
-                  }}
-                  className={`p-2 rounded-xl border text-left text-xs transition-all flex items-center gap-2 cursor-pointer ${ql.color}`}
-                >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  <div className="min-w-0 flex-1 truncate">
-                    <p className="font-bold truncate text-[11px]">{ql.role}</p>
-                    <p className="text-[9px] opacity-80 font-mono truncate">{ql.user}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
       </div>
     </div>
   );
