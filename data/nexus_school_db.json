@@ -218,58 +218,80 @@
   "questionBank": [],
   "loginAudits": [
     {
-      "id": "log-1792830576770",
-      "timestamp": "2026-10-24T08:29:36.770Z",
-      "userId": "usr-admin",
-      "userName": "Super Administrator",
-      "role": "superadmin",
-      "identifier": "admin",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
-      "status": "Success"
-    },
-    {
-      "id": "log-1792830364998",
-      "timestamp": "2026-10-24T08:26:04.998Z",
-      "userId": "usr-parent-demo",
-      "userName": "Demo Parent",
-      "role": "parent",
-      "identifier": "parent.demo",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
-      "status": "Success"
-    },
-    {
-      "id": "log-1792829978557",
-      "timestamp": "2026-10-24T08:19:38.557Z",
+      "id": "log-1793277432207",
+      "timestamp": "2026-10-29T12:37:12.207Z",
       "userId": "usr-teacher-demo",
       "userName": "Faculty Teacher",
       "role": "teacher",
       "identifier": "teacher.demo",
       "ipAddress": "127.0.0.1",
-      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.144.0 Chrome/150.0.7871.250 Electron/43.8.3 Safari/537.36",
       "status": "Success"
+    },
+    {
+      "id": "log-1792848650564",
+      "role": "superadmin",
+      "status": "Success",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-24T13:30:50.564Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.143.1 Chrome/150.0.7871.250 Electron/43.7.7 Safari/537.36",
+      "identifier": "admin"
+    },
+    {
+      "id": "log-1792830576770",
+      "role": "superadmin",
+      "status": "Success",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-24T08:29:36.770Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "identifier": "admin"
+    },
+    {
+      "id": "log-1792830364998",
+      "role": "parent",
+      "status": "Success",
+      "userId": "usr-parent-demo",
+      "userName": "Demo Parent",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-24T08:26:04.998Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "identifier": "parent.demo"
+    },
+    {
+      "id": "log-1792829978557",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-24T08:19:38.557Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
     },
     {
       "id": "log-1792829897358",
-      "timestamp": "2026-10-24T08:18:17.358Z",
+      "role": "student",
+      "status": "Success",
       "userId": "usr-student-demo",
       "userName": "Demo Student",
-      "role": "student",
-      "identifier": "student.demo",
       "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-24T08:18:17.358Z",
       "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
-      "status": "Success"
+      "identifier": "student.demo"
     },
     {
       "id": "log-1792829839701",
-      "timestamp": "2026-10-24T08:17:19.701Z",
-      "userName": "theoneandonlyking999@gmail.com",
       "role": "unauthenticated",
-      "identifier": "theoneandonlyking999@gmail.com",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
       "status": "Failed",
+      "userName": "theoneandonlyking999@gmail.com",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-24T08:17:19.701Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "identifier": "theoneandonlyking999@gmail.com",
       "failureReason": "Invalid credentials"
     },
     {
@@ -642,15 +664,15 @@
   "cheatingAudits": [
     {
       "id": "cht-1792830126621",
-      "timestamp": "2026-10-24T08:22:06.621Z",
+      "examId": "exam-1792830080847",
+      "details": "2 window focus losses recorded during exam session.",
+      "examTitle": "Physics & Applied Science: DEMO TEST Assessment (CBSE)",
       "studentId": "usr-student-demo",
+      "timestamp": "2026-10-24T08:22:06.621Z",
+      "actionTaken": "Warning 2",
       "studentName": "Demo Student",
       "studentRollNo": "1",
-      "examId": "exam-1792830080847",
-      "examTitle": "Physics & Applied Science: DEMO TEST Assessment (CBSE)",
-      "violationCount": 2,
-      "actionTaken": "Warning 2",
-      "details": "2 window focus losses recorded during exam session."
+      "violationCount": 2
     }
   ],
   "deletedCredentialAudits": [],
@@ -748,29 +770,18 @@
     {
       "id": "exam-1792830080847",
       "title": "Physics & Applied Science: DEMO TEST Assessment (CBSE)",
-      "description": "Curriculum assessment for Standard 10 (SSC) covering DEMO TEST.",
-      "subjectId": "sub-phy",
-      "subjectName": "Physics & Applied Science",
-      "classId": "cls-10",
-      "targetClassId": "cls-10",
-      "className": "Standard 10 (SSC)",
-      "divisionId": "all",
-      "targetDivisionId": "all",
-      "divisionName": "All Divisions",
-      "teacherId": "usr-teacher-demo",
-      "teacherName": "Faculty Teacher",
       "status": "published",
-      "startTime": "2026-10-24T08:21:20.822Z",
+      "classId": "cls-10",
       "endTime": "2026-10-31T08:21:20.822Z",
-      "durationMinutes": 30,
-      "passingScore": 40,
-      "totalMarks": 25,
-      "questionCount": 5,
+      "className": "Standard 10 (SSC)",
+      "createdAt": "2026-10-24T08:21:20.847Z",
       "questions": [
         {
           "id": "q-gen-1792830080821-0",
           "text": "[DEMO TEST] Core Concept Evaluation Question 1: Which of the following fundamental principles correctly describes the mechanics of this topic under CBSE guidelines?",
           "type": "single",
+          "marks": 5,
+          "points": 5,
           "options": [
             {
               "id": "opt-1",
@@ -789,18 +800,18 @@
               "text": "Disproven historical axiom superseded by modern formulations"
             }
           ],
-          "correctAnswer": "opt-1",
-          "correctAnswerIndex": 0,
-          "explanation": "Option A correctly states the core definition outlined in CBSE chapter syllabus for DEMO TEST.",
-          "marks": 5,
-          "points": 5,
+          "category": "Multiple Choice",
           "difficulty": "Medium",
-          "category": "Multiple Choice"
+          "explanation": "Option A correctly states the core definition outlined in CBSE chapter syllabus for DEMO TEST.",
+          "correctAnswer": "opt-1",
+          "correctAnswerIndex": 0
         },
         {
           "id": "q-gen-1792830080821-1",
           "text": "[DEMO TEST] Core Concept Evaluation Question 2: Which of the following fundamental principles correctly describes the mechanics of this topic under CBSE guidelines?",
           "type": "single",
+          "marks": 5,
+          "points": 5,
           "options": [
             {
               "id": "opt-1",
@@ -819,18 +830,18 @@
               "text": "Disproven historical axiom superseded by modern formulations"
             }
           ],
-          "correctAnswer": "opt-1",
-          "correctAnswerIndex": 0,
-          "explanation": "Option A correctly states the core definition outlined in CBSE chapter syllabus for DEMO TEST.",
-          "marks": 5,
-          "points": 5,
+          "category": "Multiple Choice",
           "difficulty": "Medium",
-          "category": "Multiple Choice"
+          "explanation": "Option A correctly states the core definition outlined in CBSE chapter syllabus for DEMO TEST.",
+          "correctAnswer": "opt-1",
+          "correctAnswerIndex": 0
         },
         {
           "id": "q-gen-1792830080821-2",
           "text": "[DEMO TEST] Core Concept Evaluation Question 3: Which of the following fundamental principles correctly describes the mechanics of this topic under CBSE guidelines?",
           "type": "single",
+          "marks": 5,
+          "points": 5,
           "options": [
             {
               "id": "opt-1",
@@ -849,18 +860,18 @@
               "text": "Disproven historical axiom superseded by modern formulations"
             }
           ],
-          "correctAnswer": "opt-1",
-          "correctAnswerIndex": 0,
-          "explanation": "Option A correctly states the core definition outlined in CBSE chapter syllabus for DEMO TEST.",
-          "marks": 5,
-          "points": 5,
+          "category": "Multiple Choice",
           "difficulty": "Medium",
-          "category": "Multiple Choice"
+          "explanation": "Option A correctly states the core definition outlined in CBSE chapter syllabus for DEMO TEST.",
+          "correctAnswer": "opt-1",
+          "correctAnswerIndex": 0
         },
         {
           "id": "q-gen-1792830080821-3",
           "text": "[DEMO TEST] Core Concept Evaluation Question 4: Which of the following fundamental principles correctly describes the mechanics of this topic under CBSE guidelines?",
           "type": "single",
+          "marks": 5,
+          "points": 5,
           "options": [
             {
               "id": "opt-1",
@@ -879,18 +890,18 @@
               "text": "Disproven historical axiom superseded by modern formulations"
             }
           ],
-          "correctAnswer": "opt-1",
-          "correctAnswerIndex": 0,
-          "explanation": "Option A correctly states the core definition outlined in CBSE chapter syllabus for DEMO TEST.",
-          "marks": 5,
-          "points": 5,
+          "category": "Multiple Choice",
           "difficulty": "Medium",
-          "category": "Multiple Choice"
+          "explanation": "Option A correctly states the core definition outlined in CBSE chapter syllabus for DEMO TEST.",
+          "correctAnswer": "opt-1",
+          "correctAnswerIndex": 0
         },
         {
           "id": "q-gen-1792830080821-4",
           "text": "[DEMO TEST] Core Concept Evaluation Question 5: Which of the following fundamental principles correctly describes the mechanics of this topic under CBSE guidelines?",
           "type": "single",
+          "marks": 5,
+          "points": 5,
           "options": [
             {
               "id": "opt-1",
@@ -909,16 +920,27 @@
               "text": "Disproven historical axiom superseded by modern formulations"
             }
           ],
-          "correctAnswer": "opt-1",
-          "correctAnswerIndex": 0,
-          "explanation": "Option A correctly states the core definition outlined in CBSE chapter syllabus for DEMO TEST.",
-          "marks": 5,
-          "points": 5,
+          "category": "Multiple Choice",
           "difficulty": "Medium",
-          "category": "Multiple Choice"
+          "explanation": "Option A correctly states the core definition outlined in CBSE chapter syllabus for DEMO TEST.",
+          "correctAnswer": "opt-1",
+          "correctAnswerIndex": 0
         }
       ],
-      "createdAt": "2026-10-24T08:21:20.847Z"
+      "startTime": "2026-10-24T08:21:20.822Z",
+      "subjectId": "sub-phy",
+      "teacherId": "usr-teacher-demo",
+      "divisionId": "all",
+      "totalMarks": 25,
+      "description": "Curriculum assessment for Standard 10 (SSC) covering DEMO TEST.",
+      "subjectName": "Physics & Applied Science",
+      "teacherName": "Faculty Teacher",
+      "divisionName": "All Divisions",
+      "passingScore": 40,
+      "questionCount": 5,
+      "targetClassId": "cls-10",
+      "durationMinutes": 30,
+      "targetDivisionId": "all"
     },
     {
       "id": "exam-1792821438151",
@@ -1058,34 +1080,34 @@
   "submissions": [
     {
       "id": "subm-1792830126621",
+      "score": 5,
       "examId": "exam-1792830080847",
-      "examTitle": "Physics & Applied Science: DEMO TEST Assessment (CBSE)",
-      "subjectName": "Physics & Applied Science",
-      "studentId": "usr-student-demo",
-      "studentName": "Demo Student",
-      "studentRollNo": "1",
-      "classId": "cls-10",
-      "divisionId": "all",
+      "passed": false,
       "answers": {
         "q-gen-1792830080821-0": "opt-1"
       },
-      "score": 5,
-      "totalMarks": 25,
+      "classId": "cls-10",
+      "examTitle": "Physics & Applied Science: DEMO TEST Assessment (CBSE)",
+      "studentId": "usr-student-demo",
+      "divisionId": "all",
       "percentage": 20,
-      "passed": false,
-      "bonusPointsAwarded": 20,
+      "totalMarks": 25,
+      "rescheduled": false,
+      "studentName": "Demo Student",
+      "subjectName": "Physics & Applied Science",
       "submittedAt": "2026-10-24T08:22:06.621Z",
-      "cheatingFlagged": false,
+      "studentRollNo": "1",
+      "idempotencyKey": "subm_exam-1792830080847_usr-student-demo_1792830109175_jz1ff",
       "cheatingDetails": {
-        "violationCount": 2,
+        "reason": "2 minor focus loss warnings logged.",
         "blurTimestamps": [
           "2026-10-24T08:21:56.438Z",
           "2026-10-24T08:22:01.954Z"
         ],
-        "reason": "2 minor focus loss warnings logged."
+        "violationCount": 2
       },
-      "rescheduled": false,
-      "idempotencyKey": "subm_exam-1792830080847_usr-student-demo_1792830109175_jz1ff"
+      "cheatingFlagged": false,
+      "bonusPointsAwarded": 20
     },
     {
       "id": "subm-1792821438163",
@@ -1176,14 +1198,14 @@
     {
       "id": "att-1792830109182-demo",
       "examId": "exam-1792830080847",
-      "studentId": "usr-student-demo",
+      "status": "completed",
       "startedAt": "2026-10-24T08:21:49.182Z",
+      "studentId": "usr-student-demo",
+      "updatedAt": "2026-10-24T08:22:04.213Z",
+      "completedAt": "2026-10-24T08:22:06.621Z",
       "savedAnswers": {
         "q-gen-1792830080821-0": "opt-1"
-      },
-      "status": "completed",
-      "updatedAt": "2026-10-24T08:22:04.213Z",
-      "completedAt": "2026-10-24T08:22:06.621Z"
+      }
     }
   ]
 }
