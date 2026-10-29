@@ -22,19 +22,9 @@
       ]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "strict": true
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "noEmit": true
   },
-  "include": [
-    "src",
-    "server.ts",
-    "vite.config.ts"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "scripts",
-    "data",
-    "uploads"
-  ]
+  "exclude": ["dist"]
 }

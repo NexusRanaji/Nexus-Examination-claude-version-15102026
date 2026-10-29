@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'dark' | 'light';
+type Theme = 'light' | 'dark';
 
 interface ThemeContextType {
   theme: Theme;
@@ -12,20 +12,37 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const saved = localStorage.getItem('nexus_theme');
-    if (saved === 'light' || saved === 'dark') return saved;
-    return 'dark'; // Default institutional twilight theme
+    try {
+      const saved = localStorage.getItem('nexus_theme');
+      if (saved === 'light' || saved === 'dark') {
+        if (saved === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+        return saved;
+      }
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const initial = prefersDark ? 'dark' : 'light';
+      if (initial === 'dark') document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+      return initial;
+    } catch {
+      return 'dark';
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('nexus_theme', theme);
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.remove('dark');
-      root.classList.add('light');
+    try {
+      localStorage.setItem('nexus_theme', theme);
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.style.colorScheme = 'dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.documentElement.style.colorScheme = 'light';
+      }
+    } catch (e) {
+      console.warn('Theme storage unavailable:', e);
     }
   }, [theme]);
 
@@ -33,8 +50,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
+  const setTheme = (t: Theme) => {
+    setThemeState(t);
   };
 
   return (
@@ -44,10 +61,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
-export const useTheme = (): ThemeContextType => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+export function useTheme(): ThemeContextType {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) {
+    // Graceful fallback outside provider
+    return {
+      theme: 'dark',
+      toggleTheme: () => {},
+      setTheme: () => {},
+    };
   }
-  return context;
-};
+  return ctx;
+}

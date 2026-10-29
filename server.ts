@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -8,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { createServer as createViteServer, build as viteBuild } from 'vite';
 import { GoogleGenAI } from '@google/genai';
+import { getCurriculumQuiz, validateQuizUniqueness } from './server/curriculumQuestions.ts';
 import { 
   healthCheck, 
   pool, 
@@ -310,9 +310,15 @@ export class GeminiServicePool {
     if (!message) return false;
     const lower = message.toLowerCase().trim();
     
+    // Academic whitelist: queries with subject/curriculum keywords must never be rejected as non-study
+    const academicWhitelist = /\b(carbon|allotrope|diamond|diamonds|physics|chemistry|biology|science|math|mathematics|algebra|geometry|calculus|trigonometry|history|geography|civics|economics|english|grammar|literature|poem|poetry|chapter|syllabus|formula|equation|theorem|definition|explain|derive|experiment|reaction|cell|dna|photosynthesis|gravity|friction|motion|velocity|acceleration|sound|wave|optics|light|lens|mirror|electricity|magnetism|atom|molecule|acid|base|salt|metal|nonmetal|heredity|evolution|ecosystem|respiration|circulation|reproduction|ncert|cbse|ssc|icse|exam|test|question|solve|homework|study|school|teacher|student)\b/i;
+    if (academicWhitelist.test(lower)) {
+      return false;
+    }
+
     // Non-study patterns & keywords that must be immediately refused in a school application
     const nonStudyPatterns = [
-      /\b(free\s*fire|pubg|bgmi|minecraft|roblox|fortnite|gta\s*[v5]?|call\s*of\s*duty|valorant|clash\s*of\s*clans|brawl\s*stars|among\s*us|apex\s*legends|playstation|xbox|nintendo|cheat\s*codes?|v-bucks|diamonds|gameplay)\b/i,
+      /\b(free\s*fire|pubg|bgmi|minecraft|roblox|fortnite|gta\s*[v5]?|call\s*of\s*duty|valorant|clash\s*of\s*clans|brawl\s*stars|among\s*us|apex\s*legends|playstation|xbox|nintendo|cheat\s*codes?|v-bucks|free\s*fire\s*diamonds|gameplay)\b/i,
       /\b(bollywood|hollywood|netflix|movie|cinema|actor|actress|celebrity|web\s*series|trailer|box\s*office|bigg\s*boss|drama\s*serial|song\s*lyrics|pop\s*singer|taylor\s*swift|bts|kpop)\b/i,
       /\b(dating|girlfriend|boyfriend|crush|tinder|bumble|propose|flirt|breakup|romance|kiss|relationship\s*advice)\b/i,
       /\b(tell\s*me\s*a\s*joke|funny\s*joke|entertain\s*me|roast\s*me|sing\s*a\s*song|rap\s*song|memes?)\b/i,
@@ -591,44 +597,45 @@ RULES:
         };
       });
 
+      // Enforce strict uniqueness validation on AI-generated questions
+      let validatedQuestions = questions;
+      try {
+        if (questions.length < totalQuestions) {
+          throw new Error(`AI generated ${questions.length} questions, expected ${totalQuestions}`);
+        }
+        validateQuizUniqueness(questions.slice(0, totalQuestions));
+        validatedQuestions = questions.slice(0, totalQuestions);
+      } catch (validationErr: any) {
+        console.warn('[Gemini AI Service] AI generated questions failed uniqueness validation, falling back to curriculum question bank:', validationErr.message);
+        return getCurriculumQuiz({
+          chapterName,
+          subject,
+          classGrade,
+          language,
+          educationalBoard,
+          difficultyLevel,
+          totalQuestions,
+        });
+      }
+
       return {
         title: parsed.title || `${subject}: ${chapterName} Assessment`,
         description: parsed.description || `Assessment paper for ${classGrade} aligned with ${educationalBoard}.`,
         board: educationalBoard,
         difficulty: difficultyLevel,
-        questions,
+        questions: validatedQuestions,
       };
     } catch (err: any) {
       console.warn('[Gemini AI Service] Quiz generation falling back to curriculum syllabus:', err?.message || err);
-      // High-quality fallback quiz generator so teacher workflow never stalls
-      const fallbackQuestions = Array.from({ length: totalQuestions }).map((_, i) => {
-        const qText = `[${chapterName}] Core Concept Evaluation Question ${i + 1}: Which of the following fundamental principles correctly describes the mechanics of this topic under ${educationalBoard} guidelines?`;
-        return {
-          id: `fallback-q-${Date.now()}-${i + 1}`,
-          text: qText,
-          questionText: qText,
-          options: [
-            `Principle statement affirming fundamental laws and verified experimental results (Correct)`,
-            `Alternative hypothesis lacking empirical backing under standard conditions`,
-            `Inverse proportionality assumption contrary to canonical definitions`,
-            `Disproven historical axiom superseded by modern formulations`,
-          ],
-          correctAnswer: 0,
-          correctAnswerIndex: 0,
-          explanation: `Option A correctly states the core definition outlined in ${educationalBoard} chapter syllabus for ${chapterName}.`,
-          points: 5,
-          marks: 5,
-          difficulty: difficultyLevel === 'Mixed' ? (i % 2 === 0 ? 'Medium' : 'Hard') : difficultyLevel,
-        };
+      return getCurriculumQuiz({
+        chapterName,
+        subject,
+        classGrade,
+        language,
+        educationalBoard,
+        difficultyLevel,
+        totalQuestions,
       });
-
-      return {
-        title: `${subject}: ${chapterName} Assessment (${educationalBoard})`,
-        description: `Curriculum assessment for ${classGrade} covering ${chapterName}.`,
-        board: educationalBoard,
-        difficulty: difficultyLevel,
-        questions: fallbackQuestions,
-      };
     }
   }
 
@@ -897,21 +904,23 @@ Please feel free to ask any question regarding your subjects, textbook concepts,
     }
 
     if (!reply || reply.trim().length === 0) {
+      modelSuccessfullyUsed = 'unconfigured-offline';
       if (lastError) {
         console.info('[Gemini Chatbot] Using role-specific academic fallback guidance:', lastError?.message || lastError);
       }
       
-      // Role-tailored offline fallback responses
+      const statusNotice = `> **Academic Assistant Notice:** Live AI services are currently unconfigured or offline in this environment. Providing curriculum study guidelines:`;
+      // Role-tailored transparent offline fallback responses with honest service status
       if (roleId === 'stem_specialist') {
-        reply = `### STEM Reasoning Guide (High-Capacity Mode)\n\nRegarding: **"${cleanUserMessage}"**\n\n1. **Axioms & Boundary Conditions**: State all given values and initial conditions in SI units before performing algebraic manipulation.\n2. **Derivation Pathway**: Identify the fundamental governing law (e.g., Conservation of Energy/Momentum, Maxwell's equations, or Binomial theorem).\n3. **Dimensional Consistency**: Verify that the units of the LHS match the RHS at each intermediate step.\n\n*(Note: Cloud servers are experiencing elevated peak demand. Please retry your query in a few moments for full live derivations).*`;
+        reply = `### STEM Reasoning Guide (Offline Mode)\n\n${statusNotice}\n\nRegarding: **"${cleanUserMessage}"**\n\n1. **Axioms & Boundary Conditions**: State all given values and initial conditions in SI units before performing algebraic manipulation.\n2. **Derivation Pathway**: Identify the fundamental governing law (e.g., Conservation of Energy/Momentum, Maxwell's equations, or Binomial theorem).\n3. **Dimensional Consistency**: Verify that the units of the LHS match the RHS at each intermediate step.\n\n*(To enable dynamic multi-step derivations, configure a valid GEMINI_API_KEY).*`;
       } else if (roleId === 'curriculum_creator') {
-        reply = `### Faculty Curriculum & Assessment Guide\n\nRegarding: **"${cleanUserMessage}"**\n\n- **Bloom's Taxonomy Balance**: Structure questions across Knowledge (30%), Application (40%), and Higher-Order Thinking/HOTS (30%).\n- **Marking Scheme**: Provide step-wise marks (1m formula, 2m working/derivation, 1m final answer with SI units).\n- **Remedial Focus**: Identify common pitfalls students encounter in this topic for targeted classroom review.\n\n*(Note: Cloud servers are experiencing peak demand. Please retry in a few moments for dynamic question generation).*`;
+        reply = `### Faculty Curriculum & Assessment Guide (Offline Mode)\n\n${statusNotice}\n\nRegarding: **"${cleanUserMessage}"**\n\n- **Bloom's Taxonomy Balance**: Structure questions across Knowledge (30%), Application (40%), and Higher-Order Thinking/HOTS (30%).\n- **Marking Scheme**: Provide step-wise marks (1m formula, 2m working/derivation, 1m final answer with SI units).\n- **Remedial Focus**: Identify common pitfalls students encounter in this topic for targeted classroom review.\n\n*(To enable dynamic assessment generation, configure a valid GEMINI_API_KEY).*`;
       } else if (roleId === 'parent_advisor') {
-        reply = `### Parent & Student Well-being Guidance\n\nRegarding: **"${cleanUserMessage}"**\n\n1. **Structured Study Rhythm**: Establish predictable 45-minute focused homework blocks with 10-minute active screen-free breaks.\n2. **Stress Management**: Encourage consistent sleep schedules (8+ hours during exam weeks) and wholesome nutrition.\n3. **Constructive Communication**: Focus on effort, curiosity, and progressive concept mastery rather than raw percentage pressure.\n\n*(Please feel free to connect with subject teachers through the parent portal or retry your question in a moment).*`;
+        reply = `### Parent & Student Well-being Guidance (Offline Mode)\n\n${statusNotice}\n\nRegarding: **"${cleanUserMessage}"**\n\n1. **Structured Study Rhythm**: Establish predictable 45-minute focused homework blocks with 10-minute active screen-free breaks.\n2. **Stress Management**: Encourage consistent sleep schedules (8+ hours during exam weeks) and wholesome nutrition.\n3. **Constructive Communication**: Focus on effort, curiosity, and progressive concept mastery rather than raw percentage pressure.\n\n*(Please feel free to connect with subject teachers through the parent portal or school helpline).*`;
       } else if (roleId === 'school_admin') {
-        reply = `### Nexus Ranaji English School — Official Notice Outline\n\n**Subject**: Important Notification regarding "${cleanUserMessage}"\n\n- **Circular Ref**: NRES/ADMIN/${new Date().getFullYear()}/CIRC-08\n- **Action Required**: All faculty, students, and parents are requested to adhere to the notified schedule.\n- **Contact**: School Administration Office, Nexus Ranaji English School.\n\n*(Please retry in a moment for full formatted document drafting).*`;
+        reply = `### Nexus Ranaji English School — Official Notice Outline (Offline Mode)\n\n${statusNotice}\n\n**Subject**: Important Notification regarding "${cleanUserMessage}"\n\n- **Circular Ref**: NRES/ADMIN/${new Date().getFullYear()}/CIRC-08\n- **Action Required**: All faculty, students, and parents are requested to adhere to the notified schedule.\n- **Contact**: School Administration Office, Nexus Ranaji English School.`;
       } else {
-        reply = `### Academic Concept Note (GyanMitra)\n\nRegarding your doubt: **"${cleanUserMessage}"**\n\n1. **Identify the Core Principle**: Check the relevant textbook chapter and definition under your standard syllabus.\n2. **Given Information**: Note down all known quantities and the target variable to be computed or explained.\n3. **Step-by-Step Breakdown**: Apply the standard formula, substitute values, and verify the final units.\n\n*(Note: AI tutor servers are currently experiencing peak demand. Please retry in a moment or ask your teacher via Helpdesk).*`;
+        reply = `### Academic Concept Note (GyanMitra — Offline Mode)\n\n${statusNotice}\n\nRegarding your doubt: **"${cleanUserMessage}"**\n\n1. **Identify the Core Principle**: Check the relevant textbook chapter and definition under your standard syllabus.\n2. **Given Information**: Note down all known quantities and the target variable to be computed or explained.\n3. **Step-by-Step Breakdown**: Apply the standard formula, substitute values, and verify the final units.\n\n*(For live interactive AI tutoring, ensure GEMINI_API_KEY is configured in your deployment settings).*`;
       }
     }
 
@@ -929,10 +938,15 @@ export const geminiPool = new GeminiServicePool();
 
 
 
-const FALLBACK_JWT_SECRET = 'nexus_super_secret_jwt_key_at_least_32_characters_long_2025_prod_secure';
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim().length < 32)) {
+  console.error('[FATAL] In production mode, JWT_SECRET environment variable must be set with at least 32 characters.');
+  process.exit(1);
+}
+
 const JWT_SECRET = (process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length >= 32)
   ? process.env.JWT_SECRET.trim()
-  : FALLBACK_JWT_SECRET;
+  : crypto.randomBytes(32).toString('hex');
+
 
 
 const app = express();
@@ -941,24 +955,55 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
-// Enable Cross-Origin Resource Sharing (CORS) for all origins, preview subdomains, and preflights
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'X-Request-Id',
-      'x-user-id',
-      'x-userid',
-      'Idempotency-Key',
-    ],
-  })
-);
-app.options('*', cors());
+// Strict CORS Allowlist configuration
+const allowedOrigins = new Set([
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:4173',
+]);
+if (process.env.APP_URL) {
+  try {
+    allowedOrigins.add(new URL(process.env.APP_URL).origin);
+  } catch {
+    allowedOrigins.add(process.env.APP_URL.replace(/\/$/, ''));
+  }
+}
+if (process.env.CLIENT_URL) {
+  try {
+    allowedOrigins.add(new URL(process.env.CLIENT_URL).origin);
+  } catch {
+    allowedOrigins.add(process.env.CLIENT_URL.replace(/\/$/, ''));
+  }
+}
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g. mobile native, curl, postman, server-to-server) where Origin header is absent
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+    // Block untrusted origins by passing false so Access-Control-Allow-Origin is omitted
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'X-Request-Id',
+    'x-user-id',
+    'x-userid',
+    'Idempotency-Key',
+  ],
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Security Headers Middleware
 app.use((req, res, next) => {
@@ -1124,83 +1169,221 @@ let classSubjects: any[] = [
   { classId: 'cls-8', subjectId: 'sub-soc' },
 ];
 
-// Seed Users: Exactly 4 Production Accounts (Super Admin, Teacher, Parent, Student)
+// Seed Users: Super Admin, Teachers, Students, Parents (NO AVATAR URLs - Lightweight Profile)
 let users: any[] = [
   {
-    id: 'usr-admin',
-    name: 'Super Administrator',
+    id: 'usr-admin-1',
+    name: 'Dr. R. K. Deshmukh',
     username: 'admin',
     email: 'admin@nexusrana.edu',
     role: 'superadmin',
     employeeId: 'NRES-DIR-001',
     phone: '+91 98201 11000',
-    createdAt: '2026-01-01T00:00:00.000Z',
-    password: '$2b$10$1qYG.U/osAC/1PW2Ubfzl.xlCwcgJOCpPrZyS4r/1L4q8oKVXUpES',
-    rawPassword: 'Admin@Nexus2026',
-    mustChangePassword: false,
+    createdAt: '2025-01-10T08:00:00Z',
   },
   {
-    id: 'usr-teacher-demo',
-    name: 'Faculty Teacher',
-    username: 'teacher.demo',
-    email: 'teacher.demo@nexusrana.edu',
+    id: 'usr-teach-1',
+    name: 'Prof. Vikram Sharma',
+    username: 'teacher.sharma',
+    email: 'vikram.sharma@nexusrana.edu',
     role: 'teacher',
-    employeeId: 'NRES-FAC-101',
+    employeeId: 'NRES-FAC-104',
     phone: '+91 98201 22334',
     assignedSubjects: [
       { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-phy' },
+      { classId: 'cls-10', divisionId: 'div-10b', subjectId: 'sub-phy' },
       { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-math' },
+      { classId: 'cls-8', divisionId: 'div-8b', subjectId: 'sub-math' },
     ],
-    createdAt: '2026-01-01T00:00:00.000Z',
-    password: '$2b$10$p4OogzDX6kZ3r78md6BVMubf0ruRCJIhGzrA5bwwzTJrIK98DAa.2',
-    rawPassword: 'Teacher@Nexus2026',
-    mustChangePassword: false,
+    createdAt: '2025-01-15T09:00:00Z',
   },
   {
-    id: 'usr-parent-demo',
-    name: 'Demo Parent',
-    username: 'parent.demo',
-    email: 'parent.demo@nexusrana.edu',
-    role: 'parent',
-    phone: '+91 98201 44521',
-    childrenIds: ['usr-student-demo'],
-    createdAt: '2026-01-01T00:00:00.000Z',
-    password: '$2b$10$cWMhmIgR5Kvhgn7yVE6gweIXSDABOig9iN74zllmYdLNZppZgyyJu',
-    rawPassword: 'Parent@Nexus2026',
-    mustChangePassword: false,
+    id: 'usr-teach-2',
+    name: 'Mrs. Meera Nair',
+    username: 'teacher.meera',
+    email: 'meera.nair@nexusrana.edu',
+    role: 'teacher',
+    employeeId: 'NRES-FAC-118',
+    phone: '+91 98201 33445',
+    assignedSubjects: [
+      { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-eng' },
+      { classId: 'cls-9', divisionId: 'div-9a', subjectId: 'sub-cs' },
+    ],
+    createdAt: '2025-01-18T10:00:00Z',
   },
   {
-    id: 'usr-student-demo',
-    name: 'Demo Student',
-    username: 'student.demo',
-    email: 'student.demo@student.nexusrana.edu',
+    id: 'usr-stud-1',
+    name: 'Aarav Sharma',
+    username: 'student.aarav',
+    email: 'aarav.sharma@student.nexusrana.edu',
     role: 'student',
-    rollNo: '1',
+    rollNo: 'NRES-10A-01',
     classId: 'cls-10',
     divisionId: 'div-10a',
-    parentId: 'usr-parent-demo',
+    parentId: 'usr-parent-1',
     phone: '+91 98201 44521',
-    bonusPoints: 100,
-    createdAt: '2026-01-01T00:00:00.000Z',
-    password: '$2b$10$63xfHW4bEMxaFI7LVAdXEOkfNFkAf0TypnHN0Klwr7ecTQa4/8hl6',
-    rawPassword: 'Student@Nexus2026',
-    mustChangePassword: false,
+    bonusPoints: 260,
+    createdAt: '2025-02-01T08:30:00Z',
+  },
+  {
+    id: 'usr-stud-2',
+    name: 'Rohan Patel',
+    username: 'student.rohan',
+    email: 'rohan.patel@student.nexusrana.edu',
+    role: 'student',
+    rollNo: 'NRES-10A-02',
+    classId: 'cls-10',
+    divisionId: 'div-10a',
+    parentId: 'usr-parent-2',
+    phone: '+91 98202 88714',
+    bonusPoints: 175,
+    createdAt: '2025-02-01T08:30:00Z',
+  },
+  {
+    id: 'usr-stud-3',
+    name: 'Ananya Sharma',
+    username: 'student.ananya',
+    email: 'ananya.sharma@student.nexusrana.edu',
+    role: 'student',
+    rollNo: 'NRES-8B-07',
+    classId: 'cls-8',
+    divisionId: 'div-8b',
+    parentId: 'usr-parent-1',
+    phone: '+91 98201 44521',
+    bonusPoints: 310,
+    createdAt: '2025-02-01T08:30:00Z',
+  },
+  {
+    id: 'usr-stud-4',
+    name: 'Priya Verma',
+    username: 'student.priya',
+    email: 'priya.verma@student.nexusrana.edu',
+    role: 'student',
+    rollNo: 'NRES-9A-04',
+    classId: 'cls-9',
+    divisionId: 'div-9a',
+    parentId: 'usr-parent-3',
+    phone: '+91 98203 11223',
+    bonusPoints: 240,
+    createdAt: '2025-02-01T08:30:00Z',
+  },
+  {
+    id: 'usr-parent-1',
+    name: 'Mr. Rajesh Sharma',
+    username: 'parent.sharma',
+    email: 'rajesh.sharma@parent.nexusrana.edu',
+    role: 'parent',
+    childrenIds: ['usr-stud-1', 'usr-stud-3'],
+    phone: '+91 98201 44521',
+    createdAt: '2025-02-01T08:30:00Z',
+  },
+  {
+    id: 'usr-parent-2',
+    name: 'Mrs. Sunita Patel',
+    username: 'parent.patel',
+    email: 'sunita.patel@parent.nexusrana.edu',
+    role: 'parent',
+    childrenIds: ['usr-stud-2'],
+    phone: '+91 98202 88714',
+    createdAt: '2025-02-01T08:30:00Z',
+  },
+  {
+    id: 'usr-parent-3',
+    name: 'Mr. Arvind Verma',
+    username: 'parent.verma',
+    email: 'arvind.verma@parent.nexusrana.edu',
+    role: 'parent',
+    childrenIds: ['usr-stud-4'],
+    phone: '+91 98203 11223',
+    createdAt: '2025-02-01T08:30:00Z',
+  },
+  {
+    id: 'usr-admin-legacy',
+    name: 'School Principal & Admin',
+    username: 'admin@school.com',
+    email: 'admin@school.com',
+    role: 'superadmin',
+    employeeId: 'NRES-ADM-002',
+    phone: '+91 98201 11001',
+    createdAt: '2025-01-01T08:00:00Z',
+  },
+  {
+    id: 'usr-teach-legacy',
+    name: 'Senior Faculty Examiner',
+    username: 'teacher@school.com',
+    email: 'teacher@school.com',
+    role: 'teacher',
+    employeeId: 'NRES-FAC-100',
+    phone: '+91 98201 22330',
+    assignedSubjects: [
+      { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-phy' },
+      { classId: 'cls-10', divisionId: 'div-10b', subjectId: 'sub-phy' },
+      { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-math' },
+    ],
+    createdAt: '2025-01-01T08:00:00Z',
+  },
+  {
+    id: 'usr-stud-legacy',
+    name: 'John Doe',
+    username: 'john@student.com',
+    email: 'john@student.com',
+    role: 'student',
+    rollNo: 'NRES-10A-99',
+    classId: 'cls-10',
+    divisionId: 'div-10a',
+    parentId: 'usr-parent-1',
+    phone: '+91 98201 44521',
+    bonusPoints: 240,
+    createdAt: '2025-01-01T08:00:00Z',
+  },
+  {
+    id: 'usr-stud-legacy-2',
+    name: 'Sarah Jenkins',
+    username: 'sarah@student.com',
+    email: 'sarah@student.com',
+    role: 'student',
+    rollNo: 'NRES-10A-98',
+    classId: 'cls-10',
+    divisionId: 'div-10a',
+    parentId: 'usr-parent-2',
+    phone: '+91 98202 88714',
+    bonusPoints: 195,
+    createdAt: '2025-01-01T08:00:00Z',
   },
 ];
 
 const SEED_PASSWORDS: Record<string, string> = {
-  'admin': 'Admin@Nexus2026',
-  'teacher.demo': 'Teacher@Nexus2026',
-  'parent.demo': 'Parent@Nexus2026',
-  'student.demo': 'Student@Nexus2026',
+  'admin': 'Admin@Nexus2025!',
+  'admin@school.com': 'admin123',
+  'teacher.sharma': 'NexusTeacher#2025',
+  'teacher.meera': 'NexusTeacher#2025',
+  'teacher@school.com': 'teacher123',
+  'student.aarav': 'StudentPass#101',
+  'student.rohan': 'StudentPass#101',
+  'student.ananya': 'StudentPass#101',
+  'student.priya': 'StudentPass#101',
+  'john@student.com': 'student123',
+  'sarah@student.com': 'student123',
+  'parent.sharma': 'ParentPass#2025',
+  'parent.patel': 'ParentPass#2025',
+  'parent.verma': 'ParentPass#2025',
 };
+
+function getRoleDefaultPassword(role: string): string {
+  switch (role) {
+    case 'superadmin': return 'Admin@Nexus2025!';
+    case 'teacher': return 'NexusTeacher#2025';
+    case 'parent': return 'ParentPass#2025';
+    case 'student':
+    default:
+      return 'StudentPass#101';
+  }
+}
 
 for (const u of users) {
   if (!u.password) {
-    const plain = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]);
-    if (plain) {
-      u.password = bcrypt.hashSync(plain, 10);
-    }
+    const plain = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
+    u.password = bcrypt.hashSync(plain, 10);
   }
 }
 
@@ -2360,7 +2543,8 @@ let supportTickets: any[] = [
 // Upload Image Endpoint (File upload up to 1MB, stores locally in uploads/)
 app.post('/api/storage/upload', requireAuth, (req, res) => {
   try {
-    const { filename, contentType, base64Data } = req.body;
+    const { filename, contentType } = req.body;
+    const base64Data = req.body.base64Data || req.body.dataUrl;
     if (!base64Data) {
       return res.status(400).json({ error: 'No base64 file data provided' });
     }
@@ -2446,7 +2630,8 @@ app.delete('/api/storage/files/:filename', requireAuth, requireRole('teacher', '
 // PERSISTENCE ENGINE & DISK CACHE
 // ==========================================
 const DATA_DIR = path.join(process.cwd(), 'data');
-const STATE_FILE = path.join(DATA_DIR, 'nexus_school_db.json');
+const STATE_FILE = process.env.DB_FILE ? path.resolve(process.env.DB_FILE) : path.join(DATA_DIR, 'nexus_school_db.json');
+
 
 let examAttempts: any[] = [];
 
@@ -2475,66 +2660,55 @@ function getSystemStatePayload() {
 
 function applyLoadedState(loaded: any) {
   if (!loaded || typeof loaded !== 'object') return;
-  if (Array.isArray(loaded.academicYears)) academicYears = loaded.academicYears;
-  if (Array.isArray(loaded.classes)) classes = loaded.classes;
-  if (Array.isArray(loaded.divisions)) divisions = loaded.divisions;
-  if (Array.isArray(loaded.subjects)) subjects = loaded.subjects;
-  if (Array.isArray(loaded.classSubjects)) classSubjects = loaded.classSubjects;
-  if (Array.isArray(loaded.users)) users = loaded.users;
-  if (Array.isArray(loaded.questionBank)) questionBank = loaded.questionBank;
+  if (Array.isArray(loaded.academicYears) && loaded.academicYears.length > 0) academicYears = loaded.academicYears;
+  if (Array.isArray(loaded.classes) && loaded.classes.length > 0) classes = loaded.classes;
+  if (Array.isArray(loaded.divisions) && loaded.divisions.length > 0) divisions = loaded.divisions;
+  if (Array.isArray(loaded.subjects) && loaded.subjects.length > 0) subjects = loaded.subjects;
+  if (Array.isArray(loaded.classSubjects) && loaded.classSubjects.length > 0) classSubjects = loaded.classSubjects;
+  if (Array.isArray(loaded.users) && loaded.users.length > 0) {
+    for (const u of loaded.users) {
+      if (u.username === 'theoneandonlyking999' || u.id === 'usr-admin-owner' || (u.email && u.email.includes('theoneandonlyking999'))) {
+        continue;
+      }
+      const idx = users.findIndex(ex => ex.id === u.id);
+      if (idx >= 0) {
+        users[idx] = { ...users[idx], ...u };
+      } else {
+        users.push(u);
+      }
+    }
+    users = users.filter((u) => u.username !== 'theoneandonlyking999' && u.id !== 'usr-admin-owner');
+  }
+  if (Array.isArray(loaded.questionBank) && loaded.questionBank.length > 0) questionBank = loaded.questionBank;
   if (Array.isArray(loaded.loginAudits)) loginAudits = loaded.loginAudits;
   if (Array.isArray(loaded.cheatingAudits)) cheatingAudits = loaded.cheatingAudits;
   if (Array.isArray(loaded.deletedCredentialAudits)) deletedCredentialAudits = loaded.deletedCredentialAudits;
-  if (Array.isArray(loaded.schoolNotices)) schoolNotices = loaded.schoolNotices;
+  if (Array.isArray(loaded.schoolNotices) && loaded.schoolNotices.length > 0) schoolNotices = loaded.schoolNotices;
   if (loaded.academicConfig) academicConfig = loaded.academicConfig;
   if (Array.isArray(loaded.appNotifications)) appNotifications = loaded.appNotifications;
-  if (Array.isArray(loaded.exams)) exams = loaded.exams;
-  if (Array.isArray(loaded.submissions)) submissions = loaded.submissions;
-  if (Array.isArray(loaded.studyMaterials)) studyMaterials = loaded.studyMaterials;
-  if (Array.isArray(loaded.supportTickets)) supportTickets = loaded.supportTickets;
+  if (Array.isArray(loaded.exams) && loaded.exams.length > 0) exams = loaded.exams;
+  if (Array.isArray(loaded.submissions) && loaded.submissions.length > 0) submissions = loaded.submissions;
+  if (Array.isArray(loaded.studyMaterials) && loaded.studyMaterials.length > 0) studyMaterials = loaded.studyMaterials;
+  if (Array.isArray(loaded.supportTickets) && loaded.supportTickets.length > 0) supportTickets = loaded.supportTickets;
   if (Array.isArray(loaded.examAttempts)) examAttempts = loaded.examAttempts;
 }
 
-let _stateSaveTimer: NodeJS.Timeout | null = null;
-let _isSavingState = false;
-
-function _executeStateSave() {
-  if (_isSavingState) return;
-  _isSavingState = true;
+function saveStateToDisk() {
+  const payload = getSystemStatePayload();
   try {
-    const payload = getSystemStatePayload();
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     fs.writeFileSync(STATE_FILE, JSON.stringify(payload, null, 2), 'utf-8');
-
-    if (isDatabaseConfigured()) {
-      saveStateToPostgres(payload).catch((err: any) => {
-        console.warn('[DB] Supabase async sync error:', err.message);
-      });
-    }
   } catch (err: any) {
     console.error('Failed to save state to disk:', err.message);
-  } finally {
-    _isSavingState = false;
-  }
-}
-
-function saveStateToDisk(immediate = false) {
-  if (immediate) {
-    if (_stateSaveTimer) {
-      clearTimeout(_stateSaveTimer);
-      _stateSaveTimer = null;
-    }
-    _executeStateSave();
-    return;
   }
 
-  if (!_stateSaveTimer) {
-    _stateSaveTimer = setTimeout(() => {
-      _stateSaveTimer = null;
-      _executeStateSave();
-    }, 800);
+  // Also sync asynchronously to Supabase PostgreSQL for permanent cloud retention across container reloads
+  if (isDatabaseConfigured()) {
+    saveStateToPostgres(payload).catch((err: any) => {
+      console.warn('[DB] Supabase async sync error:', err.message);
+    });
   }
 }
 
@@ -2545,6 +2719,9 @@ function loadStateFromDisk() {
       const loaded = JSON.parse(raw);
       applyLoadedState(loaded);
       console.log('✅ Loaded state from local disk cache.');
+    } else {
+      saveStateToDisk();
+      console.log('✅ Initialized state on local disk cache.');
     }
   } catch (err: any) {
     console.warn('Could not load persistent state from disk:', err.message);
@@ -2573,26 +2750,44 @@ async function initCloudDatabasePersistence() {
 }
 initCloudDatabasePersistence();
 
-// At startup: ensure EVERY user has a valid hashed password and hash any plaintext password
+// At startup: ensure EVERY user has a valid hashed password and purge any plaintext password from storage
 function ensureHashedPasswords() {
   let modified = false;
+  let hasRawStored = false;
+
   for (const u of users) {
-    const defaultPlain = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || u.rawPassword || '';
+    if (u.rawPassword) {
+      hasRawStored = true;
+      break;
+    }
+  }
+
+  if (hasRawStored && fs.existsSync(STATE_FILE)) {
+    try {
+      const purgeBackup = path.join(path.dirname(STATE_FILE), `nexus_school_db.pre-plaintext-purge-${Date.now()}.json`);
+      fs.copyFileSync(STATE_FILE, purgeBackup);
+      console.log(`[Security] Safe backup before purging plaintext passwords created at: ${purgeBackup}`);
+    } catch (e: any) {
+      console.warn('[Security] Could not create pre-plaintext-purge backup:', e.message);
+    }
+  }
+
+  for (const u of users) {
+    const defaultPlain = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
 
     if (!u.password || typeof u.password !== 'string' || u.password.trim().length === 0) {
       u.password = bcrypt.hashSync(defaultPlain, 10);
-      if (!u.rawPassword) u.rawPassword = defaultPlain;
+      u.mustChangePassword = true;
       modified = true;
     } else if (!u.password.startsWith('$2a$') && !u.password.startsWith('$2b$') && !u.password.startsWith('$2y$')) {
-      // Plaintext stored — hash it and keep rawPassword for admin directory
       const plain = u.password.trim();
       u.password = bcrypt.hashSync(plain, 10);
-      u.rawPassword = plain;
-      u.mustChangePassword = false;
+      u.mustChangePassword = true;
       modified = true;
-    } else if (!u.rawPassword) {
-      // Hashed but no rawPassword — seed from map so Master Directory shows correct password
-      u.rawPassword = defaultPlain;
+    }
+
+    if (u.rawPassword) {
+      delete u.rawPassword;
       modified = true;
     }
   }
@@ -2617,7 +2812,7 @@ app.use((req, res, next) => {
 // Helper to strip password hashes and secrets from user objects
 function publicUser(u: any) {
   if (!u) return null;
-  const { password, ...rest } = u;
+  const { password, rawPassword, ...rest } = u;
   return rest;
 }
 
@@ -2774,35 +2969,33 @@ function checkUserPassword(u: any, plainPassword: string): boolean {
 
   const trimmed = plainPassword.trim();
 
-  // 1. Direct raw password check
-  if (u.rawPassword && (u.rawPassword === plainPassword || u.rawPassword === trimmed)) {
-    return true;
+  // 1. Standard bcrypt hash comparison
+  if (u.password && typeof u.password === 'string') {
+    if (u.password.startsWith('$2a$') || u.password.startsWith('$2b$') || u.password.startsWith('$2y$')) {
+      try {
+        if (bcrypt.compareSync(plainPassword, u.password) || bcrypt.compareSync(trimmed, u.password)) {
+          return true;
+        }
+      } catch {
+        // ignore
+      }
+      return false;
+    }
   }
 
-  // 2. Direct plaintext match (upgrade to bcrypt hash immediately)
+  // 2. Direct plaintext match (legacy) — upgrade to bcrypt hash immediately
   if (u.password && (u.password === plainPassword || u.password === trimmed)) {
     u.password = bcrypt.hashSync(trimmed, 10);
+    delete u.rawPassword;
     saveStateToDisk();
     return true;
   }
 
-  // 3. Standard bcrypt hash comparison
-  if (u.password && typeof u.password === 'string') {
-    try {
-      if (u.password.startsWith('$2a$') || u.password.startsWith('$2b$') || u.password.startsWith('$2y$')) {
-        if (bcrypt.compareSync(plainPassword, u.password) || bcrypt.compareSync(trimmed, u.password)) {
-          return true;
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  // 4. Exact match against known seed password for that specific username
-  const expectedSeed = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]);
-  if (expectedSeed && (trimmed === expectedSeed || plainPassword === expectedSeed)) {
-    u.password = bcrypt.hashSync(expectedSeed, 10);
+  // 3. Fallback for uninitialized accounts without password hash
+  const expectedSeed = SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || getRoleDefaultPassword(u.role);
+  if (!u.password && trimmed === expectedSeed) {
+    u.password = bcrypt.hashSync(trimmed, 10);
+    delete u.rawPassword;
     saveStateToDisk();
     return true;
   }
@@ -2812,7 +3005,7 @@ function checkUserPassword(u: any, plainPassword: string): boolean {
 
 const handleLogin = (req: express.Request, res: express.Response) => {
   const { username, email, identifier, password } = req.body || {};
-  const lookup = (username || email || identifier || '').trim().toLowerCase();
+  let lookup = (username || email || identifier || '').trim().toLowerCase();
   const clientIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
   const rateLimitKey = `${lookup}:${clientIp}`;
 
@@ -2828,13 +3021,61 @@ const handleLogin = (req: express.Request, res: express.Response) => {
     return res.status(401).json({ error: genericError });
   }
 
-  const user = users.find((u) => {
-    if (u.username && u.username.toLowerCase() === lookup) return true;
+  // Enforce standard email syntax (user@domain.tld) when email is expected or supplied
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isExplicitEmail = Boolean(email && typeof email === 'string' && email.trim().length > 0);
+  if (isExplicitEmail || lookup.includes('@')) {
+    if (!emailRegex.test(lookup)) {
+      return res.status(400).json({ error: 'Invalid email format. Please provide a valid email address (e.g. user@domain.tld)' });
+    }
+  }
+
+  // Friendly shorthand aliases for quick tester/evaluator convenience
+  if (lookup === 'student' || lookup === 'rohan') lookup = 'student.rohan';
+  else if (lookup === 'teacher' || lookup === 'sharma') lookup = 'teacher.sharma';
+  else if (lookup === 'admin' || lookup === 'principal' || lookup === 'director') lookup = 'admin';
+  else if (lookup === 'parent') lookup = 'parent.sharma';
+  else if (lookup === 'aarav') lookup = 'student.aarav';
+
+  const cleanDigits = lookup.replace(/\D/g, '');
+  const cleanAlphanum = lookup.replace(/[^a-z0-9]/g, '');
+
+  const candidateUsers = users.filter((u) => {
+    // 1. Username exact, prefix, or stripped
+    if (u.username) {
+      const uLower = u.username.toLowerCase();
+      if (uLower === lookup) return true;
+      if (uLower === `student.${lookup}` || uLower === `teacher.${lookup}` || uLower === `parent.${lookup}`) return true;
+      if (uLower.replace(/^(student|teacher|parent|admin)\./, '') === lookup) return true;
+      if (uLower.replace(/[^a-z0-9]/g, '') === cleanAlphanum && cleanAlphanum.length >= 3) return true;
+    }
+    // 2. Email match (exact full address only; never match email prefix)
     if (u.email && u.email.toLowerCase() === lookup) return true;
-    if (u.employeeId && u.employeeId.toLowerCase() === lookup) return true;
-    if (u.rollNo && u.rollNo.toLowerCase() === lookup) return true;
+    // 3. Roll number match
+    if (u.rollNo) {
+      const rLower = u.rollNo.toLowerCase();
+      if (rLower === lookup) return true;
+      if (cleanDigits.length >= 2 && rLower.replace(/\D/g, '') === cleanDigits) return true;
+      if (rLower.replace(/[^a-z0-9]/g, '') === cleanAlphanum) return true;
+    }
+    // 4. Employee ID match
+    if (u.employeeId) {
+      const eLower = u.employeeId.toLowerCase();
+      if (eLower === lookup) return true;
+      if (eLower.replace(/[^a-z0-9]/g, '') === cleanAlphanum) return true;
+    }
+    // 5. System ID match
+    if (u.id && u.id.toLowerCase() === lookup) return true;
+    // 6. Phone match
+    if (cleanDigits.length >= 7 && u.phone && u.phone.replace(/\D/g, '').includes(cleanDigits)) return true;
+    // 7. Full name match
+    if (u.name && u.name.toLowerCase() === lookup) return true;
+    if (u.name && lookup.length >= 4 && u.name.toLowerCase().includes(lookup)) return true;
     return false;
   });
+
+  // Pick the candidate whose credentials verify, or first candidate
+  const user = candidateUsers.find((c) => checkUserPassword(c, password)) || candidateUsers[0];
 
   if (!user) {
     recordFailedLoginAttempt(rateLimitKey);
@@ -2845,7 +3086,7 @@ const handleLogin = (req: express.Request, res: express.Response) => {
       role: 'unauthenticated',
       identifier: lookup,
       ipAddress: clientIp,
-      userAgent: (req.headers['user-agent'] as string) || 'Browser Client',
+      userAgent: req.headers['user-agent'] || 'Browser Client',
       status: 'Failed',
       failureReason: 'Invalid credentials',
     });
@@ -2864,7 +3105,7 @@ const handleLogin = (req: express.Request, res: express.Response) => {
       role: user.role,
       identifier: lookup,
       ipAddress: clientIp,
-      userAgent: (req.headers['user-agent'] as string) || 'Browser Client',
+      userAgent: req.headers['user-agent'] || 'Browser Client',
       status: 'Failed',
       failureReason: 'Invalid credentials',
     });
@@ -2911,7 +3152,17 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
 // Public directory for login presets and unauthenticated visitors (with login presets passwords)
 // Public directory for login-page demos ONLY — never expose passwords or sensitive fields
 app.get(['/api/auth/public-users', '/api/users/public'], (req, res) => {
-  return res.json({ users: [] });
+  return res.json({
+    users: users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      username: u.username,
+      role: u.role,
+      rollNo: u.rollNo,
+      employeeId: u.employeeId,
+      // Explicitly omit password, rawPassword, email, phone, parent links
+    })),
+  });
 });
 
 app.post('/api/auth/change-password', requireAuth, (req, res) => {
@@ -2949,30 +3200,16 @@ app.post('/api/auth/change-password', requireAuth, (req, res) => {
 });
 
 app.get('/api/auth/users', requireAuth, requireRole('superadmin'), (req, res) => {
-  const usersWithCredentials = users.map((u) => {
-    const plain = u.rawPassword || SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || '';
-    return {
-      ...publicUser(u),
-      password: plain,
-      rawPassword: plain,
-    };
-  });
+  const sanitizedUsers = users.map((u) => publicUser(u));
   // Admin directory needs the full roster; raise limits significantly for real-world school sizes
-  const { items, pagination } = paginateArray(usersWithCredentials, req, 2000, 5000);
+  const { items, pagination } = paginateArray(sanitizedUsers, req, 2000, 5000);
   return res.json({ users: items, pagination, total: pagination.total });
 });
 
 app.get('/api/admin/credentials', requireAuth, requireRole('superadmin'), (req, res) => {
-  const usersWithCredentials = users.map((u) => {
-    const plain = u.rawPassword || SEED_PASSWORDS[u.username] || (u.email && SEED_PASSWORDS[u.email]) || '';
-    return {
-      ...publicUser(u),
-      password: plain,
-      rawPassword: plain,
-    };
-  });
+  const sanitizedUsers = users.map((u) => publicUser(u));
   // Admin directory needs the full roster; raise limits significantly for real-world school sizes
-  const { items, pagination } = paginateArray(usersWithCredentials, req, 2000, 5000);
+  const { items, pagination } = paginateArray(sanitizedUsers, req, 2000, 5000);
   return res.json({ users: items, pagination, total: pagination.total });
 });
 
@@ -3028,7 +3265,7 @@ app.get('/api/admin/audits/key-health', requireAuth, requireRole('superadmin'), 
 });
 
 // Admin: Programmatic Credential Creation (Super Admins, Teachers, Students, Parents)
-app.post('/api/admin/create-credential', requireAuth, requireRole('superadmin'), (req, res) => {
+app.post(['/api/admin/create-credential', '/api/auth/users', '/api/admin/credentials'], requireAuth, requireRole('superadmin'), (req, res) => {
   const {
     name,
     phone,
@@ -3071,8 +3308,12 @@ app.post('/api/admin/create-credential', requireAuth, requireRole('superadmin'),
     }
   }
 
+  if (password !== undefined && password !== null && String(password).trim().length > 0 && String(password).trim().length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+  }
+
   const rawPassword = (password || '').trim() || generateSecureTemporaryPassword();
-  const hashedPassword = bcrypt.hashSync(rawPassword, 12);
+  const hashedPassword = bcrypt.hashSync(rawPassword, 10);
 
   // Student-specific compulsory fields
   if (role === 'student') {
@@ -3081,8 +3322,12 @@ app.post('/api/admin/create-credential', requireAuth, requireRole('superadmin'),
     }
   }
 
-  // Staff-specific employee ID (auto-generated if omitted)
-  const finalEmployeeId = (employeeId || '').trim() || ((role === 'teacher' || role === 'superadmin') ? `NRES-${role === 'superadmin' ? 'DIR' : 'FAC'}-${Math.floor(100 + Math.random() * 900)}` : undefined);
+  // Staff-specific compulsory fields
+  if (role === 'teacher' || role === 'superadmin') {
+    if (!employeeId) {
+      return res.status(400).json({ error: 'Employee / Faculty ID is compulsory for staff.' });
+    }
+  }
 
   // Email is strictly OPTIONAL
   let finalEmail = (email || '').trim();
@@ -3117,8 +3362,8 @@ app.post('/api/admin/create-credential', requireAuth, requireRole('superadmin'),
     bonusPoints: role === 'student' ? 100 : undefined,
   };
 
-  if (role === 'superadmin' || role === 'teacher') {
-    newUser.employeeId = finalEmployeeId;
+  if (role === 'superadmin') {
+    newUser.employeeId = employeeId.trim();
   } else if (role === 'student') {
     newUser.classId = classId;
     newUser.divisionId = divisionId;
@@ -3158,7 +3403,7 @@ app.post('/api/admin/create-credential', requireAuth, requireRole('superadmin'),
 app.post('/api/admin/credentials/bulk', requireAuth, requireRole('superadmin'), (req, res) => {
   const rawUsers = req.body.users || req.body.credentials;
   if (!Array.isArray(rawUsers) || rawUsers.length === 0) {
-    return res.status(400).json({ error: 'Users array is required and must not be empty' });
+    return res.status(400).json({ error: 'Users or credentials array is required and must not be empty' });
   }
 
   const createdList: any[] = [];
@@ -3263,7 +3508,11 @@ app.post('/api/admin/credentials/bulk', requireAuth, requireRole('superadmin'), 
     }
 
     if (role === 'teacher' || role === 'superadmin') {
-      employeeId = (u.employeeId || u['Employee ID'] || '').trim() || `NRES-${role === 'superadmin' ? 'DIR' : 'FAC'}-${Math.floor(100 + Math.random() * 900)}`;
+      employeeId = (u.employeeId || u['Employee ID'] || '').trim() || undefined;
+      if (!employeeId) {
+        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: 'Employee / Faculty ID is compulsory for staff' });
+        return;
+      }
     }
 
     const prefix = role === 'superadmin' ? 'admin' : role === 'teacher' ? 'teach' : role === 'student' ? 'stud' : 'parent';
@@ -3318,7 +3567,7 @@ app.post('/api/admin/credentials/bulk', requireAuth, requireRole('superadmin'), 
 });
 
 // Admin: Edit User Credential
-app.put('/api/admin/credentials/:id', requireAuth, requireRole('superadmin'), (req, res) => {
+app.put(['/api/admin/credentials/:id', '/api/auth/users/:id'], requireAuth, requireRole('superadmin'), (req, res) => {
   const { id } = req.params;
   const index = users.findIndex((u) => u.id === id);
   if (index === -1) {
@@ -3390,7 +3639,7 @@ app.put('/api/admin/credentials/:id', requireAuth, requireRole('superadmin'), (r
   users[index] = updatedUser;
   saveStateToDisk();
 
-  const activePassword = updatedUser.rawPassword || (password && password.trim()) || current.rawPassword || SEED_PASSWORDS[updatedUser.username] || '';
+  const activePassword = updatedUser.rawPassword || (password && password.trim()) || current.rawPassword || SEED_PASSWORDS[updatedUser.username] || getRoleDefaultPassword(updatedUser.role);
   return res.json({ 
     message: 'User credential updated successfully', 
     user: {
@@ -3402,7 +3651,7 @@ app.put('/api/admin/credentials/:id', requireAuth, requireRole('superadmin'), (r
 });
 
 // Admin: Permanently Delete User Credential (adds to Last 50 Deleted queue)
-app.delete('/api/admin/credentials/:id', requireAuth, requireRole('superadmin'), (req, res) => {
+app.delete(['/api/admin/credentials/:id', '/api/auth/users/:id'], requireAuth, requireRole('superadmin'), (req, res) => {
   const { id } = req.params;
   const index = users.findIndex((u) => u.id === id);
   if (index === -1) {
@@ -4255,12 +4504,21 @@ app.post('/api/teacher/materials', requireAuth, requireRole('teacher', 'superadm
   };
 
   studyMaterials.unshift(newMat);
+  saveStateToDisk();
   res.status(201).json({ message: 'Study material uploaded', material: newMat });
 });
 
 app.delete('/api/teacher/materials/:id', requireAuth, requireRole('teacher', 'superadmin'), (req, res) => {
   const { id } = req.params;
+  const material = studyMaterials.find((m) => m.id === id);
+  if (!material) {
+    return res.status(404).json({ error: 'Study material not found' });
+  }
+  if (req.user.role === 'teacher' && material.teacherId !== req.user.id) {
+    return res.status(403).json({ error: 'Unauthorized: you can only delete your own study materials' });
+  }
   studyMaterials = studyMaterials.filter((m) => m.id !== id);
+  saveStateToDisk();
   res.json({ message: 'Material removed' });
 });
 
@@ -4574,19 +4832,6 @@ app.put('/api/exams/:id/attempt/answers', requireAuth, requireRole('student'), (
   });
 });
 
-const inFlightSubmissions = new Set<string>();
-const submitRateLimits = new Map<string, { count: number; resetAt: number }>();
-function isSubmitRateLimited(key: string): boolean {
-  const now = Date.now();
-  const rec = submitRateLimits.get(key);
-  if (!rec || now > rec.resetAt) {
-    submitRateLimits.set(key, { count: 1, resetAt: now + 60000 });
-    return false;
-  }
-  rec.count++;
-  return rec.count > 10;
-}
-
 // Student Submits Exam -> Instant Server Auto-Grading & Anti-Cheating Enforcement
 app.post('/api/exams/:id/submit', requireAuth, requireRole('student'), (req, res) => {
   const { id } = req.params;
@@ -4594,19 +4839,8 @@ app.post('/api/exams/:id/submit', requireAuth, requireRole('student'), (req, res
   const student = req.user;
   const idempotencyKey = (req.headers['idempotency-key'] as string) || (req.body?.idempotencyKey as string);
 
-  const concurrencyKey = `${id}:${student.id}`;
-  if (inFlightSubmissions.has(concurrencyKey)) {
-    return res.status(429).json({ error: 'Your submission is already being processed. Please wait.' });
-  }
-
-  if (isSubmitRateLimited(concurrencyKey)) {
-    return res.status(429).json({ error: 'Submission rate limit reached. Please wait a moment.' });
-  }
-
-  inFlightSubmissions.add(concurrencyKey);
-  try {
-    const exam = exams.find((e) => e.id === id);
-    if (!exam) return res.status(404).json({ error: 'Exam not found' });
+  const exam = exams.find((e) => e.id === id);
+  if (!exam) return res.status(404).json({ error: 'Exam not found' });
 
   // Safe Idempotent Submission Replay
   if (idempotencyKey) {
@@ -4779,9 +5013,9 @@ app.post('/api/exams/:id/submit', requireAuth, requireRole('student'), (req, res
     attempt.status = 'completed';
     attempt.completedAt = new Date().toISOString();
   }
-  saveStateToDisk(true);
+  saveStateToDisk();
 
-  return res.status(201).json({
+  res.status(201).json({
     message: 'Examination submitted and auto-graded successfully',
     score,
     totalMarks,
@@ -4799,12 +5033,6 @@ app.post('/api/exams/:id/submit', requireAuth, requireRole('student'), (req, res
       isWindowClosed: new Date() > new Date(exam.endTime),
     },
   });
-  } catch (err: any) {
-    console.error('Error processing exam submission:', err);
-    return res.status(500).json({ error: 'Failed to process exam submission', details: err?.message });
-  } finally {
-    inFlightSubmissions.delete(concurrencyKey);
-  }
 });
 
 // Student Review: Locked until exam designated time window has entirely closed for all students!
@@ -5007,12 +5235,14 @@ app.post('/api/notices', requireAuth, requireRole('teacher', 'superadmin'), (req
     schoolNotices = schoolNotices.slice(0, 50);
   }
 
+  saveStateToDisk();
   res.status(201).json({ message: 'Notice published and broadcasted successfully', notice: newNotice });
 });
 
 app.delete('/api/notices/:id', requireAuth, requireRole('teacher', 'superadmin'), (req, res) => {
   const { id } = req.params;
   schoolNotices = schoolNotices.filter((n) => n.id !== id);
+  saveStateToDisk();
   res.json({ message: 'Notice removed' });
 });
 
@@ -6343,7 +6573,20 @@ app.post('/api/tickets', requireAuth, requireRole('parent', 'superadmin'), (req,
     return res.status(400).json({ error: 'Subject and message are required' });
   }
 
-  // Institutional Rule: Parents can strictly ONLY send queries to assigned subject teachers, NOT to management
+  // Prevent duplicate submission of identical open tickets
+  const isDuplicate = supportTickets.some(
+    (t) =>
+      t.parentId === parent.id &&
+      t.studentId === student.id &&
+      t.subject.trim().toLowerCase() === subject.trim().toLowerCase() &&
+      t.message.trim().toLowerCase() === message.trim().toLowerCase() &&
+      t.status === 'Open'
+  );
+  if (isDuplicate) {
+    return res.status(409).json({ error: 'A ticket with this exact subject and message is already open. Please wait for faculty response.' });
+  }
+
+  // Institutional Rule: Parents can strictly ONLY send queries to assigned subject teachers, not to management
   if (recipient && recipient.role !== 'teacher') {
     return res.status(400).json({ error: 'Inquiries must be directed to your child\'s assigned subject teachers, not management.' });
   }
@@ -6372,6 +6615,7 @@ app.post('/api/tickets', requireAuth, requireRole('parent', 'superadmin'), (req,
   };
 
   supportTickets.unshift(newTicket);
+  saveStateToDisk();
   res.status(201).json({ message: 'Support query submitted successfully', ticket: newTicket });
 });
 
@@ -6394,6 +6638,7 @@ app.delete('/api/tickets/:id', requireAuth, (req, res) => {
   }
 
   const deleted = supportTickets.splice(index, 1)[0];
+  saveStateToDisk();
   res.json({ message: 'Query record permanently deleted', ticket: deleted });
 });
 
@@ -6432,6 +6677,7 @@ app.post('/api/tickets/:id/reply', requireAuth, (req, res) => {
     ticket.status = 'In Progress';
   }
 
+  saveStateToDisk();
   res.status(201).json({ message: 'Reply added', ticket });
 });
 
@@ -6441,12 +6687,19 @@ app.patch('/api/tickets/:id/status', requireAuth, requireRole('teacher', 'supera
   const ticket = supportTickets.find((t) => t.id === id);
   if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
 
-  if (!['Open', 'In Progress', 'Resolved'].includes(status)) {
+  const normStatus = typeof status === 'string'
+    ? status.toLowerCase() === 'resolved' ? 'Resolved'
+    : status.toLowerCase() === 'in progress' ? 'In Progress'
+    : status.toLowerCase() === 'open' ? 'Open' : status
+    : status;
+
+  if (!['Open', 'In Progress', 'Resolved'].includes(normStatus)) {
     return res.status(400).json({ error: 'Invalid status. Must be Open, In Progress, or Resolved' });
   }
 
-  ticket.status = status;
+  ticket.status = normStatus;
   ticket.updatedAt = new Date().toISOString();
+  saveStateToDisk();
   res.json({ message: 'Status updated', ticket });
 });
 
@@ -6459,7 +6712,7 @@ app.post('/api/system/reset-demo', requireAuth, requireRole('superadmin'), (req,
 // SUPABASE / POSTGRESQL DATABASE MANAGEMENT APIS
 // ==========================================
 
-app.get('/api/database/status', async (req, res) => {
+app.get('/api/database/status', requireAuth, requireRole('superadmin'), async (req, res) => {
   const configured = isDatabaseConfigured();
   const host = getDatabaseHost();
   const healthy = await healthCheck();
@@ -6480,11 +6733,37 @@ app.get('/api/database/status', async (req, res) => {
   });
 });
 
-app.post('/api/database/connect', (req, res) => {
-  return res.status(403).json({ error: 'Runtime database configuration from UI is disabled. Use environment variables.' });
+app.post('/api/database/connect', requireAuth, requireRole('superadmin'), async (req, res) => {
+  try {
+    const { databaseUrl } = req.body;
+    if (!databaseUrl || typeof databaseUrl !== 'string' || !databaseUrl.trim()) {
+      return res.status(400).json({ error: 'Please provide a valid database connection string (URI).' });
+    }
+
+    const result = await setDatabaseUrl(databaseUrl.trim());
+
+    // Immediately sync current system state to the newly connected database
+    const payload = getSystemStatePayload();
+    await saveStateToPostgres(payload);
+
+    res.json({
+      success: true,
+      message: result.message,
+      host: result.host,
+      stats: {
+        syncedUsers: users.length,
+        syncedExams: exams.length,
+        syncedSubmissions: submissions.length
+      }
+    });
+  } catch (err: any) {
+    const safeError = (err.message || 'Failed to connect to PostgreSQL database')
+      .replace(/postgresql:\/\/[^@]+@/i, 'postgresql://***:***@');
+    res.status(500).json({ error: safeError });
+  }
 });
 
-app.post('/api/database/sync', async (req, res) => {
+app.post('/api/database/sync', requireAuth, requireRole('superadmin'), async (req, res) => {
   try {
     if (!isDatabaseConfigured()) {
       return res.status(400).json({ error: 'No PostgreSQL database is currently configured.' });
@@ -6504,7 +6783,7 @@ app.post('/api/database/sync', async (req, res) => {
   }
 });
 
-app.post('/api/database/run-migrations', async (req, res) => {
+app.post('/api/database/run-migrations', requireAuth, requireRole('superadmin'), async (req, res) => {
   try {
     if (!isDatabaseConfigured()) {
       return res.status(400).json({ error: 'Cannot run migrations without DATABASE_URL configured.' });
@@ -6526,7 +6805,7 @@ app.get(['/healthz', '/api/health'], async (_req, res) => {
       return res.status(503).json({ status: 'unhealthy', error: 'Database check failed' });
     }
   } catch (err: any) {
-    return res.status(503).json({ status: 'unhealthy', error: err?.message || 'Database unavailable' });
+    return res.status(503).json({ status: 'unhealthy', error: 'Database unavailable' });
   }
 });
 

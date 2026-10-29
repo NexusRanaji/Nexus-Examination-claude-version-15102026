@@ -32,7 +32,6 @@ import {
   Home,
   FileSpreadsheet,
   RefreshCw,
-  Database,
   Trash2
 } from 'lucide-react';
 import { UserCredential, SchoolClass, Division, Subject, SchoolStats, ExamSubmission } from '../../types';

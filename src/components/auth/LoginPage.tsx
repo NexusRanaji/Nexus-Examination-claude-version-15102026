@@ -69,9 +69,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!identifier.trim() || !password) {
+    const cleanId = identifier.trim();
+    if (!cleanId || !password) {
       setError('Please enter your institutional ID and password');
       return;
+    }
+
+    if (cleanId.includes('@')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanId)) {
+        setError('Invalid email address format. Please enter a valid email address (e.g. name@school.com) or your assigned username / roll number.');
+        return;
+      }
     }
 
     setLoading(true);

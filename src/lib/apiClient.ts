@@ -1,240 +1,120 @@
-import { getAuthToken, clearAuthSession } from '../services/auth';
+import { getAuthToken } from '../services/auth';
 
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
-  params?: Record<string, any>;
-  body?: any;
-  timeoutMs?: number;
-  retries?: number;
-  idempotencyKey?: string;
   skipAuth?: boolean;
+  timeoutMs?: number;
+  params?: Record<string, any>;
+  idempotencyKey?: string;
+  body?: any;
+  [key: string]: any;
 }
 
 export interface ApiResponse<T = any> {
-  data: T;
-  status: number;
   ok: boolean;
-  headers: Headers;
-  requestId?: string;
-}
-
-export class ApiError extends Error {
   status: number;
-  data: any;
-  requestId?: string;
+  data: T;
+  headers: Headers;
+}
 
-  constructor(message: string, status: number, data?: any, requestId?: string) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.data = data;
-    this.requestId = requestId;
+async function request<T = any>(endpoint: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
+  const headers = new Headers(options.headers || {});
+
+  if (options.idempotencyKey) {
+    headers.set('idempotency-key', options.idempotencyKey);
   }
-}
 
-const DEFAULT_TIMEOUT_MS = 60000; // 60 seconds
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+  let body = options.body;
+  if (body !== undefined && typeof body !== 'string' && !(body instanceof FormData) && !(body instanceof Blob)) {
+    headers.set('Content-Type', 'application/json');
+    body = JSON.stringify(body);
+  } else if (!headers.has('Content-Type') && typeof body === 'string') {
+    headers.set('Content-Type', 'application/json');
+  }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function buildUrl(endpoint: string, params?: Record<string, any>): string {
-  let normalized = endpoint;
-  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
-    if (!normalized.startsWith('/api') && !normalized.startsWith('/')) {
-      normalized = `/api/${normalized}`;
-    } else if (normalized.startsWith('/') && !normalized.startsWith('/api')) {
-      normalized = `/api${normalized}`;
+  if (!options.skipAuth) {
+    const token = getAuthToken();
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
     }
-    normalized = `${BASE_URL}${normalized}`;
   }
 
-  if (params && Object.keys(params).length > 0) {
-    const urlObj = new URL(normalized, typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-    for (const [k, v] of Object.entries(params)) {
-      if (v !== undefined && v !== null && v !== '') {
-        urlObj.searchParams.set(k, String(v));
-      }
+  let url = endpoint;
+  if (options.params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(options.params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) searchParams.append(k, String(v));
+    });
+    const qs = searchParams.toString();
+    if (qs) {
+      url += (url.includes('?') ? '&' : '?') + qs;
     }
-    return urlObj.toString();
   }
-  return normalized;
-}
 
-async function executeRequest<T = any>(
-  endpoint: string,
-  options: RequestOptions = {}
-): Promise<ApiResponse<T>> {
-  const method = (options.method || 'GET').toUpperCase();
-  const url = buildUrl(endpoint, options.params);
-  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  let controller: AbortController | undefined;
+  let timer: any;
+  if (options.timeoutMs && options.timeoutMs > 0) {
+    controller = new AbortController();
+    timer = setTimeout(() => controller?.abort(), options.timeoutMs);
+  }
 
-  // Retry logic rules:
-  // - GET: up to 2 retries (3 total attempts) with exponential backoff
-  // - POST / PUT / DELETE: 0 retries UNLESS options.idempotencyKey is set
-  const maxRetries = options.retries !== undefined
-    ? options.retries
-    : method === 'GET'
-    ? 2
-    : options.idempotencyKey
-    ? 2
-    : 0;
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers,
+      body,
+      signal: controller ? controller.signal : options.signal,
+    });
 
-  let attempt = 0;
-  let lastError: any = null;
+    if (timer) clearTimeout(timer);
 
-  while (attempt <= maxRetries) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
+    const text = await res.text();
+    let data: any = null;
     try {
-      const headers = new Headers(options.headers || {});
-
-      // Add auth token if not skipped
-      if (!options.skipAuth) {
-        const token = getAuthToken();
-        if (token && !headers.has('Authorization')) {
-          headers.set('Authorization', `Bearer ${token}`);
-        }
-      }
-
-      // Add idempotency key if specified
-      if (options.idempotencyKey && !headers.has('Idempotency-Key')) {
-        headers.set('Idempotency-Key', options.idempotencyKey);
-      }
-
-      // Prepare body
-      let body = options.body;
-      if (body !== undefined && body !== null) {
-        if (!(body instanceof FormData) && !(body instanceof Blob) && typeof body !== 'string') {
-          if (!headers.has('Content-Type')) {
-            headers.set('Content-Type', 'application/json');
-          }
-          body = JSON.stringify(body);
-        }
-      }
-
-      const fetchOptions: RequestInit = {
-        ...options,
-        method,
-        headers,
-        body,
-        signal: controller.signal,
-      };
-
-      const response = await fetch(url, fetchOptions);
-      clearTimeout(timeoutId);
-
-      const requestId = response.headers.get('x-request-id') || undefined;
-
-      // Handle 401 Unauthorized
-      if (
-        response.status === 401 &&
-        !options.skipAuth &&
-        !url.includes('/api/auth/login') &&
-        !url.includes('/api/auth/student/login') &&
-        !url.includes('/api/auth/faculty/login') &&
-        !url.includes('/api/auth/public-users')
-      ) {
-        clearAuthSession();
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('nexus:unauthorized'));
-        }
-      }
-
-      // Parse JSON response safely
-      let parsedData: any = null;
-      const contentType = response.headers.get('content-type') || '';
-      if (contentType.includes('application/json')) {
-        parsedData = await response.json().catch(() => null);
-      } else {
-        const text = await response.text().catch(() => '');
-        try {
-          parsedData = JSON.parse(text);
-        } catch {
-          parsedData = text;
-        }
-      }
-
-      if (!response.ok) {
-        const errorMessage =
-          (parsedData && typeof parsedData === 'object' && (parsedData.error || parsedData.message)) ||
-          `Request failed with status ${response.status}`;
-
-        const apiErr = new ApiError(errorMessage, response.status, parsedData, requestId);
-
-        // Only retry server errors (5xx) or transient statuses for idempotent requests
-        const isServerFault = response.status >= 500 && response.status <= 599;
-        const canRetry = (method === 'GET' || !!options.idempotencyKey) && isServerFault;
-
-        if (canRetry && attempt < maxRetries) {
-          attempt++;
-          const backoff = Math.min(1000 * Math.pow(2, attempt - 1), 3000);
-          await sleep(backoff);
-          continue;
-        }
-
-        throw apiErr;
-      }
-
-      return {
-        data: parsedData,
-        status: response.status,
-        ok: true,
-        headers: response.headers,
-        requestId,
-      };
-    } catch (err: any) {
-      clearTimeout(timeoutId);
-      lastError = err;
-
-      // Check if it's an abort error (timeout)
-      const isTimeout = err?.name === 'AbortError';
-      const isNetworkError = err instanceof TypeError || isTimeout;
-      const canRetry = (method === 'GET' || !!options.idempotencyKey) && isNetworkError;
-
-      if (canRetry && attempt < maxRetries) {
-        attempt++;
-        const backoff = Math.min(1000 * Math.pow(2, attempt - 1), 3000);
-        await sleep(backoff);
-        continue;
-      }
-
-      if (err instanceof ApiError) {
-        throw err;
-      }
-
-      const message = isTimeout
-        ? `Request timed out after ${timeoutMs}ms`
-        : err?.message || 'Network request failed';
-
-      throw new ApiError(message, 0, null);
+      data = JSON.parse(text);
+    } catch {
+      data = text;
     }
-  }
 
-  throw lastError || new ApiError('Request failed after retries', 0, null);
+    return {
+      ok: res.ok,
+      status: res.status,
+      data,
+      headers: res.headers,
+    };
+  } catch (err: any) {
+    if (timer) clearTimeout(timer);
+    throw err;
+  }
 }
 
 export const apiClient = {
-  get<T = any>(endpoint: string, options?: RequestOptions): Promise<ApiResponse<T>> {
-    return executeRequest<T>(endpoint, { ...options, method: 'GET' });
-  },
+  request: <T = any>(endpoint: string, options?: RequestOptions) =>
+    request<T>(endpoint, options),
 
-  post<T = any>(endpoint: string, body?: any, options?: RequestOptions): Promise<ApiResponse<T>> {
-    return executeRequest<T>(endpoint, { ...options, method: 'POST', body });
-  },
+  get: <T = any>(endpoint: string, options?: RequestOptions) =>
+    request<T>(endpoint, { ...options, method: 'GET' }),
 
-  put<T = any>(endpoint: string, body?: any, options?: RequestOptions): Promise<ApiResponse<T>> {
-    return executeRequest<T>(endpoint, { ...options, method: 'PUT', body });
-  },
+  post: <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
+    request<T>(endpoint, {
+      ...options,
+      method: 'POST',
+      body: body !== undefined ? body : options?.body,
+    }),
 
-  delete<T = any>(endpoint: string, options?: RequestOptions): Promise<ApiResponse<T>> {
-    return executeRequest<T>(endpoint, { ...options, method: 'DELETE' });
-  },
+  put: <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
+    request<T>(endpoint, {
+      ...options,
+      method: 'PUT',
+      body: body !== undefined ? body : options?.body,
+    }),
 
-  request<T = any>(endpoint: string, options?: RequestOptions): Promise<ApiResponse<T>> {
-    return executeRequest<T>(endpoint, options);
-  },
+  patch: <T = any>(endpoint: string, body?: any, options?: RequestOptions) =>
+    request<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
+      body: body !== undefined ? body : options?.body,
+    }),
+
+  delete: <T = any>(endpoint: string, options?: RequestOptions) =>
+    request<T>(endpoint, { ...options, method: 'DELETE' }),
 };
-
-export default apiClient;
