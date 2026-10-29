@@ -13,19 +13,16 @@ import {
   User,
   Shield,
   FileText,
-  Cpu,
-  Download,
-  Sparkles
+  Download
 } from 'lucide-react';
 import { LoginAuditLog, CheatingAuditLog, DeletedCredentialLog } from '../../types';
 import { apiClient } from '../../lib/apiClient';
 
 export const AuditQueuesView: React.FC = () => {
-  const [activeQueue, setActiveQueue] = useState<'logins' | 'cheating' | 'deletions' | 'keys'>('logins');
+  const [activeQueue, setActiveQueue] = useState<'logins' | 'cheating' | 'deletions'>('logins');
   const [logins, setLogins] = useState<LoginAuditLog[]>([]);
   const [cheatingLogs, setCheatingLogs] = useState<CheatingAuditLog[]>([]);
   const [deletions, setDeletions] = useState<DeletedCredentialLog[]>([]);
-  const [keyHealth, setKeyHealth] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,11 +32,10 @@ export const AuditQueuesView: React.FC = () => {
     try {
       setLoading(true);
       setLoadError(null);
-      const [loginsRes, cheatingRes, deletionsRes, keyRes] = await Promise.all([
+      const [loginsRes, cheatingRes, deletionsRes] = await Promise.all([
         apiClient.get('/api/admin/audits/logins'),
         apiClient.get('/api/admin/audits/cheating'),
         apiClient.get('/api/admin/audits/deleted-credentials'),
-        apiClient.get('/api/admin/audits/key-health'),
       ]);
 
       if (loginsRes.ok && loginsRes.data) {
@@ -53,9 +49,6 @@ export const AuditQueuesView: React.FC = () => {
       if (deletionsRes.ok && deletionsRes.data) {
         const d = deletionsRes.data;
         setDeletions(d.deletedAudits || d.audits || d.deletions || []);
-      }
-      if (keyRes.ok && keyRes.data) {
-        setKeyHealth(keyRes.data);
       }
     } catch (err: any) {
       console.error('Failed to load rolling audit queues:', err);
@@ -226,21 +219,6 @@ export const AuditQueuesView: React.FC = () => {
           <span>Last 50 Deleted Credentials</span>
           <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10 dark:bg-white/10 font-mono">
             {deletions.length}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveQueue('keys')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
-            activeQueue === 'keys'
-              ? 'bg-indigo-600 text-white shadow-sm font-bold'
-              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-400'
-          }`}
-        >
-          <Cpu className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-          <span>AI Pool & Failover Health</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10 dark:bg-white/10 font-mono">
-            {keyHealth?.poolStatus?.totalKeysInPool || 1}
           </span>
         </button>
       </div>
@@ -428,70 +406,6 @@ export const AuditQueuesView: React.FC = () => {
               )}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Queue 4: Gemini AI Key Pool & Failover Health */}
-      {activeQueue === 'keys' && (
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-              <div className="text-xs text-slate-500 mb-1">Total API Keys in Pool</div>
-              <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-indigo-500" />
-                <span>{keyHealth?.poolStatus?.totalKeysInPool || 1}</span>
-              </div>
-              <div className="text-[11px] text-emerald-600 mt-1">Multi-Key Failover Active</div>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-              <div className="text-xs text-slate-500 mb-1">Active Index</div>
-              <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-500" />
-                <span>Key #{((keyHealth?.poolStatus?.currentActiveIndex || 0) + 1)}</span>
-              </div>
-              <div className="text-[11px] text-slate-500 mt-1">
-                Cooling Down: {keyHealth?.poolStatus?.coolingDownKeys || 0} keys
-              </div>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-              <div className="text-xs text-slate-500 mb-1">Quota / Failover Events</div>
-              <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-rose-500" />
-                <span>{keyHealth?.healthLogs?.length || 0}</span>
-              </div>
-              <div className="text-[11px] text-slate-500 mt-1">Automated Failover Circuit Active</div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 font-semibold text-xs text-slate-700 dark:text-slate-300">
-              Recent Gemini API Key Failover & Health Logs
-            </div>
-            {(!keyHealth?.healthLogs || keyHealth.healthLogs.length === 0) ? (
-              <div className="p-8 text-center text-xs text-slate-400">
-                All Gemini API keys in the pool are running in optimal operational health. No rate limits or failover triggers encountered.
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {keyHealth.healthLogs.map((log: any, idx: number) => (
-                  <div key={idx} className="p-4 flex items-start gap-3">
-                    <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                    <div className="text-xs space-y-1">
-                      <div className="font-semibold text-slate-800 dark:text-slate-200">
-                        {log.keyIdentifier} - {log.errorType} ({log.status})
-                      </div>
-                      <div className="text-slate-500 dark:text-slate-400">{log.message}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">
-                        {formatDate(log.timestamp)} • Cooling down until {formatDate(log.coolDownUntil)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       )}
     </div>

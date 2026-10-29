@@ -31,6 +31,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const cleanUser = username.trim();
+    if (cleanUser.includes('@')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanUser)) {
+        setError('Invalid email address format. Please enter a valid email address (e.g. name@school.com) or your assigned username / roll number.');
+        return;
+      }
+    }
     setLoading(true);
 
     try {

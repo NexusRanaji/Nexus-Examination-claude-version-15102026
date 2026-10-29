@@ -1,11 +1,18 @@
 node_modules/
 build/
 dist/
+server.js
 coverage/
 .DS_Store
 *.log
 .env*
 !.env.example
+
 # Local database and private application data
 data/nexus_school_db.json
 data/supabase_config.json
+
+# Ephemeral test, staging, scratch, and upload artifacts
+staging/
+scratch/
+uploads/

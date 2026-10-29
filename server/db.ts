@@ -131,7 +131,7 @@ function createPool(connStr: string): pg.Pool {
 
   return new Pool({
     connectionString: connStr || undefined,
-    max: 20,
+    max: 8,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 12000,
     // Enable SSL for any cloud/remote database (Supabase, Neon, Render, etc.)
@@ -338,23 +338,25 @@ export async function setDatabaseUrl(newConnStr: string): Promise<{ success: boo
       global._nexusPgPool = pool;
     }
 
-    // Persist to .env file so it survives container restarts
-    try {
-      const envPath = path.resolve(process.cwd(), '.env');
-      let envContent = '';
-      if (fs.existsSync(envPath)) {
-        envContent = fs.readFileSync(envPath, 'utf8');
-      }
+    // Persist to .env file in non-production environments so it survives dev container restarts
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        const envPath = path.resolve(process.cwd(), '.env');
+        let envContent = '';
+        if (fs.existsSync(envPath)) {
+          envContent = fs.readFileSync(envPath, 'utf8');
+        }
 
-      if (envContent.includes('DATABASE_URL=')) {
-        envContent = envContent.replace(/DATABASE_URL=.*(\r?\n|$)/, `DATABASE_URL="${cleanUrl}"$1`);
-      } else {
-        envContent += `\nDATABASE_URL="${cleanUrl}"\n`;
+        if (envContent.includes('DATABASE_URL=')) {
+          envContent = envContent.replace(/DATABASE_URL=.*(\r?\n|$)/, `DATABASE_URL="${cleanUrl}"$1`);
+        } else {
+          envContent += `\nDATABASE_URL="${cleanUrl}"\n`;
+        }
+        fs.writeFileSync(envPath, envContent, 'utf8');
+        console.log('[DB] Saved new DATABASE_URL to .env file.');
+      } catch (saveErr: any) {
+        console.warn('[DB] Could not write DATABASE_URL to .env:', saveErr.message);
       }
-      fs.writeFileSync(envPath, envContent, 'utf8');
-      console.log('[DB] Saved new DATABASE_URL to .env file.');
-    } catch (saveErr: any) {
-      console.warn('[DB] Could not write DATABASE_URL to .env:', saveErr.message);
     }
 
     const host = getDatabaseHost() || 'Supabase';

@@ -3,103 +3,79 @@ export type UserRole = 'superadmin' | 'teacher' | 'student' | 'parent';
 export interface UserCredential {
   id: string;
   name: string;
-  email?: string;
-  role: UserRole;
   username?: string;
-  password?: string;
-  createdAt: string;
-  // Specific role metadata
-  classId?: string;
-  className?: string;
-  divisionId?: string;
-  divisionName?: string;
+  email?: string;
+  phone?: string;
+  role: UserRole;
   rollNo?: string;
+  employeeId?: string;
+  classId?: string;
+  divisionId?: string;
   parentId?: string;
   childrenIds?: string[];
-  phone?: string;
-  employeeId?: string;
-  assignedSubjects?: { classId: string; divisionId: string; subjectId: string }[];
+  assignedSubjects?: string[];
+  createdAt?: string;
   bonusPoints?: number;
+  password?: string;
+  rawPassword?: string;
   mustChangePassword?: boolean;
+  avatarUrl?: string;
+  isSuperAdmin?: boolean;
+  status?: string;
+  academicPoints?: number;
+  updatedAt?: string;
+  [key: string]: any;
 }
 
-export interface AcademicYear {
-  id: string;
-  name: string; // e.g. "2025-2026"
-  isCurrent: boolean;
-}
+export type User = UserCredential;
 
 export interface SchoolClass {
   id: string;
-  name: string; // e.g. "Standard 10", "Standard 9"
-  level: number;
-  archived?: boolean;
+  name: string;
+  grade?: number;
+  level?: string | number;
+  createdAt?: string;
+  [key: string]: any;
 }
 
 export interface Division {
   id: string;
   classId: string;
-  name: string; // e.g. "A", "B"
+  name: string;
   roomNumber?: string;
-  archived?: boolean;
-}
-
-export interface ClassSubjectMapping {
-  classId: string;
-  subjectId: string;
+  createdAt?: string;
+  [key: string]: any;
 }
 
 export interface Subject {
   id: string;
-  name: string; // e.g. "Mathematics", "Science & Physics"
-  code: string; // e.g. "MATH-101"
+  name: string;
+  code?: string;
+  classId?: string;
   icon?: string;
+  [key: string]: any;
 }
 
-export interface AIMessage {
-  id: string;
-  role: 'user' | 'model';
-  content: string;
-  timestamp: string;
-  modelUsed?: string;
-  suggestedFollowUps?: string[];
-}
-
-export interface AIConversationThread {
-  id: string;
-  userId: string;
-  title: string;
-  roleId: string;
-  subject?: string;
-  createdAt: string;
-  updatedAt: string;
-  messages: AIMessage[];
-}
-
-export interface TestTopPerformer {
-  rank: number;
-  studentId: string;
-  studentName: string;
-  rollNo: string;
-  score: number;
-  totalMarks: number;
-  percentage: number;
-}
-
-export type QuestionType = 'single' | 'multi' | 'true_false';
-
-export interface QuestionOption {
-  id: string;
-  text: string;
-}
+export type QuestionType =
+  | 'single'
+  | 'multiple'
+  | 'multi'
+  | 'true-false'
+  | 'true_false'
+  | 'fill-blank'
+  | 'fill_blank'
+  | 'numerical'
+  | 'subjective'
+  | string;
 
 export interface Question {
   id: string;
   text: string;
+  title?: string;
+  question?: string;
   type: QuestionType;
-  options: QuestionOption[];
-  // In student testing mode, correctAnswer and explanation are stripped by backend
-  correctAnswer?: string | string[] | boolean; 
+  options?: any;
+  correctAnswer: any;
   explanation?: string;
   points: number;
   imageUrl?: string;
@@ -107,140 +83,132 @@ export interface Question {
   classId?: string;
   chapterName?: string;
   inQuestionBank?: boolean;
+  createdAt?: string;
+  [key: string]: any;
 }
-
-export type ExamStatus = 'draft' | 'published' | 'completed';
 
 export interface Exam {
   id: string;
   title: string;
   description?: string;
   subjectId: string;
-  subjectName: string;
+  subjectName?: string;
   classId: string;
-  className: string;
-  divisionId: string;
-  divisionName: string;
-  targetClassId?: string;
-  targetDivisionId?: string;
+  className?: string;
+  divisionId?: string;
+  divisionName?: string;
   teacherId: string;
-  teacherName: string;
-  status: ExamStatus;
-  startTime: string; // ISO string availability window start
-  endTime: string;   // ISO string availability window end
-  durationMinutes: number; // e.g. 30 mins
-  passingScore: number;    // e.g. 50 (percentage)
+  teacherName?: string;
+  status: 'draft' | 'published' | 'completed' | 'archived' | string;
+  startTime?: string;
+  endTime?: string;
+  durationMinutes: number;
+  passingScore: number;
   totalMarks: number;
-  questionCount: number;
-  questions?: Question[];
-  createdAt: string;
-}
-
-export interface CheatingLog {
-  violationCount: number;
-  blurTimestamps: string[];
-  reason?: string;
+  questionCount?: number;
+  questions?: any[];
+  createdAt?: string;
+  [key: string]: any;
 }
 
 export interface ExamSubmission {
   id: string;
   examId: string;
   examTitle: string;
-  subjectId?: string;
-  subjectName: string;
   studentId: string;
   studentName: string;
   studentRollNo: string;
-  classId: string;
-  divisionId: string;
-  answers: Record<string, any>; // questionId -> selected answer(s)
+  classId?: string;
+  divisionId?: string;
   score: number;
   totalMarks: number;
   percentage: number;
-  passed: boolean;
-  bonusPointsAwarded: number;
+  status: 'pass' | 'fail' | 'submitted' | 'evaluated' | string;
+  answers?: Record<string, any>;
+  timeSpentSeconds?: number;
   submittedAt: string;
-  timeSpentMinutes?: number;
-  cheatingFlagged: boolean;
-  cheatingDetails?: CheatingLog;
-  rescheduled?: boolean;
+  cheatingLog?: any[];
+  cheatingFlagged?: boolean;
+  cheatingDetails?: string | any;
+  bonusPointsAwarded?: number;
+  subjectName?: string;
+  passed?: boolean;
+  [key: string]: any;
 }
 
 export interface StudyMaterial {
   id: string;
   title: string;
-  description: string;
-  subjectId: string;
-  subjectName: string;
-  classId: string;
-  className: string;
-  divisionId: string;
-  divisionName: string;
-  teacherId: string;
-  teacherName: string;
-  type: 'file' | 'link';
-  url: string;
-  fileName?: string;
-  fileSize?: string;
-  createdAt: string;
-}
-
-export type TicketStatus = 'Open' | 'In Progress' | 'Resolved';
-
-export interface TicketReply {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderRole: UserRole;
-  message: string;
-  timestamp: string;
+  subjectId?: string;
+  subjectName?: string;
+  classId?: string;
+  className?: string;
+  type?: 'pdf' | 'notes' | 'video' | 'link' | string;
+  fileUrl?: string;
+  url?: string;
+  description?: string;
+  createdAt?: string;
+  [key: string]: any;
 }
 
 export interface SupportTicket {
   id: string;
-  parentId: string;
-  parentName: string;
-  studentId: string;
-  studentName: string;
-  studentClass: string;
-  subject: string;
-  category: 'Exam Grievance' | 'Score Inquiry' | 'Technical Issue' | 'General Query';
-  message: string;
-  status: TicketStatus;
-  priority: 'low' | 'medium' | 'high';
+  senderId: string;
+  senderName?: string;
+  studentId?: string;
+  studentName?: string;
+  studentClass?: string;
+  parentName?: string;
+  recipientId?: string;
   recipientName?: string;
-  assignedTeacherId?: string;
-  assignedTeacherName?: string;
+  subject: string;
+  category?: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high' | string;
+  status: 'Open' | 'In Progress' | 'Resolved' | string;
+  replies?: any[];
   createdAt: string;
-  updatedAt: string;
-  replies: TicketReply[];
+  updatedAt?: string;
+  [key: string]: any;
 }
 
-export interface SchoolStats {
-  totalStudents: number;
-  totalTeachers: number;
-  totalParents: number;
-  totalClasses: number;
-  totalExams: number;
-  activeExams: number;
-  totalSubmissions: number;
-  avgPassRate: number;
-  flaggedCheatersCount: number;
+export interface SchoolNotice {
+  id: string;
+  title: string;
+  content: string;
+  priority?: 'low' | 'medium' | 'high' | string;
+  targetAudience?: 'all' | 'teacher' | 'student' | 'parent' | string;
+  createdAt?: string;
+  authorName?: string;
+  [key: string]: any;
 }
 
-// Rolling Audit Queues
+export interface NotificationItem {
+  id: string;
+  userId?: string;
+  title: string;
+  message: string;
+  type?: string;
+  read?: boolean;
+  createdAt?: string;
+  targetAudience?: string;
+  [key: string]: any;
+}
+
+export type NotificationCategory = 'all' | 'academic' | 'system' | 'alerts' | string;
+
 export interface LoginAuditLog {
   id: string;
   timestamp: string;
   userId?: string;
-  userName: string;
-  email?: string;
-  role: string;
-  identifier: string;
-  ipAddress: string;
-  userAgent: string;
-  status: 'Success' | 'Failed';
+  userName?: string;
+  role?: string;
+  identifier?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  status: string;
   failureReason?: string;
+  [key: string]: any;
 }
 
 export interface CheatingAuditLog {
@@ -248,12 +216,11 @@ export interface CheatingAuditLog {
   timestamp: string;
   studentId: string;
   studentName: string;
-  studentRollNo: string;
   examId: string;
   examTitle: string;
-  violationCount: number;
-  actionTaken: 'Warning 1' | 'Warning 2' | 'Flagged & Force-Submitted' | 'Window Blur Recorded';
-  details: string;
+  reason: string;
+  details?: string;
+  [key: string]: any;
 }
 
 export interface DeletedCredentialLog {
@@ -261,86 +228,66 @@ export interface DeletedCredentialLog {
   timestamp: string;
   deletedUserId: string;
   deletedUserName: string;
-  deletedUserEmail?: string;
-  deletedRole?: string;
-  role: UserRole;
-  identifier: string; // rollNo, employeeId, or phone
-  deletedBy: string; // Super Admin name
-  deletedByAdminName?: string;
-  reason?: string;
+  deletedUserRole: string;
+  deletedByAdminId: string;
+  deletedByAdminName: string;
+  [key: string]: any;
 }
 
-// Notice Board (Latest 4 messages auto-pruned)
-export interface SchoolNotice {
-  id: string;
-  title: string;
-  content: string;
-  category: 'Exam Schedule' | 'Urgent Alert' | 'Academic Notice' | 'General Announcement';
-  targetAudience: 'All' | 'Students' | 'Parents';
-  authorName: string;
-  authorRole: 'superadmin' | 'teacher';
-  createdAt: string;
+export interface SchoolStats {
+  totalStudents: number;
+  totalTeachers: number;
+  totalParents: number;
+  totalExams: number;
+  activeExams: number;
+  totalSubmissions: number;
+  [key: string]: any;
 }
 
-// Badge & Academic Standing Rules
-export interface TestBadgeRule {
-  id: string;
-  name: string;
-  minPercentage: number;
-  description: string;
-  iconName: string;
-}
-
-export interface OverallBadgeRule {
-  id: string;
-  name: string;
-  criteriaType: 'bonusPoints' | 'averageScore' | 'topRank';
-  thresholdValue: number;
-  description: string;
-  iconName: string;
+export interface AcademicConfig {
+  minimumPassPercentage: number;
+  bonusPointsPerExam: number;
+  standingsTiers?: any[];
+  [key: string]: any;
 }
 
 export interface AcademicStandingTier {
   id: string;
-  tierName: string; // e.g. "Summa Cum Laude / High Distinction"
-  minAveragePercentage: number; // e.g. 90
-  color: string;
-  badgeLabel: string;
-}
-
-export interface AcademicConfig {
-  testBadges: TestBadgeRule[];
-  overallBadges: OverallBadgeRule[];
-  standingTiers: AcademicStandingTier[];
-}
-
-export interface QuestionChapter {
-  id: string;
   name: string;
-  classId: string;
-  subjectId: string;
+  minPercentage: number;
+  badge: string;
+  color: string;
+  [key: string]: any;
 }
 
-export type NotificationCategory = 'result' | 'deadline' | 'announcement';
+export interface TestBadgeRule {
+  id: string;
+  badgeName: string;
+  minScore: number;
+  icon?: string;
+  [key: string]: any;
+}
 
-export interface NotificationItem {
+export interface OverallBadgeRule {
+  id: string;
+  badgeName: string;
+  minPercentage: number;
+  minExamsCompleted: number;
+  icon?: string;
+  [key: string]: any;
+}
+
+export interface AIConversationThread {
   id: string;
   title: string;
-  message: string;
-  category: NotificationCategory;
-  timestamp: string;
-  read: boolean;
-  targetRole?: 'all' | 'student' | 'parent' | 'teacher' | 'superadmin';
-  targetUserId?: string;
-  linkTab?: string; // 'exams' | 'submissions' | 'materials' | 'helpdesk' | 'notices'
-  linkId?: string; // examId, ticketId, noticeId
-  metadata?: {
-    score?: number;
-    totalMarks?: number;
-    percentage?: number;
-    subjectName?: string;
-    dueDate?: string;
-    teacherName?: string;
-    urgency?: 'normal' | 'high' | 'urgent';
-  };
+  createdAt: string;
+  updatedAt: string;
+  messages: {
+    id: string;
+    sender: 'user' | 'assistant';
+    content: string;
+    timestamp: string;
+    [key: string]: any;
+  }[];
+  [key: string]: any;
 }

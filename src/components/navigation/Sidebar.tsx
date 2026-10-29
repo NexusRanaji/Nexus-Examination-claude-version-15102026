@@ -20,7 +20,8 @@ import {
   BarChart3,
   X,
   FileText,
-  KeyRound
+  KeyRound,
+  UserCheck
 } from 'lucide-react';
 import { UserCredential } from '../../types';
 import { UserAvatar } from '../common/UserAvatar';
@@ -52,6 +53,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose,
   isMobile = false,
 }) => {
+  const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
+
   // Define navigational links for each role
   const getNavLinks = () => {
     switch (currentUser.role) {
@@ -180,15 +183,54 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {onOpenChangePassword && (
-          <div className="mt-3">
+        {/* Quick Role Switcher Trigger */}
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setRoleSwitcherOpen(!roleSwitcherOpen)}
+            className="w-full py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-left text-[11px] font-medium text-slate-600 dark:text-slate-300 flex items-center justify-between hover:border-amber-500/40 transition-colors cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5">
+              <UserCheck className="w-3.5 h-3.5 text-amber-500" />
+              <span>Switch Testing Role</span>
+            </span>
+            <ChevronRight className={`w-3.5 h-3.5 text-slate-400 transition-transform ${roleSwitcherOpen ? 'rotate-90' : ''}`} />
+          </button>
+
+          {roleSwitcherOpen && (
+            <div className="mt-2 space-y-1 p-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 max-h-48 overflow-y-auto">
+              <p className="text-[9px] font-bold text-slate-400 uppercase px-2 py-0.5">Switch Persona:</p>
+              {allUsers.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => {
+                    onSwitchUser(u);
+                    setRoleSwitcherOpen(false);
+                    if (isMobile && onClose) onClose();
+                  }}
+                  className={`w-full p-1.5 rounded-lg text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                    u.id === currentUser.id 
+                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold' 
+                      : 'hover:bg-slate-200 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <span className="truncate text-[11px]">{u.name}</span>
+                  <span className="text-[9px] font-mono px-1 rounded bg-black/10 dark:bg-white/10 uppercase">
+                    {u.role}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {onOpenChangePassword && (
             <button
               type="button"
               onClick={() => {
                 if (isMobile && onClose) onClose();
                 onOpenChangePassword();
               }}
-              className="w-full py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-left text-[11px] font-medium text-slate-600 dark:text-slate-300 flex items-center justify-between hover:border-amber-500/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
+              className="w-full mt-2 py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-left text-[11px] font-medium text-slate-600 dark:text-slate-300 flex items-center justify-between hover:border-amber-500/40 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-1.5">
                 <KeyRound className="w-3.5 h-3.5 text-amber-500" />
@@ -196,8 +238,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Navigation Menu Links */}

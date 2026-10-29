@@ -210,7 +210,7 @@ export const TeacherStudentManagement: React.FC<TeacherStudentManagementProps> =
         name: data.student.name,
         role: 'student',
         username: data.student.username,
-        password: data.student.password || data.student.rawPassword || studentCustomPassword.trim() || 'Auto-generated secure password',
+        password: data.student.password || data.student.rawPassword || studentCustomPassword.trim() || 'StudentPass#101',
         phone: data.student.phone,
         rollNo: data.student.rollNo,
         className: targetClass?.name,
@@ -986,7 +986,7 @@ ${credentialDialog.linkedParentOrChild ? `${credentialDialog.linkedParentOrChild
                     </label>
                     <input
                       type="text"
-                      placeholder="Leave blank for auto-generated password"
+                      placeholder="Default: StudentPass#101"
                       value={studentCustomPassword}
                       onChange={(e) => setStudentCustomPassword(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-amber-500"
@@ -1240,7 +1240,7 @@ ${credentialDialog.linkedParentOrChild ? `${credentialDialog.linkedParentOrChild
                 </label>
                 <input
                   type="text"
-                  placeholder="Leave blank for auto-generated password"
+                  placeholder="Default: ParentPass#2025"
                   value={parentCustomPassword}
                   onChange={(e) => setParentCustomPassword(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-amber-500"

@@ -1,129 +1,68 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useState } from 'react';
 
-interface UseSwipeTabsOptions {
-  tabs: string[];
-  activeTab: string;
-  onTabChange: (newTab: string) => void;
+interface UseSwipeTabsOptions<T extends string> {
+  tabs: readonly T[];
+  activeTab: T;
+  onTabChange: (newTab: T) => void;
   enabled?: boolean;
-  minSwipeDistance?: number;
-  maxVerticalRatio?: number;
+  threshold?: number;
 }
 
-export function useSwipeTabs({
+export function useSwipeTabs<T extends string>({
   tabs,
   activeTab,
   onTabChange,
   enabled = true,
-  minSwipeDistance = 50,
-  maxVerticalRatio = 0.65,
-}: UseSwipeTabsOptions) {
-  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const isSwipingRef = useRef(false);
-  const [swipeFeedback, setSwipeFeedback] = useState<{
-    direction: 'left' | 'right';
-    targetTab: string;
-  } | null>(null);
+  threshold = 60,
+}: UseSwipeTabsOptions<T>) {
+  const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
+  const [swipeFeedback, setSwipeFeedback] = useState<'left' | 'right' | null>(null);
 
-  // Clear feedback after brief transition
-  useEffect(() => {
-    if (swipeFeedback) {
-      const timer = setTimeout(() => {
-        setSwipeFeedback(null);
-      }, 350);
-      return () => clearTimeout(timer);
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (!enabled) return;
+    const touch = e.touches[0];
+    startX.current = touch.clientX;
+    startY.current = touch.clientY;
+    setSwipeFeedback(null);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!enabled || startX.current === null || startY.current === null) return;
+    const touch = e.touches[0];
+    const diffX = touch.clientX - startX.current;
+    const diffY = touch.clientY - startY.current;
+
+    // Check horizontal dominance
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+      setSwipeFeedback(diffX > 0 ? 'right' : 'left');
     }
-  }, [swipeFeedback]);
+  };
 
-  const onTouchStart = useCallback(
-    (e: React.TouchEvent | TouchEvent) => {
-      if (!enabled) return;
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!enabled || startX.current === null) return;
+    const touch = e.changedTouches[0];
+    const diffX = touch.clientX - startX.current;
+    const diffY = touch.clientY - (startY.current ?? 0);
 
-      const target = e.target as HTMLElement | null;
-      // Do not trigger swipe on inputs, textareas, buttons, horizontal sliders/carousels, or interactive controls
-      if (target) {
-        const interactiveTag = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(target.tagName);
-        const insideScrollable = target.closest(
-          '[data-no-swipe], .overflow-x-auto, input, textarea, select, button, [role="slider"], [role="dialog"]'
-        );
-        if (interactiveTag || insideScrollable) {
-          touchStartRef.current = null;
-          return;
-        }
+    startX.current = null;
+    startY.current = null;
+    setSwipeFeedback(null);
+
+    // If horizontal swipe exceeds threshold and is significantly larger than vertical movement
+    if (Math.abs(diffX) >= threshold && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+      const currentIndex = tabs.indexOf(activeTab);
+      if (currentIndex === -1) return;
+
+      if (diffX < 0 && currentIndex < tabs.length - 1) {
+        // Swipe left -> Next Tab
+        onTabChange(tabs[currentIndex + 1]);
+      } else if (diffX > 0 && currentIndex > 0) {
+        // Swipe right -> Prev Tab
+        onTabChange(tabs[currentIndex - 1]);
       }
-
-      if (e.touches && e.touches.length === 1) {
-        touchStartRef.current = {
-          x: e.touches[0].clientX,
-          y: e.touches[0].clientY,
-          time: Date.now(),
-        };
-        isSwipingRef.current = false;
-      }
-    },
-    [enabled]
-  );
-
-  const onTouchMove = useCallback(
-    (e: React.TouchEvent | TouchEvent) => {
-      if (!enabled || !touchStartRef.current) return;
-      if (!e.touches || e.touches.length !== 1) return;
-
-      const currentX = e.touches[0].clientX;
-      const currentY = e.touches[0].clientY;
-      const diffX = currentX - touchStartRef.current.x;
-      const diffY = currentY - touchStartRef.current.y;
-
-      // If predominantly horizontal and exceeds threshold, mark as swiping
-      if (Math.abs(diffX) > 20 && Math.abs(diffY) / Math.abs(diffX) < maxVerticalRatio) {
-        isSwipingRef.current = true;
-      }
-    },
-    [enabled, maxVerticalRatio]
-  );
-
-  const onTouchEnd = useCallback(
-    (e: React.TouchEvent | TouchEvent) => {
-      if (!enabled || !touchStartRef.current) {
-        touchStartRef.current = null;
-        isSwipingRef.current = false;
-        return;
-      }
-
-      const touch = (e.changedTouches && e.changedTouches[0]) || null;
-      if (!touch) {
-        touchStartRef.current = null;
-        return;
-      }
-
-      const diffX = touch.clientX - touchStartRef.current.x;
-      const diffY = touch.clientY - touchStartRef.current.y;
-      const duration = Date.now() - touchStartRef.current.time;
-
-      const isHorizontal = Math.abs(diffX) >= minSwipeDistance && Math.abs(diffY) / Math.abs(diffX) < maxVerticalRatio;
-      const isQuickFlick = duration < 500 && Math.abs(diffX) >= minSwipeDistance;
-
-      if (isHorizontal && isQuickFlick) {
-        const currentIndex = tabs.indexOf(activeTab);
-        if (currentIndex !== -1) {
-          if (diffX < 0 && currentIndex < tabs.length - 1) {
-            // Swiped Left -> Go to Next Tab
-            const nextTab = tabs[currentIndex + 1];
-            setSwipeFeedback({ direction: 'left', targetTab: nextTab });
-            onTabChange(nextTab);
-          } else if (diffX > 0 && currentIndex > 0) {
-            // Swiped Right -> Go to Previous Tab
-            const prevTab = tabs[currentIndex - 1];
-            setSwipeFeedback({ direction: 'right', targetTab: prevTab });
-            onTabChange(prevTab);
-          }
-        }
-      }
-
-      touchStartRef.current = null;
-      isSwipingRef.current = false;
-    },
-    [activeTab, enabled, maxVerticalRatio, minSwipeDistance, onTabChange, tabs]
-  );
+    }
+  };
 
   return {
     touchHandlers: {

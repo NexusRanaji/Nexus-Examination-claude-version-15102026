@@ -42,7 +42,7 @@ export interface ProgressSubmissionItem {
 }
 
 interface StudentProgressChartProps {
-  submissions: ProgressSubmissionItem[];
+  submissions: (ProgressSubmissionItem | any)[];
   title?: string;
   subtitle?: string;
   studentName?: string;

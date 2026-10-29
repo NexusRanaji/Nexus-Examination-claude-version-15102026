@@ -1,57 +1,66 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Get credentials from Vite environment variables or dynamic client-side settings
-const envUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const envAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const RUNTIME_URL_KEY = 'nexus_supabase_url';
+const RUNTIME_KEY_KEY = 'nexus_supabase_anon_key';
 
-const storedUrl = typeof window !== 'undefined' ? localStorage.getItem('nexus_supabase_url') : null;
-const storedAnonKey = typeof window !== 'undefined' ? localStorage.getItem('nexus_supabase_anon_key') : null;
-
-const activeUrl = envUrl || storedUrl || '';
-const activeKey = envAnonKey || storedAnonKey || '';
-
-export function isSupabaseConfigured(): boolean {
-  return Boolean(activeUrl && activeKey && activeUrl.startsWith('https://') && activeKey.length > 20);
-}
-
-export function getSupabaseCredentials(): { url: string; keyMasked: string; isConfigured: boolean } {
-  return {
-    url: activeUrl,
-    keyMasked: activeKey ? `${activeKey.slice(0, 6)}...${activeKey.slice(-4)}` : '',
-    isConfigured: isSupabaseConfigured()
-  };
+export function getSupabaseCredentials(): {
+  url: string;
+  anonKey: string;
+  isConfigured: boolean;
+  keyMasked: string;
+} {
+  try {
+    const runtimeUrl = localStorage.getItem(RUNTIME_URL_KEY) || '';
+    const runtimeKey = localStorage.getItem(RUNTIME_KEY_KEY) || '';
+    const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+    const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+    const url = runtimeUrl || envUrl;
+    const anonKey = runtimeKey || envKey;
+    const isConfigured = Boolean(
+      url &&
+      url.trim().length > 0 &&
+      anonKey &&
+      anonKey.trim().length > 0 &&
+      !url.includes('your-project')
+    );
+    const keyMasked = anonKey ? `${anonKey.slice(0, 8)}...${anonKey.slice(-4)}` : '';
+    return {
+      url,
+      anonKey,
+      isConfigured,
+      keyMasked,
+    };
+  } catch {
+    return { url: '', anonKey: '', isConfigured: false, keyMasked: '' };
+  }
 }
 
 export function saveRuntimeSupabaseConfig(url: string, anonKey: string): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('nexus_supabase_url', url.trim());
-    localStorage.setItem('nexus_supabase_anon_key', anonKey.trim());
-    window.location.reload();
+  try {
+    localStorage.setItem(RUNTIME_URL_KEY, url);
+    localStorage.setItem(RUNTIME_KEY_KEY, anonKey);
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  } catch (e) {
+    console.error('Failed to save Supabase config to localStorage:', e);
   }
 }
 
 export function clearRuntimeSupabaseConfig(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('nexus_supabase_url');
-    localStorage.removeItem('nexus_supabase_anon_key');
-    window.location.reload();
+  try {
+    localStorage.removeItem(RUNTIME_URL_KEY);
+    localStorage.removeItem(RUNTIME_KEY_KEY);
+  } catch (e) {
+    console.error('Failed to clear Supabase config from localStorage:', e);
   }
 }
 
-// Create Supabase client (or safe dummy client if unconfigured)
-export const supabase: SupabaseClient = createClient(
-  activeUrl || 'https://placeholder-project.supabase.co',
-  activeKey || 'placeholder-anon-key',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 10,
-      },
-    },
-  }
-);
+export function isSupabaseConfigured(): boolean {
+  return getSupabaseCredentials().isConfigured;
+}
+
+const creds = getSupabaseCredentials();
+export const supabase: SupabaseClient | null = isSupabaseConfigured()
+  ? createClient(creds.url, creds.anonKey)
+  : null;
