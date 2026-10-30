@@ -272,38 +272,6 @@ export const AccountDetailsModal: React.FC<AccountDetailsModalProps> = ({
               </div>
             </div>
           </div>
-
-          {/* Quick Persona Switcher in Account Modal */}
-          <div className="pt-2">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-              Fast Role Switch (Institutional Preview)
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              {uniqueUsers.slice(0, 4).map((u) => {
-                const isSelected = u.id === currentUser.id;
-                return (
-                  <button
-                    key={u.id}
-                    onClick={() => {
-                      onSwitchUser(u);
-                      onClose();
-                    }}
-                    className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer flex items-center gap-2 ${
-                      isSelected
-                        ? 'bg-amber-500/10 border-amber-500/40 text-amber-900 dark:text-amber-200'
-                        : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
-                    }`}
-                  >
-                    <UserAvatar name={u.name} role={u.role} size="sm" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold truncate">{u.name.split(' ')[0]}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 capitalize">{u.role}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         {/* Modal Footer Actions */}

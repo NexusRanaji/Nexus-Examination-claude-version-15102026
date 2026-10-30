@@ -1169,214 +1169,81 @@ let classSubjects: any[] = [
   { classId: 'cls-8', subjectId: 'sub-soc' },
 ];
 
-// Seed Users: Super Admin, Teachers, Students, Parents (NO AVATAR URLs - Lightweight Profile)
+// Seed Users: 4 Production Institutional Accounts
 let users: any[] = [
   {
-    id: 'usr-admin-1',
-    name: 'Dr. R. K. Deshmukh',
+    id: 'usr-admin',
+    name: 'Super Administrator',
     username: 'admin',
     email: 'admin@nexusrana.edu',
+    phone: '+91 98201 11000',
     role: 'superadmin',
     employeeId: 'NRES-DIR-001',
-    phone: '+91 98201 11000',
-    createdAt: '2025-01-10T08:00:00Z',
+    password: '$2b$10$2cTocYt1eQUGySirWHDzf.Li.wyxetCx54GUOGHvtZkupRqaqZd0G',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    mustChangePassword: false,
   },
   {
-    id: 'usr-teach-1',
-    name: 'Prof. Vikram Sharma',
-    username: 'teacher.sharma',
-    email: 'vikram.sharma@nexusrana.edu',
-    role: 'teacher',
-    employeeId: 'NRES-FAC-104',
+    id: 'usr-teacher-demo',
+    name: 'Faculty Teacher',
+    username: 'teacher.demo',
+    email: 'teacher.demo@nexusrana.edu',
     phone: '+91 98201 22334',
+    role: 'teacher',
+    employeeId: 'NRES-FAC-101',
+    password: '$2b$10$3CB7OlVS0mqgLtMfID4Vbe5Pveh4U7XFYsGdvO6RORRN5Grx5nQIi',
     assignedSubjects: [
       { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-phy' },
-      { classId: 'cls-10', divisionId: 'div-10b', subjectId: 'sub-phy' },
-      { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-math' },
-      { classId: 'cls-8', divisionId: 'div-8b', subjectId: 'sub-math' },
-    ],
-    createdAt: '2025-01-15T09:00:00Z',
-  },
-  {
-    id: 'usr-teach-2',
-    name: 'Mrs. Meera Nair',
-    username: 'teacher.meera',
-    email: 'meera.nair@nexusrana.edu',
-    role: 'teacher',
-    employeeId: 'NRES-FAC-118',
-    phone: '+91 98201 33445',
-    assignedSubjects: [
-      { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-eng' },
-      { classId: 'cls-9', divisionId: 'div-9a', subjectId: 'sub-cs' },
-    ],
-    createdAt: '2025-01-18T10:00:00Z',
-  },
-  {
-    id: 'usr-stud-1',
-    name: 'Aarav Sharma',
-    username: 'student.aarav',
-    email: 'aarav.sharma@student.nexusrana.edu',
-    role: 'student',
-    rollNo: 'NRES-10A-01',
-    classId: 'cls-10',
-    divisionId: 'div-10a',
-    parentId: 'usr-parent-1',
-    phone: '+91 98201 44521',
-    bonusPoints: 260,
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-stud-2',
-    name: 'Rohan Patel',
-    username: 'student.rohan',
-    email: 'rohan.patel@student.nexusrana.edu',
-    role: 'student',
-    rollNo: 'NRES-10A-02',
-    classId: 'cls-10',
-    divisionId: 'div-10a',
-    parentId: 'usr-parent-2',
-    phone: '+91 98202 88714',
-    bonusPoints: 175,
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-stud-3',
-    name: 'Ananya Sharma',
-    username: 'student.ananya',
-    email: 'ananya.sharma@student.nexusrana.edu',
-    role: 'student',
-    rollNo: 'NRES-8B-07',
-    classId: 'cls-8',
-    divisionId: 'div-8b',
-    parentId: 'usr-parent-1',
-    phone: '+91 98201 44521',
-    bonusPoints: 310,
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-stud-4',
-    name: 'Priya Verma',
-    username: 'student.priya',
-    email: 'priya.verma@student.nexusrana.edu',
-    role: 'student',
-    rollNo: 'NRES-9A-04',
-    classId: 'cls-9',
-    divisionId: 'div-9a',
-    parentId: 'usr-parent-3',
-    phone: '+91 98203 11223',
-    bonusPoints: 240,
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-parent-1',
-    name: 'Mr. Rajesh Sharma',
-    username: 'parent.sharma',
-    email: 'rajesh.sharma@parent.nexusrana.edu',
-    role: 'parent',
-    childrenIds: ['usr-stud-1', 'usr-stud-3'],
-    phone: '+91 98201 44521',
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-parent-2',
-    name: 'Mrs. Sunita Patel',
-    username: 'parent.patel',
-    email: 'sunita.patel@parent.nexusrana.edu',
-    role: 'parent',
-    childrenIds: ['usr-stud-2'],
-    phone: '+91 98202 88714',
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-parent-3',
-    name: 'Mr. Arvind Verma',
-    username: 'parent.verma',
-    email: 'arvind.verma@parent.nexusrana.edu',
-    role: 'parent',
-    childrenIds: ['usr-stud-4'],
-    phone: '+91 98203 11223',
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'usr-admin-legacy',
-    name: 'School Principal & Admin',
-    username: 'admin@school.com',
-    email: 'admin@school.com',
-    role: 'superadmin',
-    employeeId: 'NRES-ADM-002',
-    phone: '+91 98201 11001',
-    createdAt: '2025-01-01T08:00:00Z',
-  },
-  {
-    id: 'usr-teach-legacy',
-    name: 'Senior Faculty Examiner',
-    username: 'teacher@school.com',
-    email: 'teacher@school.com',
-    role: 'teacher',
-    employeeId: 'NRES-FAC-100',
-    phone: '+91 98201 22330',
-    assignedSubjects: [
-      { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-phy' },
-      { classId: 'cls-10', divisionId: 'div-10b', subjectId: 'sub-phy' },
       { classId: 'cls-10', divisionId: 'div-10a', subjectId: 'sub-math' },
     ],
-    createdAt: '2025-01-01T08:00:00Z',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    mustChangePassword: false,
   },
   {
-    id: 'usr-stud-legacy',
-    name: 'John Doe',
-    username: 'john@student.com',
-    email: 'john@student.com',
-    role: 'student',
-    rollNo: 'NRES-10A-99',
-    classId: 'cls-10',
-    divisionId: 'div-10a',
-    parentId: 'usr-parent-1',
+    id: 'usr-parent-demo',
+    name: 'Demo Parent',
+    username: 'parent.demo',
+    email: 'parent.demo@nexusrana.edu',
     phone: '+91 98201 44521',
-    bonusPoints: 240,
-    createdAt: '2025-01-01T08:00:00Z',
+    role: 'parent',
+    password: '$2b$10$l8QjyfzuQ5pTB.CD3DXjteOs2Kg4zM4IRP4lylMYn5f6C19LEsi1.',
+    childrenIds: ['usr-student-demo'],
+    createdAt: '2026-01-01T00:00:00.000Z',
+    mustChangePassword: false,
   },
   {
-    id: 'usr-stud-legacy-2',
-    name: 'Sarah Jenkins',
-    username: 'sarah@student.com',
-    email: 'sarah@student.com',
+    id: 'usr-student-demo',
+    name: 'Demo Student',
+    username: 'student.demo',
+    email: 'student.demo@student.nexusrana.edu',
+    phone: '+91 98201 44521',
     role: 'student',
-    rollNo: 'NRES-10A-98',
+    rollNo: '1',
     classId: 'cls-10',
     divisionId: 'div-10a',
-    parentId: 'usr-parent-2',
-    phone: '+91 98202 88714',
-    bonusPoints: 195,
-    createdAt: '2025-01-01T08:00:00Z',
+    parentId: 'usr-parent-demo',
+    password: '$2b$10$hIlywddB7lY3.W9nSTY3wuqlh.h7dDJUbFncQjzezqNdq6ycvPDle',
+    bonusPoints: 100,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    mustChangePassword: false,
   },
 ];
 
 const SEED_PASSWORDS: Record<string, string> = {
-  'admin': 'Admin@Nexus2025!',
-  'admin@school.com': 'admin123',
-  'teacher.sharma': 'NexusTeacher#2025',
-  'teacher.meera': 'NexusTeacher#2025',
-  'teacher@school.com': 'teacher123',
-  'student.aarav': 'StudentPass#101',
-  'student.rohan': 'StudentPass#101',
-  'student.ananya': 'StudentPass#101',
-  'student.priya': 'StudentPass#101',
-  'john@student.com': 'student123',
-  'sarah@student.com': 'student123',
-  'parent.sharma': 'ParentPass#2025',
-  'parent.patel': 'ParentPass#2025',
-  'parent.verma': 'ParentPass#2025',
+  'admin': 'Admin@Nexus2026',
+  'teacher.demo': 'Teacher@Nexus2026',
+  'parent.demo': 'Parent@Nexus2026',
+  'student.demo': 'Student@Nexus2026',
 };
 
 function getRoleDefaultPassword(role: string): string {
   switch (role) {
-    case 'superadmin': return 'Admin@Nexus2025!';
-    case 'teacher': return 'NexusTeacher#2025';
-    case 'parent': return 'ParentPass#2025';
+    case 'superadmin': return 'Admin@Nexus2026';
+    case 'teacher': return 'Teacher@Nexus2026';
+    case 'parent': return 'Parent@Nexus2026';
     case 'student':
     default:
-      return 'StudentPass#101';
+      return 'Student@Nexus2026';
   }
 }
 
@@ -2666,18 +2533,7 @@ function applyLoadedState(loaded: any) {
   if (Array.isArray(loaded.subjects) && loaded.subjects.length > 0) subjects = loaded.subjects;
   if (Array.isArray(loaded.classSubjects) && loaded.classSubjects.length > 0) classSubjects = loaded.classSubjects;
   if (Array.isArray(loaded.users) && loaded.users.length > 0) {
-    for (const u of loaded.users) {
-      if (u.username === 'theoneandonlyking999' || u.id === 'usr-admin-owner' || (u.email && u.email.includes('theoneandonlyking999'))) {
-        continue;
-      }
-      const idx = users.findIndex(ex => ex.id === u.id);
-      if (idx >= 0) {
-        users[idx] = { ...users[idx], ...u };
-      } else {
-        users.push(u);
-      }
-    }
-    users = users.filter((u) => u.username !== 'theoneandonlyking999' && u.id !== 'usr-admin-owner');
+    users = loaded.users.filter((u: any) => u && u.username !== 'theoneandonlyking999' && u.id !== 'usr-admin-owner' && !(u.email && u.email.includes('theoneandonlyking999')));
   }
   if (Array.isArray(loaded.questionBank) && loaded.questionBank.length > 0) questionBank = loaded.questionBank;
   if (Array.isArray(loaded.loginAudits)) loginAudits = loaded.loginAudits;
@@ -3031,11 +2887,11 @@ const handleLogin = (req: express.Request, res: express.Response) => {
   }
 
   // Friendly shorthand aliases for quick tester/evaluator convenience
-  if (lookup === 'student' || lookup === 'rohan') lookup = 'student.rohan';
-  else if (lookup === 'teacher' || lookup === 'sharma') lookup = 'teacher.sharma';
+  if (lookup === 'student' || lookup === 'rohan') lookup = 'student.demo';
+  else if (lookup === 'teacher' || lookup === 'sharma') lookup = 'teacher.demo';
   else if (lookup === 'admin' || lookup === 'principal' || lookup === 'director') lookup = 'admin';
-  else if (lookup === 'parent') lookup = 'parent.sharma';
-  else if (lookup === 'aarav') lookup = 'student.aarav';
+  else if (lookup === 'parent') lookup = 'parent.demo';
+  else if (lookup === 'aarav') lookup = 'student.demo';
 
   const cleanDigits = lookup.replace(/\D/g, '');
   const cleanAlphanum = lookup.replace(/[^a-z0-9]/g, '');
@@ -3149,19 +3005,10 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
   return res.json({ user: publicUser(req.user) });
 });
 
-// Public directory for login presets and unauthenticated visitors (with login presets passwords)
-// Public directory for login-page demos ONLY — never expose passwords or sensitive fields
+// Public directory: disabled in production deployment to prevent user enumeration
 app.get(['/api/auth/public-users', '/api/users/public'], (req, res) => {
   return res.json({
-    users: users.map((u) => ({
-      id: u.id,
-      name: u.name,
-      username: u.username,
-      role: u.role,
-      rollNo: u.rollNo,
-      employeeId: u.employeeId,
-      // Explicitly omit password, rawPassword, email, phone, parent links
-    })),
+    users: [],
   });
 });
 
@@ -3322,12 +3169,10 @@ app.post(['/api/admin/create-credential', '/api/auth/users', '/api/admin/credent
     }
   }
 
-  // Staff-specific compulsory fields
-  if (role === 'teacher' || role === 'superadmin') {
-    if (!employeeId) {
-      return res.status(400).json({ error: 'Employee / Faculty ID is compulsory for staff.' });
-    }
-  }
+  // Staff-specific employee ID auto-generation if not supplied
+  const finalEmployeeId = employeeId && String(employeeId).trim()
+    ? String(employeeId).trim()
+    : (role === 'teacher' || role === 'superadmin' ? `NRES-${role === 'superadmin' ? 'ADM' : 'FAC'}-${Math.floor(100 + Math.random() * 900)}` : undefined);
 
   // Email is strictly OPTIONAL
   let finalEmail = (email || '').trim();
@@ -3363,7 +3208,7 @@ app.post(['/api/admin/create-credential', '/api/auth/users', '/api/admin/credent
   };
 
   if (role === 'superadmin') {
-    newUser.employeeId = employeeId.trim();
+    newUser.employeeId = finalEmployeeId;
   } else if (role === 'student') {
     newUser.classId = classId;
     newUser.divisionId = divisionId;
@@ -3377,7 +3222,7 @@ app.post(['/api/admin/create-credential', '/api/auth/users', '/api/admin/credent
       }
     }
   } else if (role === 'teacher') {
-    newUser.employeeId = employeeId.trim();
+    newUser.employeeId = finalEmployeeId;
     newUser.assignedSubjects = assignedSubjects || [];
   } else if (role === 'parent') {
     newUser.childrenIds = [];
@@ -3508,11 +3353,7 @@ app.post('/api/admin/credentials/bulk', requireAuth, requireRole('superadmin'), 
     }
 
     if (role === 'teacher' || role === 'superadmin') {
-      employeeId = (u.employeeId || u['Employee ID'] || '').trim() || undefined;
-      if (!employeeId) {
-        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: 'Employee / Faculty ID is compulsory for staff' });
-        return;
-      }
+      employeeId = (u.employeeId || u['Employee ID'] || '').trim() || `NRES-${role === 'superadmin' ? 'ADM' : 'FAC'}-${Math.floor(100 + Math.random() * 900)}`;
     }
 
     const prefix = role === 'superadmin' ? 'admin' : role === 'teacher' ? 'teach' : role === 'student' ? 'stud' : 'parent';
@@ -6733,34 +6574,10 @@ app.get('/api/database/status', requireAuth, requireRole('superadmin'), async (r
   });
 });
 
-app.post('/api/database/connect', requireAuth, requireRole('superadmin'), async (req, res) => {
-  try {
-    const { databaseUrl } = req.body;
-    if (!databaseUrl || typeof databaseUrl !== 'string' || !databaseUrl.trim()) {
-      return res.status(400).json({ error: 'Please provide a valid database connection string (URI).' });
-    }
-
-    const result = await setDatabaseUrl(databaseUrl.trim());
-
-    // Immediately sync current system state to the newly connected database
-    const payload = getSystemStatePayload();
-    await saveStateToPostgres(payload);
-
-    res.json({
-      success: true,
-      message: result.message,
-      host: result.host,
-      stats: {
-        syncedUsers: users.length,
-        syncedExams: exams.length,
-        syncedSubmissions: submissions.length
-      }
-    });
-  } catch (err: any) {
-    const safeError = (err.message || 'Failed to connect to PostgreSQL database')
-      .replace(/postgresql:\/\/[^@]+@/i, 'postgresql://***:***@');
-    res.status(500).json({ error: safeError });
-  }
+app.post('/api/database/connect', (req, res) => {
+  return res.status(403).json({
+    error: 'Runtime database configuration is disabled in production. Database connection is managed via environment variables (DATABASE_URL) only.'
+  });
 });
 
 app.post('/api/database/sync', requireAuth, requireRole('superadmin'), async (req, res) => {

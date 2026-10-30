@@ -9,6 +9,515 @@ import jwt from "jsonwebtoken";
 import { createServer as createViteServer, build as viteBuild } from "vite";
 import { GoogleGenAI } from "@google/genai";
 
+// server/curriculumQuestions.ts
+function validateQuizUniqueness(questions) {
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new Error("Assessment must contain at least one question.");
+  }
+  const seenTexts = /* @__PURE__ */ new Set();
+  const seenOptionSets = /* @__PURE__ */ new Set();
+  for (let idx = 0; idx < questions.length; idx++) {
+    const q = questions[idx];
+    const textNorm = (q.text || q.questionText || "").trim().toLowerCase();
+    if (!textNorm) {
+      throw new Error(`Question at index ${idx + 1} has empty text.`);
+    }
+    if (seenTexts.has(textNorm)) {
+      throw new Error(`Duplicate question detected at index ${idx + 1}: "${q.text}"`);
+    }
+    seenTexts.add(textNorm);
+    if (!Array.isArray(q.options) || q.options.length !== 4) {
+      throw new Error(`Question ${idx + 1} must contain exactly 4 multiple-choice options.`);
+    }
+    const uniqueOptions = new Set(q.options.map((o) => String(o).trim().toLowerCase()));
+    if (uniqueOptions.size !== 4) {
+      throw new Error(`Question ${idx + 1} contains duplicate answer options.`);
+    }
+    const optionSignature = [...q.options].map((o) => String(o).trim().toLowerCase()).sort().join("|||");
+    if (seenOptionSets.has(optionSignature)) {
+      throw new Error(`Question ${idx + 1} reuses an identical set of answer options from another question.`);
+    }
+    seenOptionSets.add(optionSignature);
+    const ansIdx = typeof q.correctAnswer === "number" ? q.correctAnswer : q.correctAnswerIndex;
+    if (typeof ansIdx !== "number" || ansIdx < 0 || ansIdx > 3 || !Number.isInteger(ansIdx)) {
+      throw new Error(`Question ${idx + 1} has an invalid correctAnswer index: ${ansIdx}. Must be an integer between 0 and 3.`);
+    }
+  }
+}
+var CURRICULUM_BANK = {
+  // Light - Reflection and Refraction (Class 10 Physics)
+  "light": [
+    {
+      text: "Which spherical mirror has a virtual, erect, and magnified image when an object is placed between its pole and principal focus?",
+      options: ["Concave mirror", "Convex mirror", "Plane mirror", "Parabolic convex mirror"],
+      correctAnswer: 0,
+      explanation: "A concave mirror forms an enlarged virtual image when the object is placed between the pole (P) and principal focus (F), making it useful for dentists and shaving mirrors.",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "The focal length $f$ of a spherical mirror of radius of curvature $R = 30\\text{ cm}$ is:",
+      options: ["$15\\text{ cm}$", "$30\\text{ cm}$", "$60\\text{ cm}$", "$7.5\\text{ cm}$"],
+      correctAnswer: 0,
+      explanation: "For spherical mirrors of small aperture, the focal length is half the radius of curvature: $f = \\frac{R}{2} = \\frac{30}{2} = 15\\text{ cm}$.",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "According to Snell's law of refraction, what is the constant ratio for a given pair of media?",
+      options: ["$\\frac{\\sin i}{\\cos r}$", "$\\frac{\\sin i}{\\sin r}$", "$\\frac{\\tan i}{\\tan r}$", "$\\frac{\\cos i}{\\cos r}$"],
+      correctAnswer: 1,
+      explanation: "Snell's law states that the ratio of the sine of angle of incidence to the sine of angle of refraction is constant: $\\frac{\\sin i}{\\sin r} = n_{21}$.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "A convex lens of focal length $20\\text{ cm}$ has an optical power of:",
+      options: ["$-5.0\\text{ D}$", "$+2.0\\text{ D}$", "$+5.0\\text{ D}$", "$+0.05\\text{ D}$"],
+      correctAnswer: 2,
+      explanation: "Power of a lens $P = \\frac{1}{f\\text{ (in metres)}} = \\frac{1}{0.20\\text{ m}} = +5.0\\text{ Dioptres (D)}$.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "The refractive index of glass with respect to water is $\\frac{9}{8}$. If the speed of light in water is $2.25 \\times 10^8\\text{ m/s}$, the speed in glass is:",
+      options: ["$2.0 \\times 10^8\\text{ m/s}$", "$2.5 \\times 10^8\\text{ m/s}$", "$3.0 \\times 10^8\\text{ m/s}$", "$1.8 \\times 10^8\\text{ m/s}$"],
+      correctAnswer: 0,
+      explanation: "$v_g = \\frac{v_w}{n_{gw}} = \\frac{2.25 \\times 10^8}{\\frac{9}{8}} = 2.0 \\times 10^8\\text{ m/s}$.",
+      difficulty: "Hard",
+      marks: 5
+    },
+    {
+      text: "Where should an object be placed in front of a convex lens to obtain a real image of the same size as the object?",
+      options: ["At the principal focus $F_1$", "At twice the focal length $2F_1$", "At infinity", "Between optical centre and focus"],
+      correctAnswer: 1,
+      explanation: "When placed at $2F_1$, the real inverted image forms at $2F_2$ on the other side with magnification $m = -1$ (identical size).",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "Which optical phenomenon is primarily responsible for the sparkling of diamonds and transmission in optical fibres?",
+      options: ["Total Internal Reflection", "Diffraction", "Diffuse Reflection", "Atmospheric Dispersion"],
+      correctAnswer: 0,
+      explanation: "Total internal reflection occurs when light travels from an optically denser to rarer medium at an angle of incidence greater than the critical angle.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "An object is placed $12\\text{ cm}$ in front of a concave mirror of focal length $20\\text{ cm}$. The nature of the image is:",
+      options: ["Real, inverted, and magnified", "Virtual, erect, and magnified", "Real, inverted, and diminished", "Virtual, inverted, and diminished"],
+      correctAnswer: 1,
+      explanation: "Because object distance $u = 12\\text{ cm} < f = 20\\text{ cm}$, the object lies between the pole and the focus, producing a virtual, erect, and enlarged image behind the mirror.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "In the mirror formula $\\frac{1}{v} + \\frac{1}{u} = \\frac{1}{f}$, Cartesian sign convention dictates that object distance $u$ is:",
+      options: ["Always positive", "Always negative", "Positive for concave, negative for convex", "Zero at the centre of curvature"],
+      correctAnswer: 1,
+      explanation: "Because incident light travels from left to right, all distances measured to the left of the optical origin (pole) against incident light are assigned negative values.",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "The magnification produced by a rear-view mirror fitted in vehicles is:",
+      options: ["Always less than 1", "Always greater than 1", "Always equal to 1", "Greater or less than 1 depending on object distance"],
+      correctAnswer: 0,
+      explanation: "Convex mirrors always produce diminished, virtual, and erect images ($m < 1$), enabling drivers to observe a wide field of view.",
+      difficulty: "Medium",
+      marks: 4
+    }
+  ],
+  // Chemical Reactions and Equations (Class 10 Chemistry)
+  "chemical reactions": [
+    {
+      text: "Which of the following is a balanced representation of the reaction between iron and steam?",
+      options: [
+        "$3\\text{Fe} + 4\\text{H}_2\\text{O (g)} \\rightarrow \\text{Fe}_3\\text{O}_4 + 4\\text{H}_2$",
+        "$\\text{Fe} + \\text{H}_2\\text{O} \\rightarrow \\text{FeO} + \\text{H}_2$",
+        "$2\\text{Fe} + 3\\text{H}_2\\text{O} \\rightarrow \\text{Fe}_2\\text{O}_3 + 3\\text{H}_2$",
+        "$4\\text{Fe} + 3\\text{O}_2 \\rightarrow 2\\text{Fe}_2\\text{O}_3$"
+      ],
+      correctAnswer: 0,
+      explanation: "Red-hot iron reacts with steam to yield magnetic iron oxide (triferric tetroxide, $\\text{Fe}_3\\text{O}_4$) and hydrogen gas: $3\\text{Fe} + 4\\text{H}_2\\text{O} \\rightarrow \\text{Fe}_3\\text{O}_4 + 4\\text{H}_2$.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "When lead nitrate $\\text{Pb(NO}_3)_2$ powder is heated strongly in a dry test tube, brown fumes are evolved. These fumes are:",
+      options: ["Nitrogen dioxide ($\\text{NO}_2$)", "Nitric oxide ($\\text{NO}$)", "Nitrous oxide ($\\text{N}_2\\text{O}$)", "Nitrogen pentoxide ($\\text{N}_2\\text{O}_5$)"],
+      correctAnswer: 0,
+      explanation: "Thermal decomposition of lead nitrate yields lead oxide (yellow), oxygen gas, and pungent reddish-brown fumes of nitrogen dioxide ($\\text{NO}_2$).",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "In the redox reaction $\\text{MnO}_2 + 4\\text{HCl} \\rightarrow \\text{MnCl}_2 + 2\\text{H}_2\\text{O} + \\text{Cl}_2$, the substance oxidized is:",
+      options: ["$\\text{MnO}_2$", "$\\text{HCl}$", "$\\text{MnCl}_2$", "$\\text{H}_2\\text{O}$"],
+      correctAnswer: 1,
+      explanation: "$\\text{HCl}$ loses hydrogen (oxidation state of chlorine increases from $-1$ to $0$), so $\\text{HCl}$ is oxidized to $\\text{Cl}_2$, while $\\text{MnO}_2$ is reduced.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "Which antioxidant gas is flushed into plastic bags containing potato chips to prevent rancidity?",
+      options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Chlorine"],
+      correctAnswer: 1,
+      explanation: "Nitrogen is an unreactive inert gas that displaces oxygen, preventing aerial oxidation of unsaturated fats and oils.",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "What type of reaction occurs when quicklime ($\\text{CaO}$) is added to water with the evolution of large amounts of heat?",
+      options: ["Endothermic combination reaction", "Exothermic combination reaction", "Exothermic decomposition reaction", "Endothermic displacement reaction"],
+      correctAnswer: 1,
+      explanation: "$\\text{CaO} + \\text{H}_2\\text{O} \\rightarrow \\text{Ca(OH)}_2 + \\Delta H$. Two compounds combine into one and heat is liberated, classifying it as an exothermic combination reaction.",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "When an iron nail is immersed in copper sulphate solution for 30 minutes, what observable change occurs?",
+      options: [
+        "The solution changes from blue to pale green and a reddish-brown coating forms on the nail",
+        "The solution turns colourless and white precipitate forms",
+        "The iron nail completely dissolves with no residue",
+        "The solution remains deep blue while bubbles of oxygen evolve"
+      ],
+      correctAnswer: 0,
+      explanation: "Iron is more reactive than copper and displaces it: $\\text{Fe} + \\text{CuSO}_4 \\rightarrow \\text{FeSO}_4\\text{ (pale green)} + \\text{Cu}\\text{ (red-brown coating)}.",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "Electrolysis of water produces hydrogen and oxygen gases at the cathode and anode in which volume ratio?",
+      options: ["$1:2$", "$2:1$", "$1:8$", "$8:1$"],
+      correctAnswer: 1,
+      explanation: "Water decomposition ($2\\text{H}_2\\text{O} \\rightarrow 2\\text{H}_2 + \\text{O}_2$) yields $2$ volumes of $\\text{H}_2$ at the cathode for every $1$ volume of $\\text{O}_2$ at the anode ($2:1$ ratio).",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "Which reaction represents photographic black-and-white decomposition by sunlight?",
+      options: [
+        "$2\\text{AgCl (s)} \\xrightarrow{\\text{sunlight}} 2\\text{Ag (s)} + \\text{Cl}_2\\text{ (g)}$",
+        "$\\text{AgNO}_3 + \\text{NaCl} \\rightarrow \\text{AgCl} + \\text{NaNO}_3$",
+        "$2\\text{FeSO}_4 \\xrightarrow{\\Delta} \\text{Fe}_2\\text{O}_3 + \\text{SO}_2 + \\text{SO}_3$",
+        "$\\text{CaCO}_3 \\xrightarrow{\\Delta} \\text{CaO} + \\text{CO}_2$"
+      ],
+      correctAnswer: 0,
+      explanation: "White silver chloride turns grey in sunlight due to photolytic decomposition into elemental silver and chlorine gas.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "Corrosion of copper articles on prolonged exposure to moist air results in a green coating composed of:",
+      options: ["Basic copper carbonate [$\\text{CuCO}_3 \\cdot \\text{Cu(OH)}_2$]", "Copper sulphate", "Copper oxide [$\\text{CuO}$]", "Cuprous chloride"],
+      correctAnswer: 0,
+      explanation: "Copper reacts with atmospheric $\\text{CO}_2$ and moisture to form basic copper carbonate, responsible for the characteristic green patina.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "A solution of substance X is used for whitewashing. Substance X is obtained by heating limestone. What is X?",
+      options: ["Slaked lime [$\\text{Ca(OH)}_2$]", "Quicklime [$\\text{CaO}$]", "Calcium carbonate [$\\text{CaCO}_3$]", "Gypsum [$\\text{CaSO}_4 \\cdot 2\\text{H}_2\\text{O}$]"],
+      correctAnswer: 1,
+      explanation: "Limestone ($\\text{CaCO}_3$) decomposes upon heating to produce quicklime ($\\text{CaO}$), which when mixed with water gives whitewash slaked lime.",
+      difficulty: "Easy",
+      marks: 4
+    }
+  ],
+  // Real Numbers & Quadratic Equations (Class 10 Mathematics)
+  "mathematics": [
+    {
+      text: "According to the Fundamental Theorem of Arithmetic, every composite number can be factored uniquely as a product of:",
+      options: ["Prime numbers, apart from the order of factors", "Even numbers and odd numbers", "Natural numbers and integers", "Coprime integers only"],
+      correctAnswer: 0,
+      explanation: "Every composite number can be uniquely expressed as a product of powers of primes, up to rearrangement of the prime factors.",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "If the discriminant $D = b^2 - 4ac$ of a quadratic equation $ax^2 + bx + c = 0$ is greater than zero ($D > 0$), the roots are:",
+      options: ["Real and distinct", "Real and equal", "No real roots (complex conjugates)", "Purely imaginary only"],
+      correctAnswer: 0,
+      explanation: "When $D > 0$, the quadratic formula yields two distinct real values: $x = \\frac{-b \\pm \\sqrt{D}}{2a}$.",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "The HCF of 96 and 404 is 4. Their LCM is:",
+      options: ["9696", "9600", "4040", "3840"],
+      correctAnswer: 0,
+      explanation: "$\\text{LCM} \\times \\text{HCF} = a \\times b \\implies \\text{LCM} = \\frac{96 \\times 404}{4} = 96 \\times 101 = 9696$.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "For what value of $k$ does the quadratic equation $2x^2 - kx + k = 0$ have equal roots?",
+      options: ["$0\\text{ or }8$", "$4\\text{ only}$", "$8\\text{ only}$", "$0\\text{ or }4$"],
+      correctAnswer: 0,
+      explanation: "For equal roots, $D = 0 \\implies (-k)^2 - 4(2)(k) = 0 \\implies k^2 - 8k = 0 \\implies k(k - 8) = 0 \\implies k = 0\\text{ or }8$.",
+      difficulty: "Hard",
+      marks: 5
+    },
+    {
+      text: "If $\\alpha$ and $\\beta$ are the roots of the quadratic polynomial $p(x) = x^2 - 5x + 6$, then $\\alpha + \\beta$ and $\\alpha\\beta$ are:",
+      options: ["$\\alpha + \\beta = 5, \\alpha\\beta = 6$", "$\\alpha + \\beta = -5, \\alpha\\beta = 6$", "$\\alpha + \\beta = 6, \\alpha\\beta = 5$", "$\\alpha + \\beta = 5, \\alpha\\beta = -6$"],
+      correctAnswer: 0,
+      explanation: "For $ax^2 + bx + c$, sum of roots $= -\\frac{b}{a} = -\\frac{-5}{1} = 5$ and product of roots $= \\frac{c}{a} = 6$.",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "Which of the following numbers is irrational?",
+      options: ["$\\sqrt{3}$", "$\\sqrt{9}$", "$\\frac{22}{7}$", "$3.141414...$"],
+      correctAnswer: 0,
+      explanation: "$\\sqrt{3}$ has a non-terminating, non-recurring decimal expansion and cannot be written as $\\frac{p}{q}$ ($p, q \\in \\mathbb{Z}, q \\neq 0$).",
+      difficulty: "Easy",
+      marks: 4
+    },
+    {
+      text: "The decimal expansion of $\\frac{13}{3125}$ will terminate after how many decimal places?",
+      options: ["5 decimal places", "4 decimal places", "3 decimal places", "6 decimal places"],
+      correctAnswer: 0,
+      explanation: "$3125 = 5^5$. Because the denominator has prime factorization $2^0 \\times 5^5$, the decimal terminates after $\\max(0, 5) = 5$ decimal places.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "If one root of the quadratic equation $3x^2 + 7x + k = 0$ is $-\\frac{1}{3}$, the value of $k$ is:",
+      options: ["$2$", "$-2$", "$3$", "$-3$"],
+      correctAnswer: 0,
+      explanation: "Substitute $x = -\\frac{1}{3}$: $3\\left(-\\frac{1}{3}\\right)^2 + 7\\left(-\\frac{1}{3}\\right) + k = 0 \\implies \\frac{1}{3} - \\frac{7}{3} + k = 0 \\implies -2 + k = 0 \\implies k = 2$.",
+      difficulty: "Medium",
+      marks: 4
+    },
+    {
+      text: "A motor boat whose speed is $18\\text{ km/h}$ in still water takes $1\\text{ hour}$ more to go $24\\text{ km}$ upstream than to return downstream. What is the speed of the stream?",
+      options: ["$6\\text{ km/h}$", "$5\\text{ km/h}$", "$4\\text{ km/h}$", "$8\\text{ km/h}$"],
+      correctAnswer: 0,
+      explanation: "$\\frac{24}{18 - s} - \\frac{24}{18 + s} = 1 \\implies 24(2s) = 324 - s^2 \\implies s^2 + 48s - 324 = 0 \\implies (s + 54)(s - 6) = 0 \\implies s = 6\\text{ km/h}$.",
+      difficulty: "Hard",
+      marks: 5
+    },
+    {
+      text: "The condition for which the pair of linear equations $a_1x + b_1y + c_1 = 0$ and $a_2x + b_2y + c_2 = 0$ has infinitely many solutions is:",
+      options: [
+        "$\\frac{a_1}{a_2} = \\frac{b_1}{b_2} = \\frac{c_1}{c_2}$",
+        "$\\frac{a_1}{a_2} \\neq \\frac{b_1}{b_2}$",
+        "$\\frac{a_1}{a_2} = \\frac{b_1}{b_2} \\neq \\frac{c_1}{c_2}$",
+        "$\\frac{a_1}{a_2} = \\frac{c_1}{c_2} \\neq \\frac{b_1}{b_2}$"
+      ],
+      correctAnswer: 0,
+      explanation: "Infinitely many solutions occur when two linear equations represent coincident lines, requiring all coefficient ratios to be equal.",
+      difficulty: "Easy",
+      marks: 4
+    }
+  ]
+};
+function generateStructuredCurriculumQuestions(chapterName, subject, classGrade, educationalBoard, difficultyLevel, totalQuestions) {
+  const facets = [
+    {
+      dimension: "Canonical Definition",
+      text: `Under ${educationalBoard} guidelines for ${classGrade} ${subject}, which statement precisely defines the primary governing concept of "${chapterName}"?`,
+      options: [
+        `The fundamental standard principle establishing the invariant characteristics of ${chapterName}`,
+        `A localized secondary observation valid exclusively under non-standard ambient conditions`,
+        `An inverse relationship hypothesis superseded by modern pedagogical frameworks`,
+        `A historical rule applied only to non-homogeneous composite structures`
+      ],
+      correct: 0,
+      expl: `Option A correctly reflects the canonical curriculum definition established in the standard ${educationalBoard} textbook for ${chapterName}.`
+    },
+    {
+      dimension: "Mathematical Formulation",
+      text: `In mathematical models analyzing "${chapterName}", which functional relationship correctly relates the primary independent and dependent variables?`,
+      options: [
+        `Inverse quadratic decay with respect to boundary separation`,
+        `Direct proportionality where the response variable scales linearly with applied gradient`,
+        `Logarithmic compression independent of active initial parameters`,
+        `Discontinuous step function exhibiting zero variance across all domains`
+      ],
+      correct: 1,
+      expl: `In standard analytical problems of ${chapterName}, linear scaling with respect to applied gradient governs the primary state transition.`
+    },
+    {
+      dimension: "SI Units & Dimensional Verification",
+      text: `What is the standard derived SI unit and dimensional dimension convention associated with key quantities measured in "${chapterName}"?`,
+      options: [
+        `Dimensionless scalar quantity without physical units`,
+        `Compound unit expressed in standard SI coherent derived units with consistent dimensional exponents`,
+        `Empirical units valid only in historical non-metric systems`,
+        `Arbitrary index varying between 0 and 100 without metric anchoring`
+      ],
+      correct: 1,
+      expl: `Physical quantities in ${chapterName} are rigorously measured using coherent derived SI units consistent with International System standards.`
+    },
+    {
+      dimension: "Laboratory Demonstration",
+      text: `During a standard classroom laboratory experiment investigating "${chapterName}", which experimental observation directly confirms the underlying theory?`,
+      options: [
+        `A measurable deflection or quantitative transition proportional to controlled input variance`,
+        `An absolute absence of change regardless of magnitude of applied stimulation`,
+        `Erratic random oscillations violating conservation laws`,
+        `Complete immediate decomposition of all apparatus components`
+      ],
+      correct: 0,
+      expl: `The laboratory demonstration verifies ${chapterName} by recording consistent quantitative transitions that match theoretical predictions within experimental error.`
+    },
+    {
+      dimension: "Real-World Technology Application",
+      text: `Which modern industrial or technological application directly harnesses the core principles of "${chapterName}"?`,
+      options: [
+        `High-efficiency consumer devices and precision engineering systems engineered on this principle`,
+        `Pre-industrial mechanical clockwork mechanisms that ignored thermodynamic principles`,
+        `Manual paper filing storage archives requiring zero energy transmission`,
+        `Static decorative coatings possessing no active functional utility`
+      ],
+      correct: 0,
+      expl: `Modern engineering systems leverage the exact governing principles of ${chapterName} to achieve optimal efficiency and control.`
+    },
+    {
+      dimension: "Boundary Conditions",
+      text: `What limiting boundary condition or constraint must be satisfied for the standard laws of "${chapterName}" to hold rigorously?`,
+      options: [
+        `The system must operate within specified linear elastic or homogeneous equilibrium ranges`,
+        `The system must operate at relativistic velocities exceeding the speed of light`,
+        `All thermal energy must be permanently eliminated from the surroundings`,
+        `The surrounding pressure must approach infinite barometric levels`
+      ],
+      correct: 0,
+      expl: `Curriculum principles in ${chapterName} presuppose equilibrium conditions within defined physical boundaries for linear relationships to apply.`
+    },
+    {
+      dimension: "Common Academic Misconceptions",
+      text: `Which common student misconception regarding "${chapterName}" is explicitly refuted by ${educationalBoard} curricular standards?`,
+      options: [
+        `Assuming that absence of visible motion implies total absence of internal kinetic or potential energy`,
+        `Recognizing that energy remains strictly conserved throughout all closed transitions`,
+        `Applying dimensional homogeneity to verify the validity of derived equations`,
+        `Acknowledging that temperature reflects average molecular kinetic energy`
+      ],
+      correct: 0,
+      expl: `A frequent student error in ${chapterName} is mistaking macroscopic rest for microscopic inactivity; internal energy balances remain fully active.`
+    },
+    {
+      dimension: "Comparative Analytical Synthesis",
+      text: `When comparing "${chapterName}" with adjacent related chapters in ${subject}, what distinguishes its governing mechanisms?`,
+      options: [
+        `Its unique dependence on state variables rather than path-dependent mechanical work`,
+        `It operates independently of any underlying physical conservation laws`,
+        `It applies solely to extraterrestrial astrophysical phenomena`,
+        `It is the only chapter lacking empirical experimental validation`
+      ],
+      correct: 0,
+      expl: `The distinction of ${chapterName} lies in its specific formulation around state variables and boundary constraints.`
+    },
+    {
+      dimension: "Quantitative Problem Solving Strategy",
+      text: `When solving numerical assessment problems in "${chapterName}", what is the recommended first step according to standard marking schemes?`,
+      options: [
+        `List all given quantities with correct SI units, identify the target unknown, and state the governing formula`,
+        `Immediately multiply all numbers without checking dimensional compatibility`,
+        `Guess the answer from the multiple-choice options before reading the question stem`,
+        `Round off all initial data to the nearest multiple of ten before substitution`
+      ],
+      correct: 0,
+      expl: `CBSE marking rubrics award step marks for explicitly writing knowns, unknowns, and standard governing formulas with correct units.`
+    },
+    {
+      dimension: "Cause-and-Effect Mechanics",
+      text: `In a controlled system governed by "${chapterName}", what occurs if the primary driving parameter is doubled while maintaining all other variables constant?`,
+      options: [
+        `The corresponding physical response doubles or scales predictably according to the governing power-law`,
+        `The entire system collapses into an undefined singular state`,
+        `The response remains completely stationary and insensitive to all inputs`,
+        `The response scales inversely by a factor of ten thousand`
+      ],
+      correct: 0,
+      expl: `Linear or power-law scaling dictates that doubling the primary driver yields a predictable, reproducible increase in the dependent system response.`
+    }
+  ];
+  const now2 = Date.now();
+  const selectedFacets = facets.slice(0, Math.min(totalQuestions, facets.length));
+  return selectedFacets.map((facet, i) => {
+    const targetCorrect = i % 4;
+    const baseOptions = [...facet.options];
+    const correctText = baseOptions[facet.correct];
+    baseOptions.splice(facet.correct, 1);
+    const finalOptions = [];
+    let wrongIdx = 0;
+    for (let pos = 0; pos < 4; pos++) {
+      if (pos === targetCorrect) {
+        finalOptions.push(correctText);
+      } else {
+        finalOptions.push(baseOptions[wrongIdx++]);
+      }
+    }
+    const diff = difficultyLevel === "Mixed" ? i % 3 === 0 ? "Easy" : i % 3 === 1 ? "Medium" : "Hard" : difficultyLevel;
+    return {
+      id: `curriculum-q-${now2}-${i + 1}`,
+      text: facet.text,
+      questionText: facet.text,
+      options: finalOptions,
+      correctAnswer: targetCorrect,
+      correctAnswerIndex: targetCorrect,
+      explanation: facet.expl,
+      points: diff === "Hard" ? 5 : diff === "Medium" ? 4 : 3,
+      marks: diff === "Hard" ? 5 : diff === "Medium" ? 4 : 3,
+      difficulty: diff
+    };
+  });
+}
+function getCurriculumQuiz(params) {
+  const { chapterName, subject, classGrade, educationalBoard, difficultyLevel, totalQuestions } = params;
+  if (!chapterName || !chapterName.trim()) {
+    throw new Error("Chapter name is required to generate curriculum assessment.");
+  }
+  const cleanChap = chapterName.toLowerCase().trim();
+  const cleanSub = (subject || "").toLowerCase().trim();
+  let matchedBank = null;
+  for (const [key, items] of Object.entries(CURRICULUM_BANK)) {
+    if (cleanChap.includes(key) || cleanSub.includes(key)) {
+      matchedBank = items;
+      break;
+    }
+  }
+  let questions = [];
+  const now2 = Date.now();
+  if (matchedBank && matchedBank.length >= totalQuestions) {
+    questions = matchedBank.slice(0, totalQuestions).map((item, idx) => ({
+      id: `bank-q-${now2}-${idx + 1}`,
+      text: item.text,
+      questionText: item.text,
+      options: [...item.options],
+      correctAnswer: item.correctAnswer,
+      correctAnswerIndex: item.correctAnswer,
+      explanation: item.explanation,
+      points: item.marks,
+      marks: item.marks,
+      difficulty: item.difficulty
+    }));
+  } else {
+    questions = generateStructuredCurriculumQuestions(
+      chapterName,
+      subject,
+      classGrade,
+      educationalBoard,
+      difficultyLevel,
+      totalQuestions
+    );
+  }
+  validateQuizUniqueness(questions);
+  return {
+    title: `${subject}: ${chapterName} Assessment (${educationalBoard})`,
+    description: `Curriculum-grounded assessment for ${classGrade} aligned with ${educationalBoard} standards.`,
+    board: educationalBoard,
+    difficulty: difficultyLevel,
+    questions
+  };
+}
+
 // server/db.ts
 import pg from "pg";
 import fs from "fs";
@@ -50,58 +559,6 @@ function loadEnvFile() {
 }
 loadEnvFile();
 var connectionString = process.env.DATABASE_URL || "";
-function sanitizeAndValidateDatabaseUrl(raw) {
-  let str = (raw || "").trim();
-  str = str.replace(/^["'`]|["'`]$/g, "").trim();
-  if (str.startsWith("psql ")) {
-    str = str.replace(/^psql\s+/, "").trim().replace(/^["'`]|["'`]$/g, "").trim();
-  }
-  if (!str) {
-    return { cleanUrl: "", error: "Database URL cannot be empty." };
-  }
-  if (str.startsWith("http://") || str.startsWith("https://")) {
-    return {
-      cleanUrl: "",
-      error: 'You pasted a Supabase REST API URL (https://...). To connect PostgreSQL, use the Connection String URI starting with "postgresql://". In Supabase, click "Connect" at top or go to Project Settings -> Database -> Connection string -> URI.'
-    };
-  }
-  if (/\[YOUR-PASSWORD\]|\[YOUR_PASSWORD\]|<YOUR-PASSWORD>|<password>|\[password\]/i.test(str)) {
-    return {
-      cleanUrl: "",
-      error: 'The connection string still contains the placeholder "[YOUR-PASSWORD]". Please replace "[YOUR-PASSWORD]" with your actual Supabase database password.'
-    };
-  }
-  str = str.replace(/:\[([^\]\s]+)\]@/, ":$1@");
-  if (str.startsWith("postgres://")) {
-    str = "postgresql://" + str.substring(11);
-  }
-  if (!str.startsWith("postgresql://")) {
-    return {
-      cleanUrl: "",
-      error: 'Invalid connection protocol. PostgreSQL connection strings must begin with "postgresql://".'
-    };
-  }
-  try {
-    const protoIndex = str.indexOf("://");
-    const afterProto = str.substring(protoIndex + 3);
-    const lastAt = afterProto.lastIndexOf("@");
-    if (lastAt !== -1) {
-      const userInfo = afterProto.substring(0, lastAt);
-      const hostAndRest = afterProto.substring(lastAt + 1);
-      const colonIndex = userInfo.indexOf(":");
-      if (colonIndex !== -1) {
-        const user = userInfo.substring(0, colonIndex);
-        let password = userInfo.substring(colonIndex + 1);
-        if (password.includes("@") || password.includes("#") || password.includes("?") || password.includes("&")) {
-          const encodedPassword = encodeURIComponent(decodeURIComponent(password));
-          str = `postgresql://${user}:${encodedPassword}@${hostAndRest}`;
-        }
-      }
-    }
-  } catch {
-  }
-  return { cleanUrl: str };
-}
 function createPool(connStr) {
   const isLocal = !connStr || connStr.includes("localhost") || connStr.includes("127.0.0.1");
   return new Pool({
@@ -223,127 +680,6 @@ async function saveStateToPostgres(payload) {
       console.warn("[DB] Notice: Could not sync state to Supabase PostgreSQL:", err.message);
     }
     return false;
-  }
-}
-async function setDatabaseUrl(newConnStr) {
-  const { cleanUrl, error } = sanitizeAndValidateDatabaseUrl(newConnStr);
-  if (error || !cleanUrl) {
-    throw new Error(error || "Invalid database connection string.");
-  }
-  const testPool = createPool(cleanUrl);
-  try {
-    const res = await testPool.query("SELECT 1 as test, current_database() as db_name, version() as version");
-    const dbName = res.rows?.[0]?.db_name || "postgres";
-    await testPool.query(`
-      CREATE TABLE IF NOT EXISTS public.nexus_system_state (
-        id TEXT PRIMARY KEY,
-        payload JSONB NOT NULL,
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-      );
-      ALTER TABLE public.nexus_system_state ENABLE ROW LEVEL SECURITY;
-    `);
-    try {
-      await pool.end();
-    } catch {
-    }
-    connectionString = cleanUrl;
-    process.env.DATABASE_URL = cleanUrl;
-    _dbSyncDisabledDueToAuth = false;
-    pool = testPool;
-    if (process.env.NODE_ENV !== "production") {
-      global._nexusPgPool = pool;
-    }
-    try {
-      const envPath = path.resolve(process.cwd(), ".env");
-      let envContent = "";
-      if (fs.existsSync(envPath)) {
-        envContent = fs.readFileSync(envPath, "utf8");
-      }
-      if (envContent.includes("DATABASE_URL=")) {
-        envContent = envContent.replace(/DATABASE_URL=.*(\r?\n|$)/, `DATABASE_URL="${cleanUrl}"$1`);
-      } else {
-        envContent += `
-DATABASE_URL="${cleanUrl}"
-`;
-      }
-      fs.writeFileSync(envPath, envContent, "utf8");
-      console.log("[DB] Saved new DATABASE_URL to .env file.");
-    } catch (saveErr) {
-      console.warn("[DB] Could not write DATABASE_URL to .env:", saveErr.message);
-    }
-    const host = getDatabaseHost() || "Supabase";
-    return {
-      success: true,
-      message: `Successfully connected to database "${dbName}" at ${host}!`,
-      host
-    };
-  } catch (err) {
-    if (err.message.includes("timeout") || err.message.includes("ENOTFOUND") || err.message.includes("ECONNREFUSED") || err.message.includes("ETIMEDOUT")) {
-      const match = cleanUrl.match(/postgresql:\/\/postgres:([^@]+)@db\.([a-z0-9_-]+)\.supabase\.co:5432\/postgres/i);
-      if (match) {
-        const pass = match[1];
-        const ref = match[2];
-        const regionsToTry = ["aws-0-ap-southeast-1", "aws-0-ap-south-1", "aws-0-us-east-1", "aws-0-eu-central-1"];
-        for (const reg of regionsToTry) {
-          const poolerUrl = `postgresql://postgres.${ref}:${pass}@${reg}.pooler.supabase.com:6543/postgres`;
-          const poolerTest = createPool(poolerUrl);
-          try {
-            const res2 = await poolerTest.query("SELECT 1 as test, current_database() as db_name, version() as version");
-            const dbName = res2.rows?.[0]?.db_name || "postgres";
-            await poolerTest.query(`
-              CREATE TABLE IF NOT EXISTS public.nexus_system_state (
-                id TEXT PRIMARY KEY,
-                payload JSONB NOT NULL,
-                updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-              );
-              ALTER TABLE public.nexus_system_state ENABLE ROW LEVEL SECURITY;
-            `);
-            try {
-              await pool.end();
-            } catch {
-            }
-            connectionString = poolerUrl;
-            process.env.DATABASE_URL = poolerUrl;
-            pool = poolerTest;
-            if (process.env.NODE_ENV !== "production") {
-              global._nexusPgPool = pool;
-            }
-            try {
-              const envPath = path.resolve(process.cwd(), ".env");
-              let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : "";
-              if (envContent.includes("DATABASE_URL=")) {
-                envContent = envContent.replace(/DATABASE_URL=.*(\r?\n|$)/, `DATABASE_URL="${poolerUrl}"$1`);
-              } else {
-                envContent += `
-DATABASE_URL="${poolerUrl}"
-`;
-              }
-              fs.writeFileSync(envPath, envContent, "utf8");
-            } catch {
-            }
-            return {
-              success: true,
-              message: `Successfully connected to Supabase database "${dbName}" via IPv4 Pooler (${reg})!`,
-              host: `${reg}.pooler.supabase.com`
-            };
-          } catch {
-            try {
-              await poolerTest.end();
-            } catch {
-            }
-          }
-        }
-      }
-    }
-    let userFriendlyMsg = err.message;
-    if (err.message.includes("password authentication failed")) {
-      userFriendlyMsg = 'Authentication failed: The database password in your connection string is incorrect. If you forgot your password, open your Supabase project -> Project Settings -> Database -> scroll down to "Database password" and click "Reset database password".';
-    } else if (err.message.includes("getaddrinfo ENOTFOUND") || err.message.includes("ENOTFOUND")) {
-      userFriendlyMsg = "Host not found: Could not reach the database server. Check that your Supabase project URL/host is spelled correctly.";
-    } else if (err.message.includes("ETIMEDOUT") || err.message.includes("timeout")) {
-      userFriendlyMsg = 'Connection timed out: Could not connect to Supabase. Note: If your network uses IPv4, make sure you copy the "Session pooler" connection string (port 6543) from Supabase rather than direct connection (port 5432).';
-    }
-    throw new Error(`Database connection failed: ${userFriendlyMsg}`);
   }
 }
 async function runAllMigrations() {
@@ -598,8 +934,12 @@ var GeminiServicePool = class _GeminiServicePool {
   static isNonStudyQuery(message) {
     if (!message) return false;
     const lower = message.toLowerCase().trim();
+    const academicWhitelist = /\b(carbon|allotrope|diamond|diamonds|physics|chemistry|biology|science|math|mathematics|algebra|geometry|calculus|trigonometry|history|geography|civics|economics|english|grammar|literature|poem|poetry|chapter|syllabus|formula|equation|theorem|definition|explain|derive|experiment|reaction|cell|dna|photosynthesis|gravity|friction|motion|velocity|acceleration|sound|wave|optics|light|lens|mirror|electricity|magnetism|atom|molecule|acid|base|salt|metal|nonmetal|heredity|evolution|ecosystem|respiration|circulation|reproduction|ncert|cbse|ssc|icse|exam|test|question|solve|homework|study|school|teacher|student)\b/i;
+    if (academicWhitelist.test(lower)) {
+      return false;
+    }
     const nonStudyPatterns = [
-      /\b(free\s*fire|pubg|bgmi|minecraft|roblox|fortnite|gta\s*[v5]?|call\s*of\s*duty|valorant|clash\s*of\s*clans|brawl\s*stars|among\s*us|apex\s*legends|playstation|xbox|nintendo|cheat\s*codes?|v-bucks|diamonds|gameplay)\b/i,
+      /\b(free\s*fire|pubg|bgmi|minecraft|roblox|fortnite|gta\s*[v5]?|call\s*of\s*duty|valorant|clash\s*of\s*clans|brawl\s*stars|among\s*us|apex\s*legends|playstation|xbox|nintendo|cheat\s*codes?|v-bucks|free\s*fire\s*diamonds|gameplay)\b/i,
       /\b(bollywood|hollywood|netflix|movie|cinema|actor|actress|celebrity|web\s*series|trailer|box\s*office|bigg\s*boss|drama\s*serial|song\s*lyrics|pop\s*singer|taylor\s*swift|bts|kpop)\b/i,
       /\b(dating|girlfriend|boyfriend|crush|tinder|bumble|propose|flirt|breakup|romance|kiss|relationship\s*advice)\b/i,
       /\b(tell\s*me\s*a\s*joke|funny\s*joke|entertain\s*me|roast\s*me|sing\s*a\s*song|rap\s*song|memes?)\b/i,
@@ -825,42 +1165,43 @@ RULES:
           difficulty: diff
         };
       });
+      let validatedQuestions = questions;
+      try {
+        if (questions.length < totalQuestions) {
+          throw new Error(`AI generated ${questions.length} questions, expected ${totalQuestions}`);
+        }
+        validateQuizUniqueness(questions.slice(0, totalQuestions));
+        validatedQuestions = questions.slice(0, totalQuestions);
+      } catch (validationErr) {
+        console.warn("[Gemini AI Service] AI generated questions failed uniqueness validation, falling back to curriculum question bank:", validationErr.message);
+        return getCurriculumQuiz({
+          chapterName,
+          subject,
+          classGrade,
+          language,
+          educationalBoard,
+          difficultyLevel,
+          totalQuestions
+        });
+      }
       return {
         title: parsed.title || `${subject}: ${chapterName} Assessment`,
         description: parsed.description || `Assessment paper for ${classGrade} aligned with ${educationalBoard}.`,
         board: educationalBoard,
         difficulty: difficultyLevel,
-        questions
+        questions: validatedQuestions
       };
     } catch (err) {
       console.warn("[Gemini AI Service] Quiz generation falling back to curriculum syllabus:", err?.message || err);
-      const fallbackQuestions = Array.from({ length: totalQuestions }).map((_, i) => {
-        const qText = `[${chapterName}] Core Concept Evaluation Question ${i + 1}: Which of the following fundamental principles correctly describes the mechanics of this topic under ${educationalBoard} guidelines?`;
-        return {
-          id: `fallback-q-${Date.now()}-${i + 1}`,
-          text: qText,
-          questionText: qText,
-          options: [
-            `Principle statement affirming fundamental laws and verified experimental results (Correct)`,
-            `Alternative hypothesis lacking empirical backing under standard conditions`,
-            `Inverse proportionality assumption contrary to canonical definitions`,
-            `Disproven historical axiom superseded by modern formulations`
-          ],
-          correctAnswer: 0,
-          correctAnswerIndex: 0,
-          explanation: `Option A correctly states the core definition outlined in ${educationalBoard} chapter syllabus for ${chapterName}.`,
-          points: 5,
-          marks: 5,
-          difficulty: difficultyLevel === "Mixed" ? i % 2 === 0 ? "Medium" : "Hard" : difficultyLevel
-        };
+      return getCurriculumQuiz({
+        chapterName,
+        subject,
+        classGrade,
+        language,
+        educationalBoard,
+        difficultyLevel,
+        totalQuestions
       });
-      return {
-        title: `${subject}: ${chapterName} Assessment (${educationalBoard})`,
-        description: `Curriculum assessment for ${classGrade} covering ${chapterName}.`,
-        board: educationalBoard,
-        difficulty: difficultyLevel,
-        questions: fallbackQuestions
-      };
     }
   }
   /**
@@ -1077,11 +1418,15 @@ ${selectedRole.systemInstruction}`,
       }
     }
     if (!reply || reply.trim().length === 0) {
+      modelSuccessfullyUsed = "unconfigured-offline";
       if (lastError) {
         console.info("[Gemini Chatbot] Using role-specific academic fallback guidance:", lastError?.message || lastError);
       }
+      const statusNotice = `> **Academic Assistant Notice:** Live AI services are currently unconfigured or offline in this environment. Providing curriculum study guidelines:`;
       if (roleId === "stem_specialist") {
-        reply = `### STEM Reasoning Guide (High-Capacity Mode)
+        reply = `### STEM Reasoning Guide (Offline Mode)
+
+${statusNotice}
 
 Regarding: **"${cleanUserMessage}"**
 
@@ -1089,9 +1434,11 @@ Regarding: **"${cleanUserMessage}"**
 2. **Derivation Pathway**: Identify the fundamental governing law (e.g., Conservation of Energy/Momentum, Maxwell's equations, or Binomial theorem).
 3. **Dimensional Consistency**: Verify that the units of the LHS match the RHS at each intermediate step.
 
-*(Note: Cloud servers are experiencing elevated peak demand. Please retry your query in a few moments for full live derivations).*`;
+*(To enable dynamic multi-step derivations, configure a valid GEMINI_API_KEY).*`;
       } else if (roleId === "curriculum_creator") {
-        reply = `### Faculty Curriculum & Assessment Guide
+        reply = `### Faculty Curriculum & Assessment Guide (Offline Mode)
+
+${statusNotice}
 
 Regarding: **"${cleanUserMessage}"**
 
@@ -1099,9 +1446,11 @@ Regarding: **"${cleanUserMessage}"**
 - **Marking Scheme**: Provide step-wise marks (1m formula, 2m working/derivation, 1m final answer with SI units).
 - **Remedial Focus**: Identify common pitfalls students encounter in this topic for targeted classroom review.
 
-*(Note: Cloud servers are experiencing peak demand. Please retry in a few moments for dynamic question generation).*`;
+*(To enable dynamic assessment generation, configure a valid GEMINI_API_KEY).*`;
       } else if (roleId === "parent_advisor") {
-        reply = `### Parent & Student Well-being Guidance
+        reply = `### Parent & Student Well-being Guidance (Offline Mode)
+
+${statusNotice}
 
 Regarding: **"${cleanUserMessage}"**
 
@@ -1109,19 +1458,21 @@ Regarding: **"${cleanUserMessage}"**
 2. **Stress Management**: Encourage consistent sleep schedules (8+ hours during exam weeks) and wholesome nutrition.
 3. **Constructive Communication**: Focus on effort, curiosity, and progressive concept mastery rather than raw percentage pressure.
 
-*(Please feel free to connect with subject teachers through the parent portal or retry your question in a moment).*`;
+*(Please feel free to connect with subject teachers through the parent portal or school helpline).*`;
       } else if (roleId === "school_admin") {
-        reply = `### Nexus Ranaji English School \u2014 Official Notice Outline
+        reply = `### Nexus Ranaji English School \u2014 Official Notice Outline (Offline Mode)
+
+${statusNotice}
 
 **Subject**: Important Notification regarding "${cleanUserMessage}"
 
 - **Circular Ref**: NRES/ADMIN/${(/* @__PURE__ */ new Date()).getFullYear()}/CIRC-08
 - **Action Required**: All faculty, students, and parents are requested to adhere to the notified schedule.
-- **Contact**: School Administration Office, Nexus Ranaji English School.
-
-*(Please retry in a moment for full formatted document drafting).*`;
+- **Contact**: School Administration Office, Nexus Ranaji English School.`;
       } else {
-        reply = `### Academic Concept Note (GyanMitra)
+        reply = `### Academic Concept Note (GyanMitra \u2014 Offline Mode)
+
+${statusNotice}
 
 Regarding your doubt: **"${cleanUserMessage}"**
 
@@ -1129,7 +1480,7 @@ Regarding your doubt: **"${cleanUserMessage}"**
 2. **Given Information**: Note down all known quantities and the target variable to be computed or explained.
 3. **Step-by-Step Breakdown**: Apply the standard formula, substitute values, and verify the final units.
 
-*(Note: AI tutor servers are currently experiencing peak demand. Please retry in a moment or ask your teacher via Helpdesk).*`;
+*(For live interactive AI tutoring, ensure GEMINI_API_KEY is configured in your deployment settings).*`;
       }
     }
     return {
@@ -1142,29 +1493,59 @@ Regarding your doubt: **"${cleanUserMessage}"**
   }
 };
 var geminiPool = new GeminiServicePool();
-var FALLBACK_JWT_SECRET = "nexus_super_secret_jwt_key_at_least_32_characters_long_2025_prod_secure";
-var JWT_SECRET = process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length >= 32 ? process.env.JWT_SECRET.trim() : FALLBACK_JWT_SECRET;
+if (process.env.NODE_ENV === "production" && (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim().length < 32)) {
+  console.error("[FATAL] In production mode, JWT_SECRET environment variable must be set with at least 32 characters.");
+  process.exit(1);
+}
+var JWT_SECRET = process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length >= 32 ? process.env.JWT_SECRET.trim() : crypto.randomBytes(32).toString("hex");
 var app = express();
 var PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3e3;
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "X-Request-Id",
-      "x-user-id",
-      "x-userid",
-      "Idempotency-Key"
-    ]
-  })
-);
-app.options("*", cors());
+var allowedOrigins = /* @__PURE__ */ new Set([
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173"
+]);
+if (process.env.APP_URL) {
+  try {
+    allowedOrigins.add(new URL(process.env.APP_URL).origin);
+  } catch {
+    allowedOrigins.add(process.env.APP_URL.replace(/\/$/, ""));
+  }
+}
+if (process.env.CLIENT_URL) {
+  try {
+    allowedOrigins.add(new URL(process.env.CLIENT_URL).origin);
+  } catch {
+    allowedOrigins.add(process.env.CLIENT_URL.replace(/\/$/, ""));
+  }
+}
+var corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "X-Request-Id",
+    "x-user-id",
+    "x-userid",
+    "Idempotency-Key"
+  ]
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -1306,224 +1687,79 @@ var classSubjects = [
 ];
 var users = [
   {
-    id: "usr-admin-1",
-    name: "Dr. R. K. Deshmukh",
+    id: "usr-admin",
+    name: "Super Administrator",
     username: "admin",
     email: "admin@nexusrana.edu",
+    phone: "+91 98201 11000",
     role: "superadmin",
     employeeId: "NRES-DIR-001",
-    phone: "+91 98201 11000",
-    createdAt: "2025-01-10T08:00:00Z"
+    password: "$2b$10$2cTocYt1eQUGySirWHDzf.Li.wyxetCx54GUOGHvtZkupRqaqZd0G",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    mustChangePassword: false
   },
   {
-    id: "usr-teach-1",
-    name: "Prof. Vikram Sharma",
-    username: "teacher.sharma",
-    email: "vikram.sharma@nexusrana.edu",
-    role: "teacher",
-    employeeId: "NRES-FAC-104",
+    id: "usr-teacher-demo",
+    name: "Faculty Teacher",
+    username: "teacher.demo",
+    email: "teacher.demo@nexusrana.edu",
     phone: "+91 98201 22334",
+    role: "teacher",
+    employeeId: "NRES-FAC-101",
+    password: "$2b$10$3CB7OlVS0mqgLtMfID4Vbe5Pveh4U7XFYsGdvO6RORRN5Grx5nQIi",
     assignedSubjects: [
       { classId: "cls-10", divisionId: "div-10a", subjectId: "sub-phy" },
-      { classId: "cls-10", divisionId: "div-10b", subjectId: "sub-phy" },
-      { classId: "cls-10", divisionId: "div-10a", subjectId: "sub-math" },
-      { classId: "cls-8", divisionId: "div-8b", subjectId: "sub-math" }
-    ],
-    createdAt: "2025-01-15T09:00:00Z"
-  },
-  {
-    id: "usr-teach-2",
-    name: "Mrs. Meera Nair",
-    username: "teacher.meera",
-    email: "meera.nair@nexusrana.edu",
-    role: "teacher",
-    employeeId: "NRES-FAC-118",
-    phone: "+91 98201 33445",
-    assignedSubjects: [
-      { classId: "cls-10", divisionId: "div-10a", subjectId: "sub-eng" },
-      { classId: "cls-9", divisionId: "div-9a", subjectId: "sub-cs" }
-    ],
-    createdAt: "2025-01-18T10:00:00Z"
-  },
-  {
-    id: "usr-stud-1",
-    name: "Aarav Sharma",
-    username: "student.aarav",
-    email: "aarav.sharma@student.nexusrana.edu",
-    role: "student",
-    rollNo: "NRES-10A-01",
-    classId: "cls-10",
-    divisionId: "div-10a",
-    parentId: "usr-parent-1",
-    phone: "+91 98201 44521",
-    bonusPoints: 260,
-    createdAt: "2025-02-01T08:30:00Z"
-  },
-  {
-    id: "usr-stud-2",
-    name: "Rohan Patel",
-    username: "student.rohan",
-    email: "rohan.patel@student.nexusrana.edu",
-    role: "student",
-    rollNo: "NRES-10A-02",
-    classId: "cls-10",
-    divisionId: "div-10a",
-    parentId: "usr-parent-2",
-    phone: "+91 98202 88714",
-    bonusPoints: 175,
-    createdAt: "2025-02-01T08:30:00Z"
-  },
-  {
-    id: "usr-stud-3",
-    name: "Ananya Sharma",
-    username: "student.ananya",
-    email: "ananya.sharma@student.nexusrana.edu",
-    role: "student",
-    rollNo: "NRES-8B-07",
-    classId: "cls-8",
-    divisionId: "div-8b",
-    parentId: "usr-parent-1",
-    phone: "+91 98201 44521",
-    bonusPoints: 310,
-    createdAt: "2025-02-01T08:30:00Z"
-  },
-  {
-    id: "usr-stud-4",
-    name: "Priya Verma",
-    username: "student.priya",
-    email: "priya.verma@student.nexusrana.edu",
-    role: "student",
-    rollNo: "NRES-9A-04",
-    classId: "cls-9",
-    divisionId: "div-9a",
-    parentId: "usr-parent-3",
-    phone: "+91 98203 11223",
-    bonusPoints: 240,
-    createdAt: "2025-02-01T08:30:00Z"
-  },
-  {
-    id: "usr-parent-1",
-    name: "Mr. Rajesh Sharma",
-    username: "parent.sharma",
-    email: "rajesh.sharma@parent.nexusrana.edu",
-    role: "parent",
-    childrenIds: ["usr-stud-1", "usr-stud-3"],
-    phone: "+91 98201 44521",
-    createdAt: "2025-02-01T08:30:00Z"
-  },
-  {
-    id: "usr-parent-2",
-    name: "Mrs. Sunita Patel",
-    username: "parent.patel",
-    email: "sunita.patel@parent.nexusrana.edu",
-    role: "parent",
-    childrenIds: ["usr-stud-2"],
-    phone: "+91 98202 88714",
-    createdAt: "2025-02-01T08:30:00Z"
-  },
-  {
-    id: "usr-parent-3",
-    name: "Mr. Arvind Verma",
-    username: "parent.verma",
-    email: "arvind.verma@parent.nexusrana.edu",
-    role: "parent",
-    childrenIds: ["usr-stud-4"],
-    phone: "+91 98203 11223",
-    createdAt: "2025-02-01T08:30:00Z"
-  },
-  {
-    id: "usr-admin-legacy",
-    name: "School Principal & Admin",
-    username: "admin@school.com",
-    email: "admin@school.com",
-    role: "superadmin",
-    employeeId: "NRES-ADM-002",
-    phone: "+91 98201 11001",
-    createdAt: "2025-01-01T08:00:00Z"
-  },
-  {
-    id: "usr-teach-legacy",
-    name: "Senior Faculty Examiner",
-    username: "teacher@school.com",
-    email: "teacher@school.com",
-    role: "teacher",
-    employeeId: "NRES-FAC-100",
-    phone: "+91 98201 22330",
-    assignedSubjects: [
-      { classId: "cls-10", divisionId: "div-10a", subjectId: "sub-phy" },
-      { classId: "cls-10", divisionId: "div-10b", subjectId: "sub-phy" },
       { classId: "cls-10", divisionId: "div-10a", subjectId: "sub-math" }
     ],
-    createdAt: "2025-01-01T08:00:00Z"
+    createdAt: "2026-01-01T00:00:00.000Z",
+    mustChangePassword: false
   },
   {
-    id: "usr-stud-legacy",
-    name: "John Doe",
-    username: "john@student.com",
-    email: "john@student.com",
-    role: "student",
-    rollNo: "NRES-10A-99",
-    classId: "cls-10",
-    divisionId: "div-10a",
-    parentId: "usr-parent-1",
+    id: "usr-parent-demo",
+    name: "Demo Parent",
+    username: "parent.demo",
+    email: "parent.demo@nexusrana.edu",
     phone: "+91 98201 44521",
-    bonusPoints: 240,
-    createdAt: "2025-01-01T08:00:00Z"
+    role: "parent",
+    password: "$2b$10$l8QjyfzuQ5pTB.CD3DXjteOs2Kg4zM4IRP4lylMYn5f6C19LEsi1.",
+    childrenIds: ["usr-student-demo"],
+    createdAt: "2026-01-01T00:00:00.000Z",
+    mustChangePassword: false
   },
   {
-    id: "usr-stud-legacy-2",
-    name: "Sarah Jenkins",
-    username: "sarah@student.com",
-    email: "sarah@student.com",
+    id: "usr-student-demo",
+    name: "Demo Student",
+    username: "student.demo",
+    email: "student.demo@student.nexusrana.edu",
+    phone: "+91 98201 44521",
     role: "student",
-    rollNo: "NRES-10A-98",
+    rollNo: "1",
     classId: "cls-10",
     divisionId: "div-10a",
-    parentId: "usr-parent-2",
-    phone: "+91 98202 88714",
-    bonusPoints: 195,
-    createdAt: "2025-01-01T08:00:00Z"
-  },
-  {
-    id: "usr-admin-owner",
-    name: "Institutional Director",
-    username: "theoneandonlyking999",
-    email: "theoneandonlyking999@gmail.com",
-    role: "superadmin",
-    employeeId: "NRES-DIR-999",
-    phone: "+91 98201 99999",
-    createdAt: "2025-01-01T08:00:00Z"
+    parentId: "usr-parent-demo",
+    password: "$2b$10$hIlywddB7lY3.W9nSTY3wuqlh.h7dDJUbFncQjzezqNdq6ycvPDle",
+    bonusPoints: 100,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    mustChangePassword: false
   }
 ];
 var SEED_PASSWORDS = {
-  "admin": "Admin@Nexus2025!",
-  "admin@school.com": "admin123",
-  "teacher.sharma": "NexusTeacher#2025",
-  "teacher.meera": "NexusTeacher#2025",
-  "teacher@school.com": "teacher123",
-  "student.aarav": "StudentPass#101",
-  "student.rohan": "StudentPass#101",
-  "student.ananya": "StudentPass#101",
-  "student.priya": "StudentPass#101",
-  "john@student.com": "student123",
-  "sarah@student.com": "student123",
-  "parent.sharma": "ParentPass#2025",
-  "parent.patel": "ParentPass#2025",
-  "parent.verma": "ParentPass#2025",
-  "theoneandonlyking999": "Admin@Nexus2025!",
-  "theoneandonlyking999@gmail.com": "Admin@Nexus2025!"
+  "admin": "Admin@Nexus2026",
+  "teacher.demo": "Teacher@Nexus2026",
+  "parent.demo": "Parent@Nexus2026",
+  "student.demo": "Student@Nexus2026"
 };
 function getRoleDefaultPassword(role) {
   switch (role) {
     case "superadmin":
-      return "Admin@Nexus2025!";
+      return "Admin@Nexus2026";
     case "teacher":
-      return "NexusTeacher#2025";
+      return "Teacher@Nexus2026";
     case "parent":
-      return "ParentPass#2025";
+      return "Parent@Nexus2026";
     case "student":
     default:
-      return "StudentPass#101";
+      return "Student@Nexus2026";
   }
 }
 for (const u of users) {
@@ -2636,7 +2872,8 @@ var supportTickets = [
 ];
 app.post("/api/storage/upload", requireAuth, (req, res) => {
   try {
-    const { filename, contentType, base64Data } = req.body;
+    const { filename, contentType } = req.body;
+    const base64Data = req.body.base64Data || req.body.dataUrl;
     if (!base64Data) {
       return res.status(400).json({ error: "No base64 file data provided" });
     }
@@ -2699,7 +2936,7 @@ app.delete("/api/storage/files/:filename", requireAuth, requireRole("teacher", "
   return res.status(404).json({ error: "File not found in storage" });
 });
 var DATA_DIR = path2.join(process.cwd(), "data");
-var STATE_FILE = path2.join(DATA_DIR, "nexus_school_db.json");
+var STATE_FILE = process.env.DB_FILE ? path2.resolve(process.env.DB_FILE) : path2.join(DATA_DIR, "nexus_school_db.json");
 var examAttempts = [];
 function getSystemStatePayload() {
   return {
@@ -2731,14 +2968,7 @@ function applyLoadedState(loaded) {
   if (Array.isArray(loaded.subjects) && loaded.subjects.length > 0) subjects = loaded.subjects;
   if (Array.isArray(loaded.classSubjects) && loaded.classSubjects.length > 0) classSubjects = loaded.classSubjects;
   if (Array.isArray(loaded.users) && loaded.users.length > 0) {
-    for (const u of loaded.users) {
-      const idx = users.findIndex((ex) => ex.id === u.id);
-      if (idx >= 0) {
-        users[idx] = { ...users[idx], ...u };
-      } else {
-        users.push(u);
-      }
-    }
+    users = loaded.users.filter((u) => u && u.username !== "theoneandonlyking999" && u.id !== "usr-admin-owner" && !(u.email && u.email.includes("theoneandonlyking999")));
   }
   if (Array.isArray(loaded.questionBank) && loaded.questionBank.length > 0) questionBank = loaded.questionBank;
   if (Array.isArray(loaded.loginAudits)) loginAudits = loaded.loginAudits;
@@ -2776,6 +3006,9 @@ function loadStateFromDisk() {
       const loaded = JSON.parse(raw);
       applyLoadedState(loaded);
       console.log("\u2705 Loaded state from local disk cache.");
+    } else {
+      saveStateToDisk();
+      console.log("\u2705 Initialized state on local disk cache.");
     }
   } catch (err) {
     console.warn("Could not load persistent state from disk:", err.message);
@@ -2803,20 +3036,36 @@ async function initCloudDatabasePersistence() {
 initCloudDatabasePersistence();
 function ensureHashedPasswords() {
   let modified = false;
+  let hasRawStored = false;
+  for (const u of users) {
+    if (u.rawPassword) {
+      hasRawStored = true;
+      break;
+    }
+  }
+  if (hasRawStored && fs2.existsSync(STATE_FILE)) {
+    try {
+      const purgeBackup = path2.join(path2.dirname(STATE_FILE), `nexus_school_db.pre-plaintext-purge-${Date.now()}.json`);
+      fs2.copyFileSync(STATE_FILE, purgeBackup);
+      console.log(`[Security] Safe backup before purging plaintext passwords created at: ${purgeBackup}`);
+    } catch (e) {
+      console.warn("[Security] Could not create pre-plaintext-purge backup:", e.message);
+    }
+  }
   for (const u of users) {
     const defaultPlain = SEED_PASSWORDS[u.username] || u.email && SEED_PASSWORDS[u.email] || getRoleDefaultPassword(u.role);
     if (!u.password || typeof u.password !== "string" || u.password.trim().length === 0) {
       u.password = bcrypt.hashSync(defaultPlain, 10);
-      if (!u.rawPassword) u.rawPassword = defaultPlain;
+      u.mustChangePassword = true;
       modified = true;
     } else if (!u.password.startsWith("$2a$") && !u.password.startsWith("$2b$") && !u.password.startsWith("$2y$")) {
       const plain = u.password.trim();
       u.password = bcrypt.hashSync(plain, 10);
-      u.rawPassword = plain;
-      u.mustChangePassword = false;
+      u.mustChangePassword = true;
       modified = true;
-    } else if (!u.rawPassword) {
-      u.rawPassword = defaultPlain;
+    }
+    if (u.rawPassword) {
+      delete u.rawPassword;
       modified = true;
     }
   }
@@ -2837,7 +3086,7 @@ app.use((req, res, next) => {
 });
 function publicUser(u) {
   if (!u) return null;
-  const { password, ...rest } = u;
+  const { password, rawPassword, ...rest } = u;
   return rest;
 }
 function generateSecureTemporaryPassword() {
@@ -2961,51 +3210,27 @@ function clearLoginRateLimit(key) {
 function checkUserPassword(u, plainPassword) {
   if (!u || !plainPassword || typeof plainPassword !== "string") return false;
   const trimmed = plainPassword.trim();
-  if (u.rawPassword && (u.rawPassword === plainPassword || u.rawPassword === trimmed || u.rawPassword.toLowerCase() === plainPassword.toLowerCase())) {
-    u.password = bcrypt.hashSync(trimmed, 10);
-    saveStateToDisk();
-    return true;
-  }
-  if (u.password && (u.password === plainPassword || u.password === trimmed)) {
-    u.password = bcrypt.hashSync(trimmed, 10);
-    u.rawPassword = trimmed;
-    saveStateToDisk();
-    return true;
-  }
   if (u.password && typeof u.password === "string") {
-    try {
-      if (u.password.startsWith("$2a$") || u.password.startsWith("$2b$") || u.password.startsWith("$2y$")) {
+    if (u.password.startsWith("$2a$") || u.password.startsWith("$2b$") || u.password.startsWith("$2y$")) {
+      try {
         if (bcrypt.compareSync(plainPassword, u.password) || bcrypt.compareSync(trimmed, u.password)) {
           return true;
         }
+      } catch {
       }
-    } catch {
+      return false;
     }
   }
-  const isEvaluator = u.email && (u.email.toLowerCase().includes("harishchandre") || u.email.toLowerCase().includes("pratik") || u.email.toLowerCase().includes("king")) || u.username && (u.username.toLowerCase().includes("pratik") || u.username.toLowerCase().includes("king")) || u.name && u.name.toLowerCase().includes("pratik") || u.id === "usr-stud-70363" || u.phone === "7038047688";
-  const validDemos = [
-    "StudentPass#101",
-    "student123",
-    "NexusTeacher#2025",
-    "teacher123",
-    "Admin@Nexus2025!",
-    "admin123",
-    "ParentPass#2025",
-    "parent123",
-    "password",
-    "password123",
-    "admin",
-    "teacher",
-    "student",
-    "parent",
-    "School@123",
-    "Nres@2025",
-    "student"
-  ];
-  const expectedSeed = SEED_PASSWORDS[u.username] || u.email && SEED_PASSWORDS[u.email] || getRoleDefaultPassword(u.role);
-  if (trimmed === expectedSeed || u.role === "student" && (trimmed === "StudentPass#101" || trimmed === "student123" || trimmed === "School@123" || trimmed === "student") || u.role === "teacher" && (trimmed === "NexusTeacher#2025" || trimmed === "teacher123" || trimmed === "School@123" || trimmed === "teacher") || u.role === "parent" && (trimmed === "ParentPass#2025" || trimmed === "parent123" || trimmed === "School@123" || trimmed === "parent") || u.role === "superadmin" && (trimmed === "Admin@Nexus2025!" || trimmed === "admin123" || trimmed === "School@123" || trimmed === "admin") || validDemos.includes(trimmed) || isEvaluator && (trimmed.length >= 3 || validDemos.includes(trimmed))) {
+  if (u.password && (u.password === plainPassword || u.password === trimmed)) {
     u.password = bcrypt.hashSync(trimmed, 10);
-    u.rawPassword = trimmed;
+    delete u.rawPassword;
+    saveStateToDisk();
+    return true;
+  }
+  const expectedSeed = SEED_PASSWORDS[u.username] || u.email && SEED_PASSWORDS[u.email] || getRoleDefaultPassword(u.role);
+  if (!u.password && trimmed === expectedSeed) {
+    u.password = bcrypt.hashSync(trimmed, 10);
+    delete u.rawPassword;
     saveStateToDisk();
     return true;
   }
@@ -3016,7 +3241,7 @@ var handleLogin = (req, res) => {
   let lookup = (username || email || identifier || "").trim().toLowerCase();
   const clientIp = req.ip || req.socket.remoteAddress || "127.0.0.1";
   const rateLimitKey = `${lookup}:${clientIp}`;
-  if (isLoginRateLimited(rateLimitKey) && !lookup.includes("pratik") && !lookup.includes("harishchandre") && !lookup.includes("king")) {
+  if (isLoginRateLimited(rateLimitKey)) {
     return res.status(429).json({ error: "Too many failed login attempts. Please try again after 15 minutes." });
   }
   const genericError = "Invalid institutional credentials";
@@ -3024,11 +3249,18 @@ var handleLogin = (req, res) => {
     recordFailedLoginAttempt(rateLimitKey);
     return res.status(401).json({ error: genericError });
   }
-  if (lookup === "student" || lookup === "rohan") lookup = "student.rohan";
-  else if (lookup === "teacher" || lookup === "sharma") lookup = "teacher.sharma";
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isExplicitEmail = Boolean(email && typeof email === "string" && email.trim().length > 0);
+  if (isExplicitEmail || lookup.includes("@")) {
+    if (!emailRegex.test(lookup)) {
+      return res.status(400).json({ error: "Invalid email format. Please provide a valid email address (e.g. user@domain.tld)" });
+    }
+  }
+  if (lookup === "student" || lookup === "rohan") lookup = "student.demo";
+  else if (lookup === "teacher" || lookup === "sharma") lookup = "teacher.demo";
   else if (lookup === "admin" || lookup === "principal" || lookup === "director") lookup = "admin";
-  else if (lookup === "parent") lookup = "parent.sharma";
-  else if (lookup === "aarav") lookup = "student.aarav";
+  else if (lookup === "parent") lookup = "parent.demo";
+  else if (lookup === "aarav") lookup = "student.demo";
   const cleanDigits = lookup.replace(/\D/g, "");
   const cleanAlphanum = lookup.replace(/[^a-z0-9]/g, "");
   const candidateUsers = users.filter((u) => {
@@ -3040,7 +3272,6 @@ var handleLogin = (req, res) => {
       if (uLower.replace(/[^a-z0-9]/g, "") === cleanAlphanum && cleanAlphanum.length >= 3) return true;
     }
     if (u.email && u.email.toLowerCase() === lookup) return true;
-    if (u.email && u.email.toLowerCase().split("@")[0] === lookup) return true;
     if (u.rollNo) {
       const rLower = u.rollNo.toLowerCase();
       if (rLower === lookup) return true;
@@ -3058,26 +3289,7 @@ var handleLogin = (req, res) => {
     if (u.name && lookup.length >= 4 && u.name.toLowerCase().includes(lookup)) return true;
     return false;
   });
-  let user = candidateUsers.find((c) => checkUserPassword(c, password)) || candidateUsers[0];
-  if (!user && (lookup.includes("harishchandre") || lookup.includes("pratik") || lookup.includes("king") || lookup.includes("@"))) {
-    const isPratik = lookup.includes("harishchandre") || lookup.includes("pratik");
-    user = {
-      id: isPratik ? "usr-stud-70363" : "usr-admin-owner",
-      name: isPratik ? "Pratik Harishchandre" : "Super Admin Evaluator",
-      username: lookup.includes("@") ? lookup.split("@")[0] : lookup,
-      email: lookup.includes("@") ? lookup : `${lookup}@school.edu`,
-      role: isPratik ? "student" : "superadmin",
-      rollNo: isPratik ? "65" : void 0,
-      employeeId: isPratik ? void 0 : "NRES-DIR-999",
-      phone: isPratik ? "7038047688" : "+91 98201 99999",
-      password: bcrypt.hashSync(password || (isPratik ? "StudentPass#101" : "Admin@Nexus2025!"), 10),
-      rawPassword: password || (isPratik ? "StudentPass#101" : "Admin@Nexus2025!"),
-      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-      bonusPoints: isPratik ? 100 : void 0
-    };
-    users.push(user);
-    saveStateToDisk();
-  }
+  const user = candidateUsers.find((c) => checkUserPassword(c, password)) || candidateUsers[0];
   if (!user) {
     recordFailedLoginAttempt(rateLimitKey);
     loginAudits.unshift({
@@ -3093,15 +3305,7 @@ var handleLogin = (req, res) => {
     });
     return res.status(401).json({ error: genericError });
   }
-  let match = checkUserPassword(user, password);
-  if (!match) {
-    const isEvaluator = lookup.includes("harishchandre") || lookup.includes("pratik") || lookup.includes("king") || user.email && (user.email.includes("harishchandre") || user.email.includes("king")) || user.id === "usr-stud-70363";
-    if (isEvaluator) {
-      match = true;
-      user.password = bcrypt.hashSync(password, 10);
-      saveStateToDisk();
-    }
-  }
+  const match = checkUserPassword(user, password);
   if (!match) {
     recordFailedLoginAttempt(rateLimitKey);
     loginAudits.unshift({
@@ -3151,15 +3355,7 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
 });
 app.get(["/api/auth/public-users", "/api/users/public"], (req, res) => {
   return res.json({
-    users: users.map((u) => ({
-      id: u.id,
-      name: u.name,
-      username: u.username,
-      role: u.role,
-      rollNo: u.rollNo,
-      employeeId: u.employeeId
-      // Explicitly omit password, rawPassword, email, phone, parent links
-    }))
+    users: []
   });
 });
 app.post("/api/auth/change-password", requireAuth, (req, res) => {
@@ -3193,27 +3389,13 @@ app.post("/api/auth/change-password", requireAuth, (req, res) => {
   return res.json({ success: true, message: "Password updated successfully.", user: publicUser(req.user) });
 });
 app.get("/api/auth/users", requireAuth, requireRole("superadmin"), (req, res) => {
-  const usersWithCredentials = users.map((u) => {
-    const plain = u.rawPassword || SEED_PASSWORDS[u.username] || u.email && SEED_PASSWORDS[u.email] || getRoleDefaultPassword(u.role);
-    return {
-      ...publicUser(u),
-      password: plain,
-      rawPassword: plain
-    };
-  });
-  const { items, pagination } = paginateArray(usersWithCredentials, req, 2e3, 5e3);
+  const sanitizedUsers = users.map((u) => publicUser(u));
+  const { items, pagination } = paginateArray(sanitizedUsers, req, 2e3, 5e3);
   return res.json({ users: items, pagination, total: pagination.total });
 });
 app.get("/api/admin/credentials", requireAuth, requireRole("superadmin"), (req, res) => {
-  const usersWithCredentials = users.map((u) => {
-    const plain = u.rawPassword || SEED_PASSWORDS[u.username] || u.email && SEED_PASSWORDS[u.email] || getRoleDefaultPassword(u.role);
-    return {
-      ...publicUser(u),
-      password: plain,
-      rawPassword: plain
-    };
-  });
-  const { items, pagination } = paginateArray(usersWithCredentials, req, 2e3, 5e3);
+  const sanitizedUsers = users.map((u) => publicUser(u));
+  const { items, pagination } = paginateArray(sanitizedUsers, req, 2e3, 5e3);
   return res.json({ users: items, pagination, total: pagination.total });
 });
 var getNormalizedLogins = () => loginAudits.map((l) => ({
@@ -3257,7 +3439,7 @@ app.get("/api/admin/audits/key-health", requireAuth, requireRole("superadmin"), 
     healthLogs: geminiPool.getKeyHealthLogs()
   });
 });
-app.post("/api/admin/create-credential", requireAuth, requireRole("superadmin"), (req, res) => {
+app.post(["/api/admin/create-credential", "/api/auth/users", "/api/admin/credentials"], requireAuth, requireRole("superadmin"), (req, res) => {
   const {
     name,
     phone,
@@ -3294,18 +3476,17 @@ app.post("/api/admin/create-credential", requireAuth, requireRole("superadmin"),
       cleanUsername = `${base}_${Date.now().toString(36).slice(-5)}`;
     }
   }
+  if (password !== void 0 && password !== null && String(password).trim().length > 0 && String(password).trim().length < 8) {
+    return res.status(400).json({ error: "Password must be at least 8 characters long." });
+  }
   const rawPassword = (password || "").trim() || generateSecureTemporaryPassword();
-  const hashedPassword = bcrypt.hashSync(rawPassword, 12);
+  const hashedPassword = bcrypt.hashSync(rawPassword, 10);
   if (role === "student") {
     if (!classId || !divisionId || !rollNo) {
       return res.status(400).json({ error: "Class, Division, and Roll Number are compulsory for students." });
     }
   }
-  if (role === "teacher" || role === "superadmin") {
-    if (!employeeId) {
-      return res.status(400).json({ error: "Employee / Faculty ID is compulsory for staff." });
-    }
-  }
+  const finalEmployeeId = employeeId && String(employeeId).trim() ? String(employeeId).trim() : role === "teacher" || role === "superadmin" ? `NRES-${role === "superadmin" ? "ADM" : "FAC"}-${Math.floor(100 + Math.random() * 900)}` : void 0;
   let finalEmail = (email || "").trim();
   if (finalEmail) {
     const existing = users.find((u) => u.email && u.email.toLowerCase() === finalEmail.toLowerCase());
@@ -3333,7 +3514,7 @@ app.post("/api/admin/create-credential", requireAuth, requireRole("superadmin"),
     bonusPoints: role === "student" ? 100 : void 0
   };
   if (role === "superadmin") {
-    newUser.employeeId = employeeId.trim();
+    newUser.employeeId = finalEmployeeId;
   } else if (role === "student") {
     newUser.classId = classId;
     newUser.divisionId = divisionId;
@@ -3347,7 +3528,7 @@ app.post("/api/admin/create-credential", requireAuth, requireRole("superadmin"),
       }
     }
   } else if (role === "teacher") {
-    newUser.employeeId = employeeId.trim();
+    newUser.employeeId = finalEmployeeId;
     newUser.assignedSubjects = assignedSubjects || [];
   } else if (role === "parent") {
     newUser.childrenIds = [];
@@ -3367,9 +3548,9 @@ app.post("/api/admin/create-credential", requireAuth, requireRole("superadmin"),
   });
 });
 app.post("/api/admin/credentials/bulk", requireAuth, requireRole("superadmin"), (req, res) => {
-  const { users: rawUsers } = req.body;
+  const rawUsers = req.body.users || req.body.credentials;
   if (!Array.isArray(rawUsers) || rawUsers.length === 0) {
-    return res.status(400).json({ error: "Users array is required and must not be empty" });
+    return res.status(400).json({ error: "Users or credentials array is required and must not be empty" });
   }
   const createdList = [];
   const skippedDuplicates = [];
@@ -3458,11 +3639,7 @@ app.post("/api/admin/credentials/bulk", requireAuth, requireRole("superadmin"), 
       }
     }
     if (role === "teacher" || role === "superadmin") {
-      employeeId = (u.employeeId || u["Employee ID"] || "").trim() || void 0;
-      if (!employeeId) {
-        skippedDuplicates.push({ name: cleanName, username: cleanUsername, reason: "Employee / Faculty ID is compulsory for staff" });
-        return;
-      }
+      employeeId = (u.employeeId || u["Employee ID"] || "").trim() || `NRES-${role === "superadmin" ? "ADM" : "FAC"}-${Math.floor(100 + Math.random() * 900)}`;
     }
     const prefix = role === "superadmin" ? "admin" : role === "teacher" ? "teach" : role === "student" ? "stud" : "parent";
     const newId = `usr-${prefix}-${Date.now().toString().slice(-6)}${idx}`;
@@ -3507,7 +3684,7 @@ app.post("/api/admin/credentials/bulk", requireAuth, requireRole("superadmin"), 
     skippedDuplicates
   });
 });
-app.put("/api/admin/credentials/:id", requireAuth, requireRole("superadmin"), (req, res) => {
+app.put(["/api/admin/credentials/:id", "/api/auth/users/:id"], requireAuth, requireRole("superadmin"), (req, res) => {
   const { id } = req.params;
   const index = users.findIndex((u) => u.id === id);
   if (index === -1) {
@@ -3582,7 +3759,7 @@ app.put("/api/admin/credentials/:id", requireAuth, requireRole("superadmin"), (r
     }
   });
 });
-app.delete("/api/admin/credentials/:id", requireAuth, requireRole("superadmin"), (req, res) => {
+app.delete(["/api/admin/credentials/:id", "/api/auth/users/:id"], requireAuth, requireRole("superadmin"), (req, res) => {
   const { id } = req.params;
   const index = users.findIndex((u) => u.id === id);
   if (index === -1) {
@@ -4276,11 +4453,20 @@ app.post("/api/teacher/materials", requireAuth, requireRole("teacher", "superadm
     createdAt: (/* @__PURE__ */ new Date()).toISOString()
   };
   studyMaterials.unshift(newMat);
+  saveStateToDisk();
   res.status(201).json({ message: "Study material uploaded", material: newMat });
 });
 app.delete("/api/teacher/materials/:id", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
   const { id } = req.params;
+  const material = studyMaterials.find((m) => m.id === id);
+  if (!material) {
+    return res.status(404).json({ error: "Study material not found" });
+  }
+  if (req.user.role === "teacher" && material.teacherId !== req.user.id) {
+    return res.status(403).json({ error: "Unauthorized: you can only delete your own study materials" });
+  }
   studyMaterials = studyMaterials.filter((m) => m.id !== id);
+  saveStateToDisk();
   res.json({ message: "Material removed" });
 });
 app.get("/api/student/exams", requireAuth, requireRole("student"), (req, res) => {
@@ -4856,11 +5042,13 @@ app.post("/api/notices", requireAuth, requireRole("teacher", "superadmin"), (req
   if (schoolNotices.length > 50) {
     schoolNotices = schoolNotices.slice(0, 50);
   }
+  saveStateToDisk();
   res.status(201).json({ message: "Notice published and broadcasted successfully", notice: newNotice });
 });
 app.delete("/api/notices/:id", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
   const { id } = req.params;
   schoolNotices = schoolNotices.filter((n) => n.id !== id);
+  saveStateToDisk();
   res.json({ message: "Notice removed" });
 });
 app.get("/api/parent/recipients", requireAuth, requireRole("parent", "superadmin"), (req, res) => {
@@ -5948,6 +6136,12 @@ app.post("/api/tickets", requireAuth, requireRole("parent", "superadmin"), (req,
   if (!subject || !message) {
     return res.status(400).json({ error: "Subject and message are required" });
   }
+  const isDuplicate = supportTickets.some(
+    (t) => t.parentId === parent.id && t.studentId === student.id && t.subject.trim().toLowerCase() === subject.trim().toLowerCase() && t.message.trim().toLowerCase() === message.trim().toLowerCase() && t.status === "Open"
+  );
+  if (isDuplicate) {
+    return res.status(409).json({ error: "A ticket with this exact subject and message is already open. Please wait for faculty response." });
+  }
   if (recipient && recipient.role !== "teacher") {
     return res.status(400).json({ error: "Inquiries must be directed to your child's assigned subject teachers, not management." });
   }
@@ -5973,6 +6167,7 @@ app.post("/api/tickets", requireAuth, requireRole("parent", "superadmin"), (req,
     replies: []
   };
   supportTickets.unshift(newTicket);
+  saveStateToDisk();
   res.status(201).json({ message: "Support query submitted successfully", ticket: newTicket });
 });
 app.delete("/api/tickets/:id", requireAuth, (req, res) => {
@@ -5988,6 +6183,7 @@ app.delete("/api/tickets/:id", requireAuth, (req, res) => {
     return res.status(403).json({ error: "Not authorized to delete this ticket" });
   }
   const deleted = supportTickets.splice(index, 1)[0];
+  saveStateToDisk();
   res.json({ message: "Query record permanently deleted", ticket: deleted });
 });
 app.post("/api/tickets/:id/reply", requireAuth, (req, res) => {
@@ -6015,6 +6211,7 @@ app.post("/api/tickets/:id/reply", requireAuth, (req, res) => {
   if ((sender.role === "teacher" || sender.role === "superadmin") && ticket.status === "Open") {
     ticket.status = "In Progress";
   }
+  saveStateToDisk();
   res.status(201).json({ message: "Reply added", ticket });
 });
 app.patch("/api/tickets/:id/status", requireAuth, requireRole("teacher", "superadmin"), (req, res) => {
@@ -6022,17 +6219,19 @@ app.patch("/api/tickets/:id/status", requireAuth, requireRole("teacher", "supera
   const { status } = req.body;
   const ticket = supportTickets.find((t) => t.id === id);
   if (!ticket) return res.status(404).json({ error: "Ticket not found" });
-  if (!["Open", "In Progress", "Resolved"].includes(status)) {
+  const normStatus = typeof status === "string" ? status.toLowerCase() === "resolved" ? "Resolved" : status.toLowerCase() === "in progress" ? "In Progress" : status.toLowerCase() === "open" ? "Open" : status : status;
+  if (!["Open", "In Progress", "Resolved"].includes(normStatus)) {
     return res.status(400).json({ error: "Invalid status. Must be Open, In Progress, or Resolved" });
   }
-  ticket.status = status;
+  ticket.status = normStatus;
   ticket.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+  saveStateToDisk();
   res.json({ message: "Status updated", ticket });
 });
 app.post("/api/system/reset-demo", requireAuth, requireRole("superadmin"), (req, res) => {
   res.json({ message: "System state active" });
 });
-app.get("/api/database/status", async (req, res) => {
+app.get("/api/database/status", requireAuth, requireRole("superadmin"), async (req, res) => {
   const configured = isDatabaseConfigured();
   const host = getDatabaseHost();
   const healthy = await healthCheck();
@@ -6051,30 +6250,12 @@ app.get("/api/database/status", async (req, res) => {
     }
   });
 });
-app.post("/api/database/connect", async (req, res) => {
-  try {
-    const { databaseUrl } = req.body;
-    if (!databaseUrl || typeof databaseUrl !== "string" || !databaseUrl.trim()) {
-      return res.status(400).json({ error: "Please provide a valid database connection string (URI)." });
-    }
-    const result = await setDatabaseUrl(databaseUrl.trim());
-    const payload = getSystemStatePayload();
-    await saveStateToPostgres(payload);
-    res.json({
-      success: true,
-      message: result.message,
-      host: result.host,
-      stats: {
-        syncedUsers: users.length,
-        syncedExams: exams.length,
-        syncedSubmissions: submissions.length
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message || "Failed to connect to PostgreSQL database" });
-  }
+app.post("/api/database/connect", (req, res) => {
+  return res.status(403).json({
+    error: "Runtime database configuration is disabled in production. Database connection is managed via environment variables (DATABASE_URL) only."
+  });
 });
-app.post("/api/database/sync", async (req, res) => {
+app.post("/api/database/sync", requireAuth, requireRole("superadmin"), async (req, res) => {
   try {
     if (!isDatabaseConfigured()) {
       return res.status(400).json({ error: "No PostgreSQL database is currently configured." });
@@ -6093,7 +6274,7 @@ app.post("/api/database/sync", async (req, res) => {
     res.status(500).json({ error: err.message || "Failed to sync with database" });
   }
 });
-app.post("/api/database/run-migrations", async (req, res) => {
+app.post("/api/database/run-migrations", requireAuth, requireRole("superadmin"), async (req, res) => {
   try {
     if (!isDatabaseConfigured()) {
       return res.status(400).json({ error: "Cannot run migrations without DATABASE_URL configured." });
@@ -6113,7 +6294,7 @@ app.get(["/healthz", "/api/health"], async (_req, res) => {
       return res.status(503).json({ status: "unhealthy", error: "Database check failed" });
     }
   } catch (err) {
-    return res.status(503).json({ status: "unhealthy", error: err?.message || "Database unavailable" });
+    return res.status(503).json({ status: "unhealthy", error: "Database unavailable" });
   }
 });
 app.all("/api/*", (req, res) => {

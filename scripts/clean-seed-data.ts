@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
+import bcrypt from 'bcryptjs';
 import { pool, saveStateToPostgres } from '../server/db.ts';
 
 const DB_FILE = path.join(process.cwd(), 'data', 'nexus_school_db.json');
@@ -18,8 +19,7 @@ async function cleanData() {
       role: 'superadmin',
       employeeId: 'NRES-DIR-001',
       phone: '+91 98201 11000',
-      password: '$2b$10$1qYG.U/osAC/1PW2Ubfzl.xlCwcgJOCpPrZyS4r/1L4q8oKVXUpES',
-      rawPassword: 'Admin@Nexus2026',
+      password: bcrypt.hashSync('Admin@Nexus2026', 10),
       mustChangePassword: false,
       createdAt: '2026-01-01T00:00:00.000Z'
     },
@@ -43,8 +43,7 @@ async function cleanData() {
           subjectId: 'sub-math'
         }
       ],
-      password: '$2b$10$p4OogzDX6kZ3r78md6BVMubf0ruRCJIhGzrA5bwwzTJrIK98DAa.2',
-      rawPassword: 'Teacher@Nexus2026',
+      password: bcrypt.hashSync('Teacher@Nexus2026', 10),
       mustChangePassword: false,
       createdAt: '2026-01-01T00:00:00.000Z'
     },
@@ -56,8 +55,7 @@ async function cleanData() {
       role: 'parent',
       phone: '+91 98201 44521',
       childrenIds: ['usr-student-demo'],
-      password: '$2b$10$cWMhmIgR5Kvhgn7yVE6gweIXSDABOig9iN74zllmYdLNZppZgyyJu',
-      rawPassword: 'Parent@Nexus2026',
+      password: bcrypt.hashSync('Parent@Nexus2026', 10),
       mustChangePassword: false,
       createdAt: '2026-01-01T00:00:00.000Z'
     },
@@ -73,8 +71,7 @@ async function cleanData() {
       parentId: 'usr-parent-demo',
       phone: '+91 98201 44521',
       bonusPoints: 100,
-      password: '$2b$10$63xfHW4bEMxaFI7LVAdXEOkfNFkAf0TypnHN0Klwr7ecTQa4/8hl6',
-      rawPassword: 'Student@Nexus2026',
+      password: bcrypt.hashSync('Student@Nexus2026', 10),
       mustChangePassword: false,
       createdAt: '2026-01-01T00:00:00.000Z'
     }

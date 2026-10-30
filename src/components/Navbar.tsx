@@ -100,11 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const uniqueUsers = Array.from(new Map(allUsers.map((u) => [u.id, u])).values());
 
   const handleAvatarClick = () => {
-    if (window.innerWidth < 768) {
-      setMobileSheetOpen(true);
-    } else {
-      setDropdownOpen(!dropdownOpen);
-    }
+    setAccountDetailsOpen(true);
   };
 
   return (
@@ -215,35 +211,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                       </button>
 
-                      {/* Option 2: Switch User / Simulate Role */}
-                      <button
-                        onClick={() => {
-                          setHatMenuOpen(false);
-                          if (window.innerWidth < 768) {
-                            setMobileSheetOpen(true);
-                          } else {
-                            setDropdownOpen(true);
-                          }
-                        }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-xs font-medium transition-colors cursor-pointer text-left group"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                            <Users className="w-3.5 h-3.5" />
-                          </div>
-                          <div>
-                            <span className="font-semibold block text-slate-900 dark:text-slate-100">
-                              Switch Persona / Role
-                            </span>
-                            <span className="text-[10px] text-slate-400 block">
-                              Student &bull; Parent &bull; Faculty &bull; Admin
-                            </span>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
-
-                      {/* Option 3: Theme Toggle */}
+                      {/* Option 2: Theme Toggle */}
                       <button
                         onClick={() => toggleTheme()}
                         className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-xs font-medium transition-colors cursor-pointer text-left"
@@ -376,8 +344,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   id="role-switcher-button"
                   onClick={handleAvatarClick}
                   className="flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg p-1 sm:px-2 sm:py-1.5 transition-colors text-left group cursor-pointer"
-                  title="Account & Role Switcher"
-                  aria-label="Account and role switcher"
+                  title="View Account Details"
+                  aria-label="View account details"
                 >
                   <UserAvatar
                     name={currentUser.name}
@@ -389,67 +357,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       {currentUser.name}
                     </div>
                   </div>
-                  <ChevronDown className="hidden sm:block w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform" />
                 </button>
-
-                {/* Desktop Dropdown Menu */}
-                {dropdownOpen && (
-                  <div 
-                    className="hidden md:block absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-800">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                        Simulate School Role (RBAC Switcher)
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Instantly preview experience for any pre-seeded persona:
-                      </p>
-                    </div>
-
-                    <div className="max-h-72 overflow-y-auto py-1 space-y-1">
-                      {uniqueUsers.map((user) => {
-                        const userBadge = getRoleBadge(user.role);
-                        const isSelected = user.id === currentUser.id;
-                        return (
-                          <button
-                            key={user.id}
-                            onClick={() => onSwitchUser(user)}
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs transition-all cursor-pointer ${
-                              isSelected
-                                ? 'bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300'
-                                : 'hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-transparent'
-                            }`}
-                          >
-                            <UserAvatar
-                              name={user.name}
-                              role={user.role}
-                              size="sm"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold truncate">{user.name}</p>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
-                            </div>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${userBadge.color}`}>
-                              {userBadge.label.split(' ')[0]}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="pt-2 mt-1 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-2">
-                      <button
-                        onClick={onOpenLoginModal}
-                        className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium py-1 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <UserCheck className="w-3.5 h-3.5" />
-                        Sign In with Credentials
-                      </button>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">v2.4 Production</span>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -501,52 +409,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <X className="w-5 h-5" />
               </button>
-            </div>
-
-            {/* Switch Personas Section */}
-            <div className="py-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Switch User Persona
-                </span>
-                <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                  RBAC Preview
-                </span>
-              </div>
-
-              <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
-                {uniqueUsers.map((user) => {
-                  const userBadge = getRoleBadge(user.role);
-                  const isSelected = user.id === currentUser.id;
-                  return (
-                    <button
-                      key={user.id}
-                      onClick={() => {
-                        onSwitchUser(user);
-                        setMobileSheetOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-amber-500/15 border-2 border-amber-500 text-amber-900 dark:text-amber-200'
-                          : 'bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/60 active:bg-slate-200 dark:active:bg-slate-700'
-                      }`}
-                    >
-                      <UserAvatar
-                        name={user.name}
-                        role={user.role}
-                        size="md"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold truncate">{user.name}</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
-                      </div>
-                      <span className={`text-[10px] font-bold px-2 py-1 rounded-lg border ${userBadge.color}`}>
-                        {userBadge.label.split(' ')[0]}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             {/* Bottom Actions */}

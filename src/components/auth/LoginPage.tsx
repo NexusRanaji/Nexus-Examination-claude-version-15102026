@@ -438,7 +438,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
                     <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
                       <span className="text-amber-600 dark:text-amber-400 font-bold block">Username</span>
-                      <span>student.rohan</span>
+                      <span>student.demo</span>
                     </div>
                     <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
                       <span className="text-amber-600 dark:text-amber-400 font-bold block">Roll Number</span>

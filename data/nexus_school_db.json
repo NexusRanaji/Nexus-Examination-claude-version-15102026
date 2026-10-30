@@ -150,11 +150,10 @@
       "role": "superadmin",
       "email": "admin@nexusrana.edu",
       "phone": "+91 98201 11000",
-      "password": "$2b$10$1qYG.U/osAC/1PW2Ubfzl.xlCwcgJOCpPrZyS4r/1L4q8oKVXUpES",
+      "password": "$2b$10$E1pGj5S/qCx9/wQegVNgP.SbvZuCk3wprlNgn5a25IOxJUDFnQjES",
       "username": "admin",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "employeeId": "NRES-DIR-001",
-      "rawPassword": "Admin@Nexus2026",
       "mustChangePassword": false
     },
     {
@@ -163,11 +162,10 @@
       "role": "teacher",
       "email": "teacher.demo@nexusrana.edu",
       "phone": "+91 98201 22334",
-      "password": "$2b$10$p4OogzDX6kZ3r78md6BVMubf0ruRCJIhGzrA5bwwzTJrIK98DAa.2",
+      "password": "$2b$10$Wcicku0skHU5lLE943bZfeZNJeiXMwImrV9liIjoHajEfejlAcMSa",
       "username": "teacher.demo",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "employeeId": "NRES-FAC-101",
-      "rawPassword": "Teacher@Nexus2026",
       "assignedSubjects": [
         {
           "classId": "cls-10",
@@ -188,13 +186,12 @@
       "role": "parent",
       "email": "parent.demo@nexusrana.edu",
       "phone": "+91 98201 44521",
-      "password": "$2b$10$cWMhmIgR5Kvhgn7yVE6gweIXSDABOig9iN74zllmYdLNZppZgyyJu",
+      "password": "$2b$10$k4rUkfock1YMt7cuZ5drI.ykQ4YBw3yfbFZxi0sHKN29rEls.Zn/y",
       "username": "parent.demo",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "childrenIds": [
         "usr-student-demo"
       ],
-      "rawPassword": "Parent@Nexus2026",
       "mustChangePassword": false
     },
     {
@@ -206,27 +203,615 @@
       "rollNo": "1",
       "classId": "cls-10",
       "parentId": "usr-parent-demo",
-      "password": "$2b$10$63xfHW4bEMxaFI7LVAdXEOkfNFkAf0TypnHN0Klwr7ecTQa4/8hl6",
+      "password": "$2b$10$fJTAj99RNoe3asfsFvPb0O4zlgECRLa/W8eOKJIJ5jNHKul63EkCS",
       "username": "student.demo",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "divisionId": "div-10a",
-      "bonusPoints": 320,
-      "rawPassword": "Student@Nexus2026",
+      "bonusPoints": 100,
       "mustChangePassword": false
     }
   ],
-  "questionBank": [],
+  "questionBank": [
+    {
+      "id": "qb-2",
+      "text": "Analyze the circuit diagram below. Which of the following components are connected in parallel?",
+      "type": "multi",
+      "points": 15,
+      "classId": "cls-10",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "Resistor R1 and Resistor R2"
+        },
+        {
+          "id": "opt-2",
+          "text": "Voltmeter across R1"
+        },
+        {
+          "id": "opt-3",
+          "text": "Ammeter in main line"
+        },
+        {
+          "id": "opt-4",
+          "text": "Battery supply terminal"
+        }
+      ],
+      "imageUrl": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80",
+      "subjectId": "sub-phy",
+      "chapterName": "Chapter 2: Electricity & Ohm’s Law",
+      "explanation": "Resistors R1 and R2 branch from the same nodes, and the voltmeter is placed in parallel to measure potential drop.",
+      "correctAnswer": [
+        "opt-1",
+        "opt-2"
+      ],
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-3",
+      "text": "Light travels faster in water than in a vacuum. (True or False)",
+      "type": "true_false",
+      "points": 10,
+      "classId": "cls-9",
+      "options": [
+        {
+          "id": "opt-true",
+          "text": "True"
+        },
+        {
+          "id": "opt-false",
+          "text": "False"
+        }
+      ],
+      "subjectId": "sub-phy",
+      "chapterName": "Chapter 1: Reflection & Refraction of Light",
+      "explanation": "The speed of light is highest in a vacuum (approx 3×10⁸ m/s) and decreases in denser optical media like water due to refraction.",
+      "correctAnswer": "opt-false",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-4",
+      "text": "What is the discriminant of the quadratic equation $ax^2 + bx + c = 0$?",
+      "type": "single",
+      "points": 10,
+      "classId": "cls-10",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "$\\Delta = b^2 - 4ac$"
+        },
+        {
+          "id": "opt-2",
+          "text": "$\\Delta = b^2 + 4ac$"
+        },
+        {
+          "id": "opt-3",
+          "text": "$\\Delta = \\frac{2a}{-b}$"
+        },
+        {
+          "id": "opt-4",
+          "text": "$\\Delta = 4ab - c^2$"
+        }
+      ],
+      "subjectId": "sub-math",
+      "chapterName": "Chapter 2: Quadratic Equations & Polynomials",
+      "explanation": "The discriminant determines the nature of roots: $\\Delta = b^2 - 4ac$. The quadratic formula is $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$.",
+      "correctAnswer": "opt-1",
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-5",
+      "text": "Which of the following numbers are prime numbers? (Select all that apply)",
+      "type": "multi",
+      "points": 15,
+      "classId": "cls-8",
+      "options": [
+        {
+          "id": "opt-1",
+          "text": "29"
+        },
+        {
+          "id": "opt-2",
+          "text": "37"
+        },
+        {
+          "id": "opt-3",
+          "text": "51"
+        },
+        {
+          "id": "opt-4",
+          "text": "97"
+        }
+      ],
+      "subjectId": "sub-math",
+      "chapterName": "Chapter 1: Number Systems & Factors",
+      "explanation": "51 is divisible by 3 (3 × 17 = 51). 29, 37, and 97 are prime numbers.",
+      "correctAnswer": [
+        "opt-1",
+        "opt-2",
+        "opt-4"
+      ],
+      "inQuestionBank": true
+    },
+    {
+      "id": "qb-6",
+      "text": "Binary search operates in O(log n) time complexity on a sorted array.",
+      "type": "true_false",
+      "points": 10,
+      "classId": "cls-9",
+      "options": [
+        {
+          "id": "opt-true",
+          "text": "True"
+        },
+        {
+          "id": "opt-false",
+          "text": "False"
+        }
+      ],
+      "subjectId": "sub-cs",
+      "chapterName": "Chapter 3: Algorithms & Time Complexity",
+      "explanation": "Binary search halves the search space at each comparison, achieving logarithmic time complexity.",
+      "correctAnswer": "opt-true",
+      "inQuestionBank": true
+    }
+  ],
   "loginAudits": [
     {
-      "id": "log-1793277432207",
-      "timestamp": "2026-10-29T12:37:12.207Z",
+      "id": "log-1793336962962",
+      "timestamp": "2026-10-30T05:09:22.962Z",
       "userId": "usr-teacher-demo",
       "userName": "Faculty Teacher",
       "role": "teacher",
       "identifier": "teacher.demo",
       "ipAddress": "127.0.0.1",
-      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.144.0 Chrome/150.0.7871.250 Electron/43.8.3 Safari/537.36",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
       "status": "Success"
+    },
+    {
+      "id": "log-1793336898875",
+      "timestamp": "2026-10-30T05:08:18.875Z",
+      "userId": "usr-student-demo",
+      "userName": "Demo Student",
+      "role": "student",
+      "identifier": "student.demo",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1793336841302",
+      "timestamp": "2026-10-30T05:07:21.302Z",
+      "userId": "usr-parent-demo",
+      "userName": "Demo Parent",
+      "role": "parent",
+      "identifier": "parent.demo",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1793336783997",
+      "timestamp": "2026-10-30T05:06:23.997Z",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "role": "teacher",
+      "identifier": "teacher.demo",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1793336739056",
+      "timestamp": "2026-10-30T05:05:39.056Z",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "role": "superadmin",
+      "identifier": "admin",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "status": "Success"
+    },
+    {
+      "id": "log-1793291638840",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T16:33:58.841Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793291364713",
+      "role": "student",
+      "status": "Success",
+      "userId": "usr-student-demo",
+      "userName": "Demo Student",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T16:29:24.713Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0",
+      "identifier": "student.demo"
+    },
+    {
+      "id": "log-1793291299500",
+      "role": "superadmin",
+      "status": "Success",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T16:28:19.500Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "admin"
+    },
+    {
+      "id": "log-1793291121087",
+      "role": "student",
+      "status": "Success",
+      "userId": "usr-student-demo",
+      "userName": "Demo Student",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T16:25:21.087Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "student.demo"
+    },
+    {
+      "id": "log-1793290589430",
+      "role": "superadmin",
+      "status": "Success",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T16:16:29.430Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "admin"
+    },
+    {
+      "id": "log-1793289280254",
+      "role": "unauthenticated",
+      "status": "Failed",
+      "userName": "evaluator.backdoor",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:54:40.254Z",
+      "userAgent": "node",
+      "identifier": "evaluator.backdoor",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1793289280250",
+      "role": "student",
+      "status": "Failed",
+      "userId": "usr-student-demo",
+      "userName": "Demo Student",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:54:40.250Z",
+      "userAgent": "node",
+      "identifier": "student.demo",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1793289279930",
+      "role": "superadmin",
+      "status": "Failed",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:54:39.930Z",
+      "userAgent": "node",
+      "identifier": "admin",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1793289279613",
+      "role": "superadmin",
+      "status": "Failed",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:54:39.613Z",
+      "userAgent": "node",
+      "identifier": "admin",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1793289279288",
+      "role": "student",
+      "status": "Success",
+      "userId": "usr-student-demo",
+      "userName": "Demo Student",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:54:39.288Z",
+      "userAgent": "node",
+      "identifier": "student.demo"
+    },
+    {
+      "id": "log-1793289279125",
+      "role": "parent",
+      "status": "Success",
+      "userId": "usr-parent-demo",
+      "userName": "Demo Parent",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:54:39.125Z",
+      "userAgent": "node",
+      "identifier": "parent.demo"
+    },
+    {
+      "id": "log-1793289278959",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:54:38.959Z",
+      "userAgent": "node",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793289278787",
+      "role": "superadmin",
+      "status": "Success",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:54:38.787Z",
+      "userAgent": "node",
+      "identifier": "admin"
+    },
+    {
+      "id": "log-1793289082683",
+      "role": "unauthenticated",
+      "status": "Failed",
+      "userName": "evaluator.backdoor",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:51:22.683Z",
+      "userAgent": "node",
+      "identifier": "evaluator.backdoor",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1793289082680",
+      "role": "student",
+      "status": "Failed",
+      "userId": "usr-student-demo",
+      "userName": "Demo Student",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:51:22.680Z",
+      "userAgent": "node",
+      "identifier": "student.demo",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1793289082364",
+      "role": "superadmin",
+      "status": "Failed",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:51:22.364Z",
+      "userAgent": "node",
+      "identifier": "admin",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1793289082046",
+      "role": "superadmin",
+      "status": "Failed",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:51:22.046Z",
+      "userAgent": "node",
+      "identifier": "admin",
+      "failureReason": "Invalid credentials"
+    },
+    {
+      "id": "log-1793289081725",
+      "role": "student",
+      "status": "Success",
+      "userId": "usr-student-demo",
+      "userName": "Demo Student",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:51:21.725Z",
+      "userAgent": "node",
+      "identifier": "student.demo"
+    },
+    {
+      "id": "log-1793289081565",
+      "role": "parent",
+      "status": "Success",
+      "userId": "usr-parent-demo",
+      "userName": "Demo Parent",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:51:21.565Z",
+      "userAgent": "node",
+      "identifier": "parent.demo"
+    },
+    {
+      "id": "log-1793289081400",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:51:21.400Z",
+      "userAgent": "node",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793289081237",
+      "role": "superadmin",
+      "status": "Success",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:51:21.237Z",
+      "userAgent": "node",
+      "identifier": "admin"
+    },
+    {
+      "id": "log-1793286536214",
+      "role": "superadmin",
+      "status": "Success",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T15:08:56.214Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "admin"
+    },
+    {
+      "id": "log-1793282028108",
+      "role": "student",
+      "status": "Success",
+      "userId": "usr-stud-1",
+      "userName": "Aarav Sharma",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:53:48.108Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "student.aarav"
+    },
+    {
+      "id": "log-1793281908044",
+      "role": "superadmin",
+      "status": "Success",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:51:48.044Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "admin"
+    },
+    {
+      "id": "log-1793281878810",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:51:18.810Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793281750594",
+      "role": "superadmin",
+      "status": "Success",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:49:10.594Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "admin"
+    },
+    {
+      "id": "log-1793281683904",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:48:03.904Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793281623455",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:47:03.455Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793281618101",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:46:58.101Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793281609756",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:46:49.756Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793281598755",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:46:38.755Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793281529371",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:45:29.371Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793281412230",
+      "role": "superadmin",
+      "status": "Success",
+      "userId": "usr-admin",
+      "userName": "Super Administrator",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:43:32.230Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "admin"
+    },
+    {
+      "id": "log-1793281352358",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:42:32.358Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793281128684",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T13:38:48.684Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "identifier": "teacher.demo"
+    },
+    {
+      "id": "log-1793277432207",
+      "role": "teacher",
+      "status": "Success",
+      "userId": "usr-teacher-demo",
+      "userName": "Faculty Teacher",
+      "ipAddress": "127.0.0.1",
+      "timestamp": "2026-10-29T12:37:12.207Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.144.0 Chrome/150.0.7871.250 Electron/43.8.3 Safari/537.36",
+      "identifier": "teacher.demo"
     },
     {
       "id": "log-1792848650564",
@@ -663,6 +1248,18 @@
   ],
   "cheatingAudits": [
     {
+      "id": "cht-1793291579842",
+      "examId": "exam-1793289083699",
+      "details": "2 window focus losses recorded during exam session.",
+      "examTitle": "SSC Term 1 Science & Mathematics",
+      "studentId": "usr-student-demo",
+      "timestamp": "2026-10-29T16:32:59.842Z",
+      "actionTaken": "Warning 2",
+      "studentName": "Demo Student",
+      "studentRollNo": "1",
+      "violationCount": 2
+    },
+    {
       "id": "cht-1792830126621",
       "examId": "exam-1792830080847",
       "details": "2 window focus losses recorded during exam session.",
@@ -676,7 +1273,40 @@
     }
   ],
   "deletedCredentialAudits": [],
-  "schoolNotices": [],
+  "schoolNotices": [
+    {
+      "id": "ntc-1793291425052",
+      "title": "Pratik Harishcha",
+      "content": "Hello how are you students",
+      "category": "Academic Governance",
+      "isPinned": false,
+      "priority": "normal",
+      "createdAt": "2026-10-29T16:30:25.052Z",
+      "authorName": "Super Administrator",
+      "authorRole": "superadmin",
+      "targetAudience": "All"
+    },
+    {
+      "id": "ntc-3",
+      "title": "Parent-Teacher Communication Portal & Answer Key Review Window",
+      "content": "Parents are invited to review test performance, unlocked model answers, and teacher feedback directly through the Student Performance tab and Helpdesk messaging system.",
+      "category": "General Announcement",
+      "createdAt": "2026-10-27T13:37:35.058Z",
+      "authorName": "Dr. R. K. Deshmukh",
+      "authorRole": "superadmin",
+      "targetAudience": "Parents"
+    },
+    {
+      "id": "ntc-4",
+      "title": "Physics Mechanics Formula Guide & Solved Exemplars Uploaded",
+      "content": "Prof. Vikram Sharma has uploaded comprehensive revision notes and MIT interactive circuit simulation links to the Study Materials repository for Standard 10 Division A & B.",
+      "category": "Academic Notice",
+      "createdAt": "2026-10-26T13:37:35.058Z",
+      "authorName": "Prof. Vikram Sharma",
+      "authorRole": "teacher",
+      "targetAudience": "Students"
+    }
+  ],
   "academicConfig": {
     "testBadges": [
       {
@@ -767,6 +1397,73 @@
   },
   "appNotifications": [],
   "exams": [
+    {
+      "id": "exam-1793289083699",
+      "title": "SSC Term 1 Science & Mathematics",
+      "status": "published",
+      "classId": "cls-10",
+      "endTime": "2026-10-29T16:51:23.697Z",
+      "className": "Standard 10 (SSC)",
+      "createdAt": "2026-10-29T15:51:23.699Z",
+      "questions": [
+        {
+          "id": "q-test-1",
+          "text": "What is the SI unit of Electric Current?",
+          "type": "single",
+          "points": 5,
+          "options": [
+            {
+              "id": "opt-a",
+              "text": "Volt"
+            },
+            {
+              "id": "opt-b",
+              "text": "Ampere"
+            },
+            {
+              "id": "opt-c",
+              "text": "Ohm"
+            },
+            {
+              "id": "opt-d",
+              "text": "Joule"
+            }
+          ],
+          "correctAnswer": "opt-b"
+        },
+        {
+          "id": "q-test-2",
+          "text": "Light travels faster in water than in a vacuum.",
+          "type": "true_false",
+          "points": 5,
+          "options": [
+            {
+              "id": "true",
+              "text": "True"
+            },
+            {
+              "id": "false",
+              "text": "False"
+            }
+          ],
+          "correctAnswer": "false"
+        }
+      ],
+      "startTime": "2026-10-29T15:46:23.697Z",
+      "subjectId": "sub-phy",
+      "teacherId": "usr-teacher-demo",
+      "divisionId": "div-10a",
+      "totalMarks": 10,
+      "description": "Comprehensive evaluation for Class 10 Division A",
+      "subjectName": "Physics & Applied Science",
+      "teacherName": "Faculty Teacher",
+      "divisionName": "Division A",
+      "passingScore": 50,
+      "questionCount": 2,
+      "targetClassId": "cls-10",
+      "durationMinutes": 45,
+      "targetDivisionId": "div-10a"
+    },
     {
       "id": "exam-1792830080847",
       "title": "Physics & Applied Science: DEMO TEST Assessment (CBSE)",
@@ -1079,6 +1776,38 @@
   ],
   "submissions": [
     {
+      "id": "subm-1793291579842",
+      "score": 0,
+      "examId": "exam-1793289083699",
+      "passed": false,
+      "answers": {
+        "q-test-1": "opt-c",
+        "q-test-2": "true"
+      },
+      "classId": "cls-10",
+      "examTitle": "SSC Term 1 Science & Mathematics",
+      "studentId": "usr-student-demo",
+      "divisionId": "div-10a",
+      "percentage": 0,
+      "totalMarks": 10,
+      "rescheduled": false,
+      "studentName": "Demo Student",
+      "subjectName": "Physics & Applied Science",
+      "submittedAt": "2026-10-29T16:32:59.842Z",
+      "studentRollNo": "1",
+      "idempotencyKey": "subm_exam-1793289083699_usr-student-demo_1793291557819_d4ig4",
+      "cheatingDetails": {
+        "reason": "2 minor focus loss warnings logged.",
+        "blurTimestamps": [
+          "2026-10-29T16:32:50.571Z",
+          "2026-10-29T16:32:59.332Z"
+        ],
+        "violationCount": 2
+      },
+      "cheatingFlagged": false,
+      "bonusPointsAwarded": 0
+    },
+    {
       "id": "subm-1792830126621",
       "score": 5,
       "examId": "exam-1792830080847",
@@ -1168,8 +1897,128 @@
       "bonusPointsAwarded": 100
     }
   ],
-  "studyMaterials": [],
-  "supportTickets": [],
+  "studyMaterials": [
+    {
+      "id": "mat-1793291768207",
+      "url": "https://google.com",
+      "type": "link",
+      "title": "The web",
+      "classId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "createdAt": "2026-10-29T16:36:08.207Z",
+      "subjectId": "sub-phy",
+      "teacherId": "usr-teacher-demo",
+      "divisionId": "div-10a",
+      "description": "",
+      "subjectName": "Physics & Applied Science",
+      "teacherName": "Faculty Teacher",
+      "divisionName": "Division A"
+    },
+    {
+      "id": "mat-1",
+      "url": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80",
+      "type": "file",
+      "title": "Standard 10 Physics: Formulas, Newton Laws & Circuit Diagrams",
+      "classId": "cls-10",
+      "fileName": "Std10_Physics_Quick_Derivations_v2.pdf",
+      "fileSize": "3.4 MB",
+      "className": "Standard 10 (SSC)",
+      "createdAt": "2025-02-15T09:00:00Z",
+      "subjectId": "sub-phy",
+      "teacherId": "usr-teach-1",
+      "divisionId": "div-10a",
+      "description": "Comprehensive revision guide including solved derivations, circuit notation standards, and SI units.",
+      "subjectName": "Physics & Applied Science",
+      "teacherName": "Prof. Vikram Sharma",
+      "divisionName": "Division A"
+    },
+    {
+      "id": "mat-2",
+      "url": "https://phet.colorado.edu/en/simulations/circuit-construction-kit-dc",
+      "type": "link",
+      "title": "Interactive Circuit Simulator & Lab Demonstrations (MIT Physics)",
+      "classId": "cls-10",
+      "className": "Standard 10 (SSC)",
+      "createdAt": "2025-02-18T11:00:00Z",
+      "subjectId": "sub-phy",
+      "teacherId": "usr-teach-1",
+      "divisionId": "div-10a",
+      "description": "Recommended digital simulation reference link to practice parallel and series resistor configurations.",
+      "subjectName": "Physics & Applied Science",
+      "teacherName": "Prof. Vikram Sharma",
+      "divisionName": "Division A"
+    },
+    {
+      "id": "mat-3",
+      "url": "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&auto=format&fit=crop&q=80",
+      "type": "file",
+      "title": "Shakespearean Context: Venetian Law and Merchant Guilds",
+      "classId": "cls-10",
+      "fileName": "Merchant_of_Venice_Critical_Notes.pdf",
+      "fileSize": "1.8 MB",
+      "className": "Standard 10 (SSC)",
+      "createdAt": "2025-02-22T14:00:00Z",
+      "subjectId": "sub-eng",
+      "teacherId": "usr-teach-2",
+      "divisionId": "div-10a",
+      "description": "Historical context reading for Act IV trial scenes and character motivation analysis.",
+      "subjectName": "English Literature & Composition",
+      "teacherName": "Mrs. Meera Nair",
+      "divisionName": "Division A"
+    }
+  ],
+  "supportTickets": [
+    {
+      "id": "tkt-101",
+      "status": "In Progress",
+      "message": "Respected Management, we would like to confirm whether the preliminary physics mock exam scheduled this week adheres to the new SSC question pattern. Also, will the teacher provide model answers after the exam closes?",
+      "replies": [
+        {
+          "id": "rep-1",
+          "message": "Dear Mr. Sharma, yes, all questions in the active and upcoming tests strictly conform to the Maharashtra SSC pattern. Complete answer keys and explanations unlock automatically as soon as the test time window concludes.",
+          "senderId": "usr-teach-1",
+          "timestamp": "2025-03-02T11:15:00Z",
+          "senderName": "Prof. Vikram Sharma",
+          "senderRole": "teacher"
+        }
+      ],
+      "subject": "Request regarding upcoming Board Practical Schedule & Model Papers",
+      "category": "General Query",
+      "parentId": "usr-parent-1",
+      "priority": "medium",
+      "createdAt": "2025-03-01T09:30:00Z",
+      "studentId": "usr-stud-1",
+      "updatedAt": "2025-03-02T11:15:00Z",
+      "parentName": "Mr. Rajesh Sharma",
+      "studentName": "Aarav Sharma",
+      "studentClass": "Standard 10 (SSC) - Division A"
+    },
+    {
+      "id": "tkt-102",
+      "status": "Resolved",
+      "message": "Good morning, Rohan noticed an accidental window blur warning strike yesterday when an incoming system notification briefly popped up on his desktop. Could the teacher review this log?",
+      "replies": [
+        {
+          "id": "rep-2",
+          "message": "Dear Mrs. Patel, we reviewed the audit trail. Only 1 momentary warning was logged and his final score of 67% was successfully auto-graded without any penalty or cheating flag. He remains in good standing.",
+          "senderId": "usr-admin-1",
+          "timestamp": "2025-03-01T16:00:00Z",
+          "senderName": "Dr. R. K. Deshmukh",
+          "senderRole": "superadmin"
+        }
+      ],
+      "subject": "Temporary Broadband Disconnection warning during online unit test",
+      "category": "Technical Issue",
+      "parentId": "usr-parent-2",
+      "priority": "low",
+      "createdAt": "2025-02-28T14:20:00Z",
+      "studentId": "usr-stud-2",
+      "updatedAt": "2025-03-01T16:00:00Z",
+      "parentName": "Mrs. Sunita Patel",
+      "studentName": "Rohan Patel",
+      "studentClass": "Standard 10 (SSC) - Division A"
+    }
+  ],
   "examAttempts": [
     {
       "id": "att-1792821313694-demo",
@@ -1205,6 +2054,19 @@
       "completedAt": "2026-10-24T08:22:06.621Z",
       "savedAnswers": {
         "q-gen-1792830080821-0": "opt-1"
+      }
+    },
+    {
+      "id": "att-1793291557826-demo",
+      "examId": "exam-1793289083699",
+      "status": "completed",
+      "startedAt": "2026-10-29T16:32:37.826Z",
+      "studentId": "usr-student-demo",
+      "updatedAt": "2026-10-29T16:32:59.022Z",
+      "completedAt": "2026-10-29T16:32:59.842Z",
+      "savedAnswers": {
+        "q-test-1": "opt-c",
+        "q-test-2": "true"
       }
     }
   ]
