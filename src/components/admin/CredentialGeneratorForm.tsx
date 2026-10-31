@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Key, 
   ShieldCheck, 
@@ -45,7 +45,12 @@ export const CredentialGeneratorForm: React.FC<CredentialGeneratorFormProps> = (
 
   // Student-specific
   const [classId, setClassId] = useState(classes[0]?.id || '');
-  const [divisionId, setDivisionId] = useState('');
+  // Initialise to first available division so the visible selection matches state from the start.
+  // Without this, the browser renders the first <option> as selected but divisionId state remains ''
+  // which causes the validation guard (!divisionId) to fire even when Division A is visually chosen.
+  const [divisionId, setDivisionId] = useState(
+    () => divisions.find((d) => d.classId === (classes[0]?.id || ''))?.id || ''
+  );
   const [rollNo, setRollNo] = useState('');
   const [parentId, setParentId] = useState('');
 
@@ -70,6 +75,13 @@ export const CredentialGeneratorForm: React.FC<CredentialGeneratorFormProps> = (
 
   // Filter divisions for selected class
   const classDivisions = divisions.filter((d) => d.classId === classId);
+
+  // When the selected class changes, reset divisionId to the first division of the new class.
+  // This keeps state in sync with the visible <select> selection.
+  useEffect(() => {
+    const firstDiv = divisions.find((d) => d.classId === classId);
+    setDivisionId(firstDiv?.id || '');
+  }, [classId, divisions]);
 
   // Deduplicate existing parents list
   const uniqueParents = Array.from(new Map(existingParents.map((p) => [p.id, p])).values());
